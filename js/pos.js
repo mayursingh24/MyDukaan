@@ -424,6 +424,7 @@ class POSEngine {
     const shop = db.shop;
 
     // Build WhatsApp invoice text
+    const cleanPhone = (invoice.customerPhone || '').replace(/\D/g, '');
     const itemsText = invoice.items.map(it => `• ${it.name} (${it.qty} x ₹${it.price}) = ₹${it.total}`).join('%0A');
     const waText = `*${encodeURIComponent(shop.name)}* - INVOICE %23${invoice.id}%0A` +
       `Date: ${invoice.date} ${invoice.time}%0A` +
@@ -432,10 +433,10 @@ class POSEngine {
       `*Total Amount:* ₹${invoice.total}%0A` +
       `*Status:* ${invoice.status.toUpperCase()} (${invoice.paymentMode})%0A%0A` +
       `Pay via UPI: ${encodeURIComponent(shop.upiId)}%0A` +
-      `_Thank you for shopping with us! Billed via MyDukaan Pro • Dev: Mayur Singh_`;
+      `_Thank you for shopping with us! Billed via MyDukaan24 • Dev: Mayur Singh_`;
 
-    const waLink = invoice.customerPhone ? 
-      `https://wa.me/91${invoice.customerPhone}?text=${waText}` : 
+    const waLink = cleanPhone ? 
+      `https://wa.me/91${cleanPhone.slice(-10)}?text=${waText}` : 
       `https://wa.me/?text=${waText}`;
 
     const modalHtml = `

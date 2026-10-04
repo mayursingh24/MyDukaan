@@ -289,9 +289,10 @@ Recent Invoices:
     }
   }
 
-  // Direct client call to Gemini 3.8 Flash (Used when running in dev/preview without Netlify Functions)
+  // Direct client call to Gemini with resilient fallback (Used when running in dev/preview without Netlify Functions)
   async callGeminiDirect(prompt, storeContext, apiKey) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${apiKey}`;
+    const models = [this.modelName, 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    let lastError = null;
 
     const systemPrompt = `You are "MyDukaan24 AI", an expert retail business advisor for small businesses and Kirana stores in India.
 Always format currency in Indian Rupees (₹).
@@ -313,24 +314,36 @@ ${storeContext}`;
       }
     };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const data = await response.json();
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-    if (!response.ok) {
-      throw new Error(data.error?.message || `Google Gemini API returned status ${response.status}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) return reply;
+        }
+
+        lastError = new Error(data.error?.message || `Google Gemini API error (Status ${response.status})`);
+        if (response.status !== 404) {
+          throw lastError; // Non-404 error (like quota or invalid key) should be surfaced immediately
+        }
+      } catch (err) {
+        lastError = err;
+        if (!err.message.includes('404') && !err.message.includes('not found')) {
+          throw err;
+        }
+      }
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!reply) {
-      throw new Error('Received an empty response from Gemini 3.8 Flash.');
-    }
-
-    return reply;
+    throw lastError || new Error('Received an empty response from Gemini API.');
   }
 
   // Append user or AI message into UI & history

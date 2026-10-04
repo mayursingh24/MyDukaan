@@ -73,12 +73,13 @@ class KhataEngine {
       const shop = db.shop;
 
       // WhatsApp Due Reminder Link
-      const reminderMsg = `Namaste ${c.name} ji 🙏,%0A%0A` +
+      const cleanPhone = (c.phone || '').replace(/\D/g, '');
+      const reminderMsg = `Namaste ${encodeURIComponent(c.name)} ji 🙏,%0A%0A` +
         `This is a gentle reminder regarding your pending balance of *₹${c.balanceDue.toLocaleString('en-IN')}* at *${encodeURIComponent(shop.name)}*.%0A%0A` +
         `You can easily pay via UPI to: *${encodeURIComponent(shop.upiId)}*%0A%0A` +
-        `Thank you for your cooperation! Billed via MyDukaan Pro • Dev: Mayur Singh`;
+        `Thank you for your cooperation! Billed via MyDukaan24 • Dev: Mayur Singh`;
 
-      const waLink = c.phone ? `https://wa.me/91${c.phone}?text=${reminderMsg}` : `https://wa.me/?text=${reminderMsg}`;
+      const waLink = cleanPhone ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${reminderMsg}` : `https://wa.me/?text=${reminderMsg}`;
 
       return `
         <div class="card" style="margin-bottom: 12px; padding: 16px;">

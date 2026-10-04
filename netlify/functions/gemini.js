@@ -62,48 +62,62 @@ Keep answers structured, concise, and focused on business growth, inventory heal
 Current Live Business Context:
 ${storeContext || 'No store data provided.'}`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+    // Candidate models in preference order (latest Gemini 3.8 Flash with fallbacks)
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    let lastError = null;
+    let successfulResult = null;
 
-    const payload = {
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: `${systemInstruction}\n\nUser Question: ${prompt}` }
-          ]
+    for (const model of modelsToTry) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        const payload = {
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: `${systemInstruction}\n\nUser Question: ${prompt}` }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800
+          }
+        };
+
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const candidate = data.candidates?.[0];
+          const text = candidate?.content?.parts?.[0]?.text;
+          if (text) {
+            successfulResult = { text, model };
+            break;
+          }
         }
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 800
+
+        // If not 404/not-found, store error
+        lastError = data.error?.message || `Google API error (Status ${response.status})`;
+        if (response.status !== 404) {
+          break; // Don't try other models if it's a quota/auth error
+        }
+      } catch (err) {
+        lastError = err.message;
       }
-    };
-
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      const errorMessage = data.error?.message || `Google API error (Status ${response.status})`;
-      return {
-        statusCode: response.status,
-        headers,
-        body: JSON.stringify({ error: errorMessage })
-      };
     }
 
-    const candidate = data.candidates?.[0];
-    const generatedText = candidate?.content?.parts?.[0]?.text;
-
-    if (!generatedText) {
+    if (!successfulResult) {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Gemini model returned an empty response. Please try again.' })
+        body: JSON.stringify({ error: lastError || 'Failed to get response from Gemini API.' })
       };
     }
 
@@ -112,8 +126,8 @@ ${storeContext || 'No store data provided.'}`;
       headers,
       body: JSON.stringify({
         success: true,
-        text: generatedText,
-        model: 'gemini-3.8-flash'
+        text: successfulResult.text,
+        model: successfulResult.model
       })
     };
   } catch (err) {

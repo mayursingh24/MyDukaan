@@ -45,8 +45,12 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Never intercept Gemini API calls or chrome-extensions
-  if (e.request.url.includes('googleapis.com') || e.request.url.startsWith('chrome-extension')) {
+  // Never intercept Gemini API calls, serverless functions, QR APIs or chrome-extensions
+  if (e.request.url.includes('googleapis.com') || 
+      e.request.url.includes('/api/') || 
+      e.request.url.includes('qrserver.com') ||
+      e.request.url.startsWith('chrome-extension') ||
+      e.request.method !== 'GET') {
     return;
   }
 
