@@ -118,10 +118,52 @@ class BarcodeScannerEngine {
   }
 
   async startCamera(facingMode = 'environment') {
+    this.currentFacingMode = facingMode;
+
+    // 1. Try universal Html5Qrcode if loaded
+    if (window.Html5Qrcode) {
+      try {
+        const viewportWrap = document.querySelector('.scanner-viewport-wrap');
+        if (viewportWrap) {
+          viewportWrap.innerHTML = `
+            <div id="html5-qr-reader" style="width: 100%; height: 100%;"></div>
+            <div class="scanner-target-reticle" style="pointer-events: none;">
+              <div class="scanner-laser"></div>
+            </div>
+            <div id="scanner-status-pill" style="position: absolute; bottom: 12px; background: rgba(0,0,0,0.7); color: #fff; font-size: 11px; padding: 3px 10px; border-radius: 100px; font-family: var(--font-mono); pointer-events: none;">
+              Aim camera at barcode...
+            </div>
+          `;
+        }
+
+        if (this.html5QrCode) {
+          try { await this.html5QrCode.stop(); } catch(e){}
+        }
+
+        this.html5QrCode = new Html5Qrcode("html5-qr-reader");
+        await this.html5QrCode.start(
+          { facingMode: facingMode },
+          { fps: 15, qrbox: { width: 240, height: 150 } },
+          (decodedText) => {
+            const now = Date.now();
+            if (decodedText && (decodedText !== this.lastScannedCode || now - this.lastScanTime > 2500)) {
+              this.lastScannedCode = decodedText;
+              this.lastScanTime = now;
+              this.onBarcodeDetected(decodedText, 'camera');
+            }
+          },
+          (errorMessage) => {}
+        );
+        this.isScanning = true;
+        return;
+      } catch (e) {
+        console.warn('[Scanner] Html5Qrcode error, falling back to native stream:', e);
+      }
+    }
+
+    // 2. Native getUserMedia + BarcodeDetector fallback
     const video = document.getElementById('scanner-video-preview');
     if (!video) return;
-
-    this.currentFacingMode = facingMode;
 
     try {
       if (this.videoStream) {
@@ -143,7 +185,7 @@ class BarcodeScannerEngine {
       console.warn('[Scanner] Camera access failed or denied:', err);
       const statusPill = document.getElementById('scanner-status-pill');
       if (statusPill) {
-        statusPill.textContent = 'Camera not available. Use manual entry or Demo scan.';
+        statusPill.textContent = 'Camera unavailable. Use manual lookup or Demo button.';
         statusPill.style.color = '#EF4444';
       }
     }
@@ -281,6 +323,12 @@ class BarcodeScannerEngine {
 
   closeScannerModal() {
     this.isScanning = false;
+    if (this.html5QrCode) {
+      try {
+        this.html5QrCode.stop().then(() => this.html5QrCode.clear()).catch(() => {});
+      } catch (e) {}
+      this.html5QrCode = null;
+    }
     if (this.videoStream) {
       this.videoStream.getTracks().forEach(track => track.stop());
       this.videoStream = null;

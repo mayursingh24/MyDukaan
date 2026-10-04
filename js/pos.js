@@ -84,9 +84,17 @@ class POSEngine {
 
   setPaymentMode(mode) {
     this.paymentMode = mode;
-    document.querySelectorAll('.pm-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.mode === mode);
-    });
+    this.renderCart();
+  }
+
+  calculateCashChange(grandTotal) {
+    const input = document.getElementById('pos-cash-tendered');
+    const changeEl = document.getElementById('pos-cash-change');
+    if (!input || !changeEl) return;
+    const tendered = parseFloat(input.value) || 0;
+    const change = Math.max(0, tendered - grandTotal);
+    changeEl.textContent = `₹${change.toLocaleString('en-IN')}`;
+    changeEl.style.color = tendered >= grandTotal ? 'var(--success)' : 'var(--danger)';
   }
 
   setCategoryFilter(category) {
@@ -281,6 +289,33 @@ class POSEngine {
             </button>
           `).join('')}
         </div>
+
+        ${this.paymentMode === 'Cash' ? `
+          <!-- Cash Change Calculator -->
+          <div style="background: var(--bg-input); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 4px;">
+              <span style="font-weight: 600; color: var(--text-secondary);">Cash Received (₹):</span>
+              <input type="number" id="pos-cash-tendered" class="form-input" style="width: 100px; padding: 4px 8px; height: 30px; font-size: 13px; text-align: right;" value="${calc.grandTotal}" oninput="POS.calculateCashChange(${calc.grandTotal})" />
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700;">
+              <span>Change to Return:</span>
+              <span id="pos-cash-change" style="color: var(--success);">₹0</span>
+            </div>
+          </div>
+        ` : ''}
+
+        ${this.paymentMode === 'UPI' ? `
+          <!-- Live UPI QR Code -->
+          <div style="background: var(--bg-input); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle); text-align: center; margin-bottom: 6px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--primary); margin-bottom: 6px;">
+              📱 Scan with PhonePe / GPay / Paytm
+            </div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&margin=4&data=upi%3A%2F%2Fpay%3Fpa%3D${encodeURIComponent(db.shop.upiId || 'mydukaan24@upi')}%26pn%3D${encodeURIComponent(db.shop.name || 'MyDukaan24')}%26am%3D${calc.grandTotal}%26cu%3DINR" alt="UPI QR Code" style="width: 130px; height: 130px; border-radius: 6px; border: 1px solid #fff; background: #fff;" />
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono);">
+              UPI: ${db.shop.upiId || 'mydukaan24@upi'} • Amount: ₹${calc.grandTotal}
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Checkout Trigger -->
         <button class="btn btn-primary w100" style="padding: 12px; font-size: 15px; margin-top: 4px;" onclick="POS.processCheckout()">
