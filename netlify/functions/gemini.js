@@ -62,8 +62,8 @@ Keep answers structured, concise, and focused on business growth, inventory heal
 Current Live Business Context:
 ${storeContext || 'No store data provided.'}`;
 
-    // Candidate models in preference order (latest Gemini 3.8 Flash with fallbacks)
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    // Candidate models in preference order (gemini-2.5-flash first for high stability & capacity, plus fallbacks)
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-3.8-flash'];
     let lastError = null;
     let successfulResult = null;
 
@@ -103,11 +103,22 @@ ${storeContext || 'No store data provided.'}`;
           }
         }
 
-        // If not 404/not-found, store error
-        lastError = data.error?.message || `Google API error (Status ${response.status})`;
-        if (response.status !== 404) {
-          break; // Don't try other models if it's a quota/auth error
+        const errMsg = data.error?.message || `Google API error (Status ${response.status})`;
+        lastError = errMsg;
+
+        // Abort ONLY if the API key itself is fundamentally invalid
+        if (data.error?.status === 'INVALID_ARGUMENT' && errMsg.toLowerCase().includes('api key')) {
+          lastError = 'Invalid Gemini API Key. Please verify your key at aistudio.google.com';
+          break;
         }
+        if (response.status === 401 || response.status === 403) {
+          lastError = errMsg || 'API key unauthorized. Please check your credentials.';
+          break;
+        }
+
+        // On 503 (High demand / Overloaded), 429 (Rate limit), 404 (Not found), or 500:
+        // Automatically try next model in list!
+        console.warn(`[Gemini Failover] Model ${model} returned status ${response.status} (${errMsg}). Switching to next model...`);
       } catch (err) {
         lastError = err.message;
       }

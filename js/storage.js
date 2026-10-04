@@ -28,7 +28,8 @@ const DEFAULT_PRODUCTS = [
   { id: "P109", name: "Dettol Antiseptic Liquid 250ml", cat: "Healthcare", barcode: "8901396112104", mrp: 145, price: 130, cost: 105, stock: 4, unit: "bottle", minStock: 6, emoji: "🧴" }, // Low stock
   { id: "P110", name: "Cadbury Dairy Milk Silk 60g", cat: "Chocolates", barcode: "7622201738210", mrp: 85, price: 80, cost: 68, stock: 30, unit: "bar", minStock: 10, emoji: "🍫" },
   { id: "P111", name: "Basmati Rice India Gate 1kg", cat: "Grocery", barcode: "8901030383841", mrp: 140, price: 120, cost: 95, stock: 40, unit: "kg", minStock: 10, emoji: "🍚" },
-  { id: "P112", name: "Toor Dal Premium 1kg", cat: "Grocery", barcode: "8901030383858", mrp: 200, price: 175, cost: 145, stock: 0, unit: "kg", minStock: 10, emoji: "🫘" } // Out of stock
+  { id: "P112", name: "Toor Dal Premium 1kg", cat: "Grocery", barcode: "8901030383858", mrp: 200, price: 175, cost: 145, stock: 0, unit: "kg", minStock: 10, emoji: "🫘" }, // Out of stock
+  { id: "P113", name: "Indian Retail FMCG Pack", cat: "Grocery", barcode: "8904258116198", mrp: 30, price: 25, cost: 20, stock: 45, unit: "pack", minStock: 10, emoji: "🍿" }
 ];
 
 const DEFAULT_CUSTOMERS = [
@@ -127,7 +128,27 @@ class StorageEngine {
   getData() {
     try {
       const str = localStorage.getItem(STORAGE_KEY);
-      if (str) return JSON.parse(str);
+      if (str) {
+        const parsed = JSON.parse(str);
+        // Auto-seed barcode 8904258116198 if not already in user's saved catalog
+        if (parsed && parsed.products && !parsed.products.some(p => p.barcode === "8904258116198")) {
+          parsed.products.push({
+            id: "P113",
+            name: "Indian Retail FMCG Pack",
+            cat: "Grocery",
+            barcode: "8904258116198",
+            mrp: 30,
+            price: 25,
+            cost: 20,
+            stock: 45,
+            unit: "pack",
+            minStock: 10,
+            emoji: "🍿"
+          });
+          this.saveData(parsed);
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error("[Storage] Failed to read DB:", e);
     }

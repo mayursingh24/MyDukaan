@@ -75,7 +75,7 @@ Recent Invoices:
               <div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-weight: 800; font-size: 16px; color: var(--text-primary);">MyDukaan24 AI</span>
-                  <span class="badge badge-primary" style="font-size: 10px; font-weight: 700;">Gemini 3.8 Flash Online</span>
+                  <span class="badge badge-primary" style="font-size: 10px; font-weight: 700;">Gemini Flash Online (Multi-Engine)</span>
                 </div>
                 <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
                   Live Real-Time Store Brain • Contextually Grounded
@@ -216,7 +216,7 @@ Recent Invoices:
           <div class="typing-dots-spinner">
             <span></span><span></span><span></span>
           </div>
-          <span style="font-size: 12.5px; color: var(--text-muted);">Consulting Gemini 3.8 Flash Online...</span>
+          <span style="font-size: 12.5px; color: var(--text-muted);">Consulting Gemini Flash Online...</span>
         </div>
       </div>
     `;
@@ -291,7 +291,7 @@ Recent Invoices:
 
   // Direct client call to Gemini with resilient fallback (Used when running in dev/preview without Netlify Functions)
   async callGeminiDirect(prompt, storeContext, apiKey) {
-    const models = [this.modelName, 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-3.8-flash'];
     let lastError = null;
 
     const systemPrompt = `You are "MyDukaan24 AI", an expert retail business advisor for small businesses and Kirana stores in India.
@@ -331,15 +331,24 @@ ${storeContext}`;
           if (reply) return reply;
         }
 
-        lastError = new Error(data.error?.message || `Google Gemini API error (Status ${response.status})`);
-        if (response.status !== 404) {
-          throw lastError; // Non-404 error (like quota or invalid key) should be surfaced immediately
+        const errMsg = data.error?.message || `Google Gemini API error (Status ${response.status})`;
+        lastError = new Error(errMsg);
+
+        // Abort ONLY if the API key is completely invalid
+        if (data.error?.status === 'INVALID_ARGUMENT' && errMsg.toLowerCase().includes('api key')) {
+          throw new Error('Invalid Gemini API Key. Please verify your key at aistudio.google.com');
         }
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(errMsg || 'API key unauthorized. Please check your credentials in Settings.');
+        }
+
+        // On 503 (High demand / Overloaded), 429 (Rate limit), 404 (Not found), 500:
+        console.warn(`[Gemini Failover] Model ${model} returned ${response.status} (${errMsg}). Switching to next model...`);
       } catch (err) {
-        lastError = err;
-        if (!err.message.includes('404') && !err.message.includes('not found')) {
+        if (err.message.includes('Invalid Gemini API Key') || err.message.includes('unauthorized')) {
           throw err;
         }
+        lastError = err;
       }
     }
 
@@ -520,7 +529,7 @@ ${storeContext}`;
       banner.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <div style="color: var(--success); font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-            <span>✓</span> <span>Gemini 3.8 Flash Online Activated!</span>
+            <span>✓</span> <span>Google Gemini Online AI Activated!</span>
           </div>
           <span style="font-size: 11px; color: var(--text-muted);">Ready to assist</span>
         </div>

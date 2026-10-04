@@ -278,17 +278,89 @@ class BarcodeScannerEngine {
       `;
     } else {
       resultArea.innerHTML = `
-        <div style="padding:12px;background:var(--warning-light);border:1px solid var(--warning-border);border-radius:var(--radius-md);">
-          <div style="font-weight:700;color:var(--warning);font-size:13px;display:flex;align-items:center;gap:6px;">
-            ⚠️ Barcode Not Found: <span style="font-family:var(--font-mono);">${cleanCode}</span>
+        <div style="padding:14px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md);">
+          <div style="font-weight: 700; color: var(--warning); font-size: 13.5px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span>⚠️</span>
+              <span>New Barcode: <strong style="font-family: var(--font-mono); color: #fff;">${cleanCode}</strong></span>
+            </div>
+            <span class="badge badge-warning" style="font-size: 10px;">Unregistered</span>
           </div>
-          <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">This barcode is not yet registered in your store catalog.</p>
-          <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="BarcodeScanner.closeScannerModal(); Inventory.openAddProductWithBarcode('${cleanCode}')">
-            ➕ Register New Product with Barcode ${cleanCode}
-          </button>
+          <p style="font-size: 11.5px; color: var(--text-secondary); margin: 6px 0 10px;">
+            Not in catalog yet. Quick-enter name & price to instantly add to bill and save to catalog:
+          </p>
+          
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <input type="text" id="quick-add-name" class="form-input" style="padding: 6px 10px; font-size: 12px;" placeholder="Product Name (e.g. Snack / Chips)" onkeydown="if(event.key==='Enter') BarcodeScanner.quickRegisterAndAddToCart('${cleanCode}')" />
+            <input type="number" id="quick-add-price" class="form-input" style="padding: 6px 10px; font-size: 12px; font-family: var(--font-mono);" placeholder="Price (₹)" onkeydown="if(event.key==='Enter') BarcodeScanner.quickRegisterAndAddToCart('${cleanCode}')" />
+            <input type="number" id="quick-add-stock" class="form-input" style="padding: 6px 10px; font-size: 12px; font-family: var(--font-mono);" placeholder="Stock" value="20" onkeydown="if(event.key==='Enter') BarcodeScanner.quickRegisterAndAddToCart('${cleanCode}')" />
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="BarcodeScanner.quickRegisterAndAddToCart('${cleanCode}')">
+              ⚡ Quick Save & Add to Bill
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.closeScannerModal(); App.navigate('inventory'); Inventory.openAddProductWithBarcode('${cleanCode}')">
+              Full Form
+            </button>
+          </div>
         </div>
       `;
+
+      // Auto-focus quick name input
+      setTimeout(() => {
+        const nameIn = document.getElementById('quick-add-name');
+        if (nameIn) nameIn.focus();
+      }, 100);
+
+      // Async OpenFoodFacts lookup for Indian GTINs
+      fetch(`https://world.openfoodfacts.org/api/v0/product/${cleanCode}.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.status === 1 && data.product) {
+            const prodName = data.product.product_name || data.product.generic_name;
+            const quickNameEl = document.getElementById('quick-add-name');
+            if (quickNameEl && !quickNameEl.value && prodName) {
+              quickNameEl.value = prodName;
+            }
+          }
+        })
+        .catch(() => {});
     }
+  }
+
+  // 1-Click Fast Register & Add to Active Cart
+  quickRegisterAndAddToCart(barcode) {
+    const nameInput = document.getElementById('quick-add-name');
+    const priceInput = document.getElementById('quick-add-price');
+    const stockInput = document.getElementById('quick-add-stock');
+
+    const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : `Product ${barcode.slice(-4)}`;
+    const price = priceInput && parseFloat(priceInput.value) > 0 ? parseFloat(priceInput.value) : 20;
+    const stock = stockInput && parseInt(stockInput.value) > 0 ? parseInt(stockInput.value) : 25;
+    const mrp = Math.round(price * 1.15);
+    const cost = Math.round(price * 0.85);
+
+    const newProduct = {
+      id: `P${Date.now().toString().slice(-4)}`,
+      name: name,
+      cat: "Grocery",
+      barcode: barcode,
+      mrp: mrp,
+      price: price,
+      cost: cost,
+      stock: stock,
+      unit: "pack",
+      minStock: 5,
+      emoji: "📦"
+    };
+
+    DB.updateItem('products', newProduct);
+    if (window.POS) POS.addItemToCart(newProduct);
+    if (window.Inventory) Inventory.render();
+
+    App.toast('success', 'Product Registered & Billed! 🎉', `${name} added at ₹${price}`);
+    this.closeScannerModal();
   }
 
   addToCartFromScanner(productId) {

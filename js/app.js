@@ -607,7 +607,7 @@ class AppController {
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>⚙️ Store Configuration & Settings</h1>
-          <p>Manage shop branding, UPI ID, Gemini 3.8 Flash online API key, and data backups</p>
+          <p>Manage shop branding, UPI ID, Google Gemini online AI key, and data backups</p>
         </div>
       </div>
 
@@ -658,8 +658,8 @@ class AppController {
       <!-- Gemini AI Configuration -->
       <div class="card" style="border-color: rgba(124, 58, 237, 0.35);">
         <div class="card-header">
-          <div class="card-title" style="color: var(--purple);">✨ Gemini 3.8 Flash Online AI Key</div>
-          <span class="badge badge-primary">Model: gemini-3.8-flash</span>
+          <div class="card-title" style="color: var(--purple);">✨ Google Gemini Online AI Key</div>
+          <span class="badge badge-primary">Model: Gemini Flash (Multi-Engine)</span>
         </div>
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
           Configure your Google Gemini API key to activate the live AI retail brain. In production, this can also be set via Netlify environment variable <code>GEMINI_API_KEY</code>.
@@ -796,19 +796,37 @@ class AppController {
       return;
     }
 
-    this.toast('info', 'Testing Online...', 'Connecting to gemini-3.8-flash endpoint');
+    this.toast('info', 'Testing Online...', 'Connecting to Google Gemini API');
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${key}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: "Say 'MyDukaan24 Online'" }] }] })
-      });
-      const data = await res.json();
-      if (data.candidates) {
-        this.toast('success', 'Online Verified! ✨', 'Gemini 3.8 Flash is ready and active');
+      const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-3.8-flash'];
+      let verified = false;
+      let modelUsed = '';
+      let lastErrMsg = '';
+
+      for (const m of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "Say 'MyDukaan24 Online'" }] }] })
+          });
+          const data = await res.json();
+          if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+            verified = true;
+            modelUsed = m;
+            break;
+          }
+          if (data.error) lastErrMsg = data.error.message;
+        } catch(err) {
+          lastErrMsg = err.message;
+        }
+      }
+
+      if (verified) {
+        this.toast('success', 'Online Verified! ✨', `Google Gemini is active & connected (${modelUsed})`);
       } else {
-        this.toast('danger', 'API Error', data.error ? data.error.message : 'Invalid Key');
+        this.toast('danger', 'API Error', lastErrMsg || 'Could not connect. Please verify your key at aistudio.google.com');
       }
     } catch (e) {
       this.toast('danger', 'Network Error', e.message);
