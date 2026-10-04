@@ -1,189 +1,53 @@
-# MyDukaan 🏪✨
+# ⚡ MyDukaan Pro — Retail Business OS
 
-> Smart Business Management Platform for Local Shops in India
-
-
-
-## 🚀 About The Project
-
-MyDukaan is a Hackathon project built to solve real-world problems faced by local shop owners and kirana stores in India.
-
-It helps small businesses manage their daily operations digitally through a modern and easy-to-use dashboard.
-
-
+> **The Modern Business OS for Indian Retailers & Kirana Stores**  
+> **Created & Deployed by Mayur Singh** 🇮🇳
 
 ---
 
+## 🌟 Highlights & Architecture
 
-
-## ❗ Problem Statement
-
-Many local businesses still rely on:
-
-- Manual billing
-- Notebook-based inventory tracking
-- No business analytics
-- Poor customer management
-- No digital insights for growth
-
-This creates operational issues and limits business growth.
-
-
+- **⚡ High-Speed POS Terminal**: Instant bill creation in under 5 seconds with cash change calculation, UPI QR, and WhatsApp itemized receipt generator.
+- **📷 Barcode Vision & MRP Detector**: Real camera scanner (`BarcodeDetector` API) + hardware USB scanner listener. Instantly detects product, MRP, and discounted price.
+- **📒 Customer Udhaar Khata**: Ledger tracking with one-click automated WhatsApp payment reminder link.
+- **✨ Gemini 3.8 Flash Dukaan AI**: Smart conversational retail assistant with offline intelligent fallback responses.
+- **📊 Financial Analytics & P&L**: Live SVG weekly revenue charts, operating expenses category breakdown, and net profit margins.
+- **👔 Staff Attendance**: Interactive 31-day daily register with monthly payroll estimator.
+- **💾 100% Offline LocalStorage**: Never loses data. Complete JSON backup & CSV export for Excel.
+- **🚀 Netlify Ready**: Built-in `netlify.toml` and `_redirects` configuration.
 
 ---
 
+## 📁 Modular File Structure
 
-
-## 💡 Solution
-
-MyDukaan digitizes local business operations by providing:
-
-- Smart inventory tracking
-- Digital billing system
-- Customer & employee management
-- Expense tracking
-- Sales analytics
-- Business growth insights
-
-All inside one modern dashboard.
-
-
-
----
-
-
-
-# ✨ Features
-
-### 📦 Smart Inventory Management
-Track products, stock quantity, and low stock alerts in real-time.
-
-### 🧾 Digital Billing System
-Generate invoices and manage customer payments digitally.
-
-### 📊 Business Analytics
-View sales reports, revenue insights, and performance analytics.
-
-### 👥 Customer Management
-Store customer records and manage due payments easily.
-
-### 👨‍💼 Employee Management
-Manage employees, attendance, and payroll details.
-
-### 💸 Expense Tracking
-Track business expenses and financial activities.
-
-### 🔔 Low Stock Alerts
-Get alerts for products running low in inventory.
-
-### 📱 Responsive Dashboard
-Works smoothly across desktop and mobile devices.
-
-
-
----
-
-
-
-# 🖥️ Interface Preview
-
-## Dashboard
-- Sales Overview
-- Profit Tracking
-- Weekly Analytics
-- Quick Actions
-
-## Inventory
-- Product Management
-- Stock Tracking
-- Low Stock Monitoring
-
-## Billing
-- Invoice Generation
-- Payment Records
-- Billing History
-
-## Analytics
-- Revenue Insights
-- Sales Reports
-- Growth Tracking
-
-
-
----
-
-
-
-# 🛠️ Tech Stack
-
-| Technology | Purpose |
-|------------|----------|
-| React | Frontend UI |
-| HTML5 | Structure |
-| CSS3 | Styling |
-| JavaScript | Logic |
-| LocalStorage | Data Storage |
-| Responsive Design | Mobile Support |
-
-
-
-
-# 🎯 Vision
-
-> “India’s next business revolution will begin in small shops.”
-
-MyDukaan aims to empower local businesses with modern digital tools that are simple, affordable, and impactful.
-
-
-
-
-#
+```
+C:\MyDukaan-v4\
+├── index.html            ← Modern SaaS Landing Page
+├── app.html              ← Full MyDukaan Pro POS & ERP Terminal
+├── manifest.json         ← PWA Install Configuration
+├── sw.js                 ← Offline Service Worker
+├── netlify.toml          ← Netlify Deployment Configuration
+├── _redirects            ← Netlify SPA Routing Rules
+├── css/
+│   ├── style.css         ← Global Design System & Theme Engine
+│   ├── components.css    ← POS, Barcode Reticle, Modal & Receipt Styles
+│   └── landing.css       ← Landing Page Stylesheet
+└── js/
+    ├── storage.js        ← LocalStorage DB & Web Audio Sound Engine
+    ├── scanner.js        ← Camera & Hardware Barcode Vision Engine
+    ├── pos.js            ← POS Billing, Live Cart & WhatsApp Invoicing
+    ├── inventory.js      ← Product Management & Stock Alerts
+    ├── khata.js          ← Udhaar Ledger & WhatsApp Due Reminders
+    ├── analytics.js      ← SVG Charts, Profit & Loss Statements
+    ├── staff.js          ← Staff Directory & Daily Attendance Grid
+    ├── ai.js             ← Gemini 3.8 Flash Retail Brain
+    └── app.js            ← Master UI Router & Event Controller
 ```
 
-
-
 ---
 
+## 👨‍💻 Created & Deployed by Mayur Singh
 
-
-# 🚀 Future Improvements
-
-- AI Assistant Integration
-- Voice Billing System
-- Cloud Database
-- GST Reports
-- Multi-Shop Support
-- UPI Payments
-- Advanced Analytics
-- Real-time Sync
-
-
-
----
-
-
-
-# 👨‍💻 Built During Hackathon
-
-Built with passion to solve real problems faced by local businesses in India 🇮🇳
-
-
-
----
-
-
-
-# 📬 Connect
-
-### GitHub
-@mayursingh24
-
-
-
----
-
-
-
-# ⭐ Support
-
-If you like this project, give it a ⭐ on GitHub!
+- **Developer**: Mayur Singh
+- **GitHub**: [@mayursingh24](https://github.com/mayursingh24)
+- **Deployment Platform**: Netlify

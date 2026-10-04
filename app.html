@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MyDukaan Pro — Retail Business OS & POS Terminal</title>
+  <meta name="description" content="AI-Powered POS Billing, Barcode Scanner, and Udhaar Khata for Indian Retailers. Created & Deployed by Mayur Singh." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Left Navigation Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo-icon">⚡</div>
+        <div class="brand-details">
+          <div class="brand-name">
+            MyDukaan <span class="brand-badge">PRO</span>
+          </div>
+          <div class="brand-sub">Modern Business OS</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Billing & Sales</div>
+        <a href="javascript:void(0)" class="nav-link active" data-view="pos" onclick="App.navigate('pos')">
+          <span class="nav-icon">⚡</span>
+          <span>Quick Billing POS</span>
+          <span class="nav-tag nav-tag-green">Live</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="dashboard" onclick="App.navigate('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span>Executive Dashboard</span>
+        </a>
+
+        <div class="nav-section-title">Store Management</div>
+        <a href="javascript:void(0)" class="nav-link" data-view="inventory" onclick="App.navigate('inventory')">
+          <span class="nav-icon">📦</span>
+          <span>Inventory & Stock</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="khata" onclick="App.navigate('khata')">
+          <span class="nav-icon">📒</span>
+          <span>Udhaar Khata</span>
+          <span class="nav-tag nav-tag-amber">Ledger</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="analytics" onclick="App.navigate('analytics')">
+          <span class="nav-icon">📈</span>
+          <span>Analytics & P&L</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="staff" onclick="App.navigate('staff')">
+          <span class="nav-icon">👔</span>
+          <span>Staff & Attendance</span>
+        </a>
+
+        <div class="nav-section-title">Intelligence & Setup</div>
+        <a href="javascript:void(0)" class="nav-link" onclick="DukaanAI.openChatModal()">
+          <span class="nav-icon">✨</span>
+          <span>Dukaan AI Advisor</span>
+          <span class="nav-tag nav-tag-ai">Gemini</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="settings" onclick="App.navigate('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span>Store Settings</span>
+        </a>
+        <a href="index.html" class="nav-link">
+          <span class="nav-icon">🌐</span>
+          <span>Landing Page</span>
+        </a>
+      </nav>
+
+      <!-- Creator Spotlight Footer Card -->
+      <div class="sidebar-footer">
+        <div class="creator-card">
+          <div class="creator-avatar">M</div>
+          <div class="creator-info">
+            <div class="creator-name">
+              Mayur Singh <span style="color: var(--success); font-size: 11px;">✓</span>
+            </div>
+            <div class="creator-role">Lead Creator & Deployer</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Shell -->
+    <div class="app-main">
+      <!-- Sticky Topbar Header -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" onclick="App.toggleMobileSidebar()">☰</button>
+          
+          <div class="search-shortcut-bar" onclick="BarcodeScanner.openScannerModal()">
+            <span>🔍</span>
+            <span>Scan barcode or search...</span>
+            <span class="search-shortcut-kbd">Ctrl+K</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Direct Barcode Camera Trigger Button -->
+          <button class="quick-scan-btn" onclick="BarcodeScanner.openScannerModal()">
+            <span>📷</span>
+            <span>Barcode Scanner</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="topbar-icon-btn" onclick="App.toggleTheme()" title="Toggle Theme">
+            <span id="theme-toggle-icon">🌙</span>
+          </button>
+
+          <!-- AI Assistant Quick Launch -->
+          <button class="topbar-icon-btn" style="color: var(--purple);" onclick="DukaanAI.openChatModal()" title="Ask Dukaan AI">
+            ✨
+          </button>
+
+          <!-- Store Chip -->
+          <div class="shop-chip">
+            <span class="shop-chip-icon">🏪</span>
+            <span class="shop-chip-name">MyDukaan Mart</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic View Mounting Point -->
+      <main class="page-container" id="main-view-container"></main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Dock Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a href="javascript:void(0)" class="mobile-nav-item active" data-view="pos" onclick="App.navigate('pos')">
+      <span class="mobile-nav-icon">⚡</span>
+      <span>Billing</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-view="inventory" onclick="App.navigate('inventory')">
+      <span class="mobile-nav-icon">📦</span>
+      <span>Stock</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" onclick="BarcodeScanner.openScannerModal()" style="color: var(--primary);">
+      <span class="mobile-nav-icon">📷</span>
+      <span>Scan</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-view="khata" onclick="App.navigate('khata')">
+      <span class="mobile-nav-icon">📒</span>
+      <span>Khata</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-view="settings" onclick="App.navigate('settings')">
+      <span class="mobile-nav-icon">⚙️</span>
+      <span>More</span>
+    </a>
+  </nav>
+
+  <!-- Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/storage.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/pos.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/khata.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/staff.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Service Worker Registration for PWA Offline Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('[PWA] Service Worker active ✓ Scope:', reg.scope))
+          .catch(err => console.log('[PWA] Service worker fallback:', err));
+      });
+    }
+  </script>
+</body>
+</html>
