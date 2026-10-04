@@ -168,7 +168,7 @@ class AppController {
             <span class="kpi-title">Today's Sales</span>
             <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">💵</div>
           </div>
-          <div class="kpi-val">₹${todaySales.toLocaleString('en-IN')}</div>
+          <div class="kpi-val" data-kpi-target="${todaySales}" data-kpi-prefix="₹">₹0</div>
           <div class="kpi-trend" style="color: var(--success);">${todayInvoices.length} bills billed today</div>
         </div>
 
@@ -177,7 +177,7 @@ class AppController {
             <span class="kpi-title">Total Products</span>
             <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">📦</div>
           </div>
-          <div class="kpi-val">${products.length}</div>
+          <div class="kpi-val" data-kpi-target="${products.length}">0</div>
           <div class="kpi-trend" style="color: var(--text-muted);">${products.reduce((s, p) => s + p.stock, 0)} total units in store</div>
         </div>
 
@@ -186,7 +186,7 @@ class AppController {
             <span class="kpi-title">Low Stock</span>
             <div class="kpi-icon-badge" style="background: var(--warning-light); color: var(--warning);">⚠️</div>
           </div>
-          <div class="kpi-val" style="color: ${lowStock.length ? 'var(--warning)' : 'var(--text-primary)'};">${lowStock.length}</div>
+          <div class="kpi-val" data-kpi-target="${lowStock.length}" style="color: ${lowStock.length ? 'var(--warning)' : 'var(--text-primary)'};">0</div>
           <div class="kpi-trend" style="color: var(--warning);">${lowStock.length ? 'Needs reordering' : 'Stock healthy'}</div>
         </div>
 
@@ -195,7 +195,7 @@ class AppController {
             <span class="kpi-title">Pending Udhaar</span>
             <div class="kpi-icon-badge" style="background: var(--danger-light); color: var(--danger);">📒</div>
           </div>
-          <div class="kpi-val" style="color: ${totalUdhaar > 0 ? 'var(--danger)' : 'var(--success)'};">₹${totalUdhaar.toLocaleString('en-IN')}</div>
+          <div class="kpi-val" data-kpi-target="${totalUdhaar}" data-kpi-prefix="₹" style="color: ${totalUdhaar > 0 ? 'var(--danger)' : 'var(--success)'};">₹0</div>
           <div class="kpi-trend" style="color: var(--danger);">${customers.filter(c => c.balanceDue > 0).length} debtors</div>
         </div>
 
@@ -204,7 +204,7 @@ class AppController {
             <span class="kpi-title">Customers</span>
             <div class="kpi-icon-badge" style="background: var(--purple-light); color: var(--purple);">👥</div>
           </div>
-          <div class="kpi-val">${customers.length}</div>
+          <div class="kpi-val" data-kpi-target="${customers.length}">0</div>
           <div class="kpi-trend" style="color: var(--text-muted);">Registered khata profiles</div>
         </div>
 
@@ -213,7 +213,7 @@ class AppController {
             <span class="kpi-title">Employees</span>
             <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">👔</div>
           </div>
-          <div class="kpi-val">${staff.length}</div>
+          <div class="kpi-val" data-kpi-target="${staff.length}">0</div>
           <div class="kpi-trend" style="color: var(--text-muted);">Store team members</div>
         </div>
       </div>
@@ -292,6 +292,34 @@ class AppController {
         </div>
       </div>
     `;
+
+    this.animateKpiNumbers();
+  }
+
+  // Animate Dashboard KPI Counters
+  animateKpiNumbers() {
+    const kpiEls = document.querySelectorAll('[data-kpi-target]');
+    kpiEls.forEach(el => {
+      const target = parseFloat(el.dataset.kpiTarget) || 0;
+      const prefix = el.dataset.kpiPrefix || '';
+      const suffix = el.dataset.kpiSuffix || '';
+      const duration = 1000;
+      let startTime = null;
+
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(easeOut * target);
+        el.textContent = `${prefix}${current.toLocaleString('en-IN')}${suffix}`;
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          el.textContent = `${prefix}${target.toLocaleString('en-IN')}${suffix}`;
+        }
+      }
+      requestAnimationFrame(step);
+    });
   }
 
   // 2. POS BILLING TERMINAL VIEW

@@ -544,3 +544,486 @@ a {
     flex-direction: column;
   }
 }
+
+/* ==========================================================================
+   ADVANCED ANIMATIONS & MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* 1. Button Gloss Shine Sweep */
+.lp-btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.lp-btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: rotate(30deg);
+  transition: all 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.lp-btn-primary:hover::after {
+  left: 140%;
+}
+
+/* 2. Spotlight Cursor Glow on Cards */
+.lp-feat-card, .lp-mockup-frame, .comparison-card {
+  position: relative;
+}
+.lp-feat-card::before, .comparison-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99, 102, 241, 0.16), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.lp-feat-card:hover::before, .comparison-card:hover::before {
+  opacity: 1;
+}
+.lp-feat-card > *, .comparison-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 3. Floating Animation & Pulse Glow */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.float-anim {
+  animation: floatSlow 4.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.75);
+    transform: scale(1.05);
+  }
+}
+.pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* 4. Shimmering Border Keyframes */
+@keyframes borderShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.shimmer-border {
+  border: 1px solid transparent !important;
+  background-image: linear-gradient(#0E131F, #0E131F), linear-gradient(90deg, #6366F1, #10B981, #8B5CF6, #6366F1);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: borderShimmer 6s linear infinite;
+}
+
+/* 5. Barcode Scanner Laser Animation */
+@keyframes laserSweep {
+  0% { top: 0%; opacity: 0.2; }
+  50% { top: 100%; opacity: 1; }
+  100% { top: 0%; opacity: 0.2; }
+}
+.laser-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #EF4444, #F43F5E, transparent);
+  box-shadow: 0 0 12px #EF4444, 0 0 24px #EF4444;
+  pointer-events: none;
+  z-index: 10;
+  animation: laserSweep 1.8s ease-in-out infinite;
+}
+
+/* 6. Click Pop / Flash Effect */
+@keyframes cardAddPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.96); background-color: rgba(16, 185, 129, 0.25); }
+  100% { transform: scale(1); }
+}
+.pop-active {
+  animation: cardAddPop 0.25s ease-out;
+}
+
+/* 7. Scroll Reveal */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   INTERACTIVE KIRANA POS PLAYGROUND STYLES
+   ========================================================================== */
+.lp-sim-wrapper {
+  padding: 24px;
+  background: #090D16;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lp-sim-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0E131F;
+  padding: 10px 16px;
+  border-radius: var(--lp-radius-md);
+  border: 1px solid var(--lp-border);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lp-sim-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .lp-sim-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Products Shelf */
+.lp-sim-shelf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.lp-sim-shelf-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lp-sim-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.lp-sim-product-card {
+  background: #141B2D;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius-md);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+}
+.lp-sim-product-card:hover {
+  border-color: #6366F1;
+  transform: translateY(-2px);
+  background: #1A243C;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.lp-sim-product-card:active {
+  transform: scale(0.97);
+}
+
+.lp-sim-prod-icon {
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+.lp-sim-prod-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #F8FAFC;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+.lp-sim-prod-meta {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--lp-text-muted);
+  margin-bottom: 8px;
+}
+.lp-sim-prod-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.lp-sim-price {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 800;
+  color: #10B981;
+}
+.lp-sim-mrp {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--lp-text-muted);
+  text-decoration: line-through;
+  margin-left: 4px;
+}
+.lp-sim-add-btn {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+.lp-sim-product-card:hover .lp-sim-add-btn {
+  background: #6366F1;
+  color: #fff;
+}
+
+/* Active Bill / Cart Panel */
+.lp-sim-cart-panel {
+  background: #141B2D;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-sim-cart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--lp-border);
+  margin-bottom: 12px;
+}
+
+.lp-sim-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.lp-sim-cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+.lp-sim-item-title {
+  font-weight: 600;
+  color: #F8FAFC;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lp-sim-qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lp-sim-qty-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: #1F2B47;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lp-sim-qty-btn:hover {
+  background: #6366F1;
+}
+
+.lp-sim-totals-box {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lp-sim-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--lp-text-secondary);
+}
+.lp-sim-grand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lp-sim-grand-val {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 900;
+  color: #10B981;
+}
+
+.lp-sim-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.lp-sim-btn {
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.lp-sim-btn-upi {
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.lp-sim-btn-upi:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+}
+.lp-sim-btn-print {
+  background: #1F2B47;
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.lp-sim-btn-print:hover {
+  background: #27375B;
+}
+
+/* AI Dynamic Advice Box */
+.lp-sim-ai-box {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--lp-radius-md);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.3s ease;
+}
+.lp-sim-ai-spark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+.lp-sim-ai-text {
+  font-size: 12.5px;
+  color: #CBD5E1;
+  line-height: 1.5;
+}
+.lp-sim-ai-text strong {
+  color: #A5B4FC;
+}
+
+/* Modal Popups on Playground (Receipt & UPI) */
+.lp-sim-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.lp-sim-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.lp-sim-modal-content {
+  background: #0E131F;
+  border: 1px solid var(--lp-border);
+  border-radius: 18px;
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+  transform: translateY(20px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lp-sim-modal-overlay.active .lp-sim-modal-content {
+  transform: translateY(0);
+}
+.lp-sim-receipt-paper {
+  background: #FFFFFF;
+  color: #111827;
+  padding: 20px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+.lp-sim-receipt-paper::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: radial-gradient(circle, transparent, transparent 50%, #FFFFFF 50%, #FFFFFF 100%);
+  background-size: 12px 12px;
+}

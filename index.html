@@ -99,70 +99,295 @@
               </div>
             </div>
 
-            <!-- Dashboard Mockup Content -->
-            <div style="padding: 24px; background: #090D16; display: flex; flex-direction: column; gap: 16px;">
-              <!-- 4-Stat Header Grid -->
+            <!-- INTERACTIVE KIRANA POS PLAYGROUND -->
+            <div class="lp-sim-wrapper">
+              <!-- Simulator Control & Status Bar -->
+              <div class="lp-sim-top-bar">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="pulse-glow" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+                  <span style="font-size: 12px; font-weight: 700; color: #F8FAFC; font-family: var(--font-heading);">
+                    ⚡ Interactive Kirana POS Simulator
+                  </span>
+                  <span style="font-size: 11px; color: var(--lp-text-muted); font-family: var(--font-mono);">
+                    (Try clicking items below)
+                  </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button id="sim-audio-btn" class="lp-sim-btn" style="background: rgba(255,255,255,0.06); color: #CBD5E1; padding: 4px 10px; font-size: 11px;" onclick="SimPOS.toggleAudio()">
+                    🔊 Sound: ON
+                  </button>
+                  <button class="lp-sim-btn" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; font-size: 11px;" onclick="SimPOS.simulateBarcodeGun()">
+                    🏷️ Simulate Barcode Gun
+                  </button>
+                  <button class="lp-sim-btn" style="background: rgba(255,255,255,0.06); color: var(--lp-text-secondary); padding: 4px 10px; font-size: 11px;" onclick="SimPOS.resetCart()">
+                    ↺ Reset
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4-Stat Header Grid with Rolling Animated Counters -->
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                <div style="background: #141B2D; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
                   <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Today's Revenue</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #10B981; margin-top: 4px; font-family: var(--font-mono);">₹14,850</div>
+                  <div style="font-size: 22px; font-weight: 800; color: #10B981; margin-top: 4px; font-family: var(--font-mono);" id="kpi-rev-counter">₹14,850</div>
                   <div style="font-size: 11px; color: #10B981; margin-top: 2px;">+18% vs yesterday</div>
                 </div>
-                <div style="background: #141B2D; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
                   <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Catalog Products</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-top: 4px; font-family: var(--font-mono);">128 SKUs</div>
-                  <div style="font-size: 11px; color: #818CF8; margin-top: 2px;">Barcode Camera Vision Active</div>
+                  <div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-top: 4px; font-family: var(--font-mono);" id="kpi-sku-counter">128 SKUs</div>
+                  <div style="font-size: 11px; color: #818CF8; margin-top: 2px;">Barcode Vision 0.4s</div>
                 </div>
-                <div style="background: #141B2D; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
                   <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Low Stock Warning</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #F59E0B; margin-top: 4px; font-family: var(--font-mono);">3 Items</div>
+                  <div style="font-size: 22px; font-weight: 800; color: #F59E0B; margin-top: 4px; font-family: var(--font-mono);" id="kpi-low-counter">3 Items</div>
                   <div style="font-size: 11px; color: #F59E0B; margin-top: 2px;">Needs wholesale restock</div>
                 </div>
-                <div style="background: #141B2D; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
                   <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Pending Udhaar</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #F43F5E; margin-top: 4px; font-family: var(--font-mono);">₹5,700</div>
+                  <div style="font-size: 22px; font-weight: 800; color: #F43F5E; margin-top: 4px; font-family: var(--font-mono);" id="kpi-udh-counter">₹5,700</div>
                   <div style="font-size: 11px; color: #F43F5E; margin-top: 2px;">4 Customer balances</div>
                 </div>
               </div>
 
-              <!-- POS Quick Checkout & AI Box -->
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
-                <div style="background: #141B2D; border-radius: 12px; padding: 18px; border: 1px solid rgba(255,255,255,0.06);">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <span style="font-weight: 700; font-size: 14px; color: #fff; font-family: var(--font-heading);">⚡ Active Bill: Ramesh Sharma</span>
-                    <span style="font-size: 11px; font-family: var(--font-mono); color: #818CF8;">INV-1002</span>
+              <!-- Simulator 2-Column POS Workspace -->
+              <div class="lp-sim-layout" id="sim-workspace" style="position: relative; overflow: hidden;">
+                <div id="sim-laser" style="display: none;" class="laser-beam"></div>
+
+                <!-- Shelf: Clickable FMCG Products -->
+                <div>
+                  <div class="lp-sim-shelf-header">
+                    <span class="lp-sim-shelf-title">
+                      📦 Kirana Shelf Items <span style="font-size: 11px; font-weight: 400; color: #94A3B8;">(Click to scan item)</span>
+                    </span>
+                    <span style="font-size: 11px; font-family: var(--font-mono); color: #10B981;">
+                      Instant MRP & Barcode
+                    </span>
                   </div>
-                  <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
-                    <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
-                      <span>🌾 Aashirvaad Chakki Atta 5kg (x1)</span>
-                      <strong style="font-family: var(--font-mono);">₹235</strong>
+
+                  <div class="lp-sim-products-grid">
+                    <!-- Product 1 -->
+                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p1')">
+                      <div>
+                        <div class="lp-sim-prod-icon">🌾</div>
+                        <div class="lp-sim-prod-name">Aashirvaad Chakki Atta 5kg</div>
+                        <div class="lp-sim-prod-meta">EAN: 8901030383847</div>
+                      </div>
+                      <div class="lp-sim-prod-price-row">
+                        <div>
+                          <span class="lp-sim-price">₹235</span>
+                          <span class="lp-sim-mrp">₹270</span>
+                        </div>
+                        <span class="lp-sim-add-btn">+ ADD</span>
+                      </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
-                      <span>🫙 Fortune Sunflower Oil 1L (x2)</span>
-                      <strong style="font-family: var(--font-mono);">₹310</strong>
+
+                    <!-- Product 2 -->
+                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p2')">
+                      <div>
+                        <div class="lp-sim-prod-icon">🫙</div>
+                        <div class="lp-sim-prod-name">Fortune Sunlite Oil 1L</div>
+                        <div class="lp-sim-prod-meta">EAN: 8906007280014</div>
+                      </div>
+                      <div class="lp-sim-prod-price-row">
+                        <div>
+                          <span class="lp-sim-price">₹155</span>
+                          <span class="lp-sim-mrp">₹180</span>
+                        </div>
+                        <span class="lp-sim-add-btn">+ ADD</span>
+                      </div>
                     </div>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15);">
-                    <span style="font-weight: 700;">Grand Total Payable</span>
-                    <span style="font-size: 18px; font-weight: 800; color: #10B981; font-family: var(--font-mono);">₹545</span>
+
+                    <!-- Product 3 -->
+                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p3')">
+                      <div>
+                        <div class="lp-sim-prod-icon">🧈</div>
+                        <div class="lp-sim-prod-name">Amul Butter 500g</div>
+                        <div class="lp-sim-prod-meta">EAN: 8901262010057</div>
+                      </div>
+                      <div class="lp-sim-prod-price-row">
+                        <div>
+                          <span class="lp-sim-price">₹275</span>
+                          <span class="lp-sim-mrp">₹290</span>
+                        </div>
+                        <span class="lp-sim-add-btn">+ ADD</span>
+                      </div>
+                    </div>
+
+                    <!-- Product 4 -->
+                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p4')">
+                      <div>
+                        <div class="lp-sim-prod-icon">☕</div>
+                        <div class="lp-sim-prod-name">Tata Tea Gold 500g</div>
+                        <div class="lp-sim-prod-meta">EAN: 8901052002139</div>
+                      </div>
+                      <div class="lp-sim-prod-price-row">
+                        <div>
+                          <span class="lp-sim-price">₹310</span>
+                          <span class="lp-sim-mrp">₹350</span>
+                        </div>
+                        <span class="lp-sim-add-btn">+ ADD</span>
+                      </div>
+                    </div>
+
+                    <!-- Product 5 -->
+                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p5')">
+                      <div>
+                        <div class="lp-sim-prod-icon">🧼</div>
+                        <div class="lp-sim-prod-name">Surf Excel Quick Wash 1kg</div>
+                        <div class="lp-sim-prod-meta">EAN: 8901030004926</div>
+                      </div>
+                      <div class="lp-sim-prod-price-row">
+                        <div>
+                          <span class="lp-sim-price">₹140</span>
+                          <span class="lp-sim-mrp">₹160</span>
+                        </div>
+                        <span class="lp-sim-add-btn">+ ADD</span>
+                      </div>
+                    </div>
+
+                    <!-- Product 6 -->
+                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p6')">
+                      <div>
+                        <div class="lp-sim-prod-icon">🍫</div>
+                        <div class="lp-sim-prod-name">Cadbury Dairy Milk Silk</div>
+                        <div class="lp-sim-prod-meta">EAN: 7622201438902</div>
+                      </div>
+                      <div class="lp-sim-prod-price-row">
+                        <div>
+                          <span class="lp-sim-price">₹90</span>
+                          <span class="lp-sim-mrp">₹105</span>
+                        </div>
+                        <span class="lp-sim-add-btn">+ ADD</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(139, 92, 246, 0.1)); border-radius: 12px; padding: 18px; border: 1px solid rgba(99, 102, 241, 0.3); display: flex; flex-direction: column; justify-content: space-between;">
-                  <div>
-                    <div style="font-weight: 800; font-size: 13.5px; color: #A5B4FC; display: flex; align-items: center; gap: 6px; font-family: var(--font-heading);">
-                      ✨ MyDukaan24 AI Advice
+                <!-- Active Bill & Interactive Cart -->
+                <div class="lp-sim-cart-panel">
+                  <div class="lp-sim-cart-head">
+                    <div>
+                      <div style="font-weight: 700; font-size: 13.5px; color: #fff; font-family: var(--font-heading);">
+                        ⚡ Bill: Ramesh Sharma
+                      </div>
+                      <div style="font-size: 11px; font-family: var(--font-mono); color: var(--lp-text-muted);">
+                        Customer ID: #CUST-104 • INV-2026
+                      </div>
                     </div>
-                    <p style="font-size: 12px; color: #CBD5E1; margin-top: 8px; line-height: 1.6;">
-                      "Toor Dal is out of stock. Ramesh Sharma usually buys 2kg every Tuesday. Restock before tomorrow morning to capture ₹350 margin."
-                    </p>
+                    <span class="lp-brand-tag" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border-color: rgba(16, 185, 129, 0.3);">
+                      Active Cart (<span id="sim-cart-count">2</span>)
+                    </span>
                   </div>
-                  <a href="app.html" class="lp-btn-primary" style="padding: 9px 14px; font-size: 12px; justify-content: center; margin-top: 12px;">
-                    ⚡ Launch Live Application
-                  </a>
+
+                  <!-- Dynamic Item List -->
+                  <div class="lp-sim-items-list" id="sim-cart-items">
+                    <!-- Populated by JS -->
+                  </div>
+
+                  <!-- Live Totals Calculation -->
+                  <div class="lp-sim-totals-box">
+                    <div class="lp-sim-total-row">
+                      <span>Total MRP:</span>
+                      <span id="sim-mrp-total" style="font-family: var(--font-mono); text-decoration: line-through;">₹450</span>
+                    </div>
+                    <div class="lp-sim-total-row" style="color: #10B981;">
+                      <span>Customer Savings:</span>
+                      <span id="sim-discount-val" style="font-family: var(--font-mono); font-weight: 700;">-₹60</span>
+                    </div>
+                    <div class="lp-sim-grand-row">
+                      <span style="font-weight: 700; color: #fff; font-size: 13px;">Grand Total Payable:</span>
+                      <span class="lp-sim-grand-val" id="sim-grand-total">₹390</span>
+                    </div>
+                  </div>
+
+                  <!-- Interactive Actions (QR Code, Receipt, Launch App) -->
+                  <div class="lp-sim-actions-grid">
+                    <button class="lp-sim-btn lp-sim-btn-upi" onclick="SimPOS.openUPIModal()">
+                      📱 Pay via UPI QR
+                    </button>
+                    <button class="lp-sim-btn lp-sim-btn-print" onclick="SimPOS.openReceiptModal()">
+                      🖨️ Thermal Slip
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Gemini 3.8 Flash Retail Intelligence Bubble -->
+              <div class="lp-sim-ai-box">
+                <div class="lp-sim-ai-spark">✨</div>
+                <div>
+                  <div style="font-size: 12.5px; font-weight: 800; color: #A5B4FC; font-family: var(--font-heading);">
+                    MyDukaan24 AI Retail Intelligence (Live Context)
+                  </div>
+                  <div class="lp-sim-ai-text" id="sim-ai-advice">
+                    "Atta & Sunflower oil combo detected. Ramesh Sharma usually buys Toor Dal every Tuesday — recommend 1kg packet for an extra ₹130 store revenue."
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Simulator UPI QR Modal -->
+        <div class="lp-sim-modal-overlay" id="sim-upi-modal" onclick="if(event.target===this) SimPOS.closeModals()">
+          <div class="lp-sim-modal-content" style="text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3 style="font-family: var(--font-heading); font-size: 16px; color: #fff;">📱 Live Dynamic UPI Payment</h3>
+              <button onclick="SimPOS.closeModals()" style="color: var(--lp-text-muted); font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+            
+            <div style="background: #fff; padding: 14px; border-radius: 12px; display: inline-block; margin-bottom: 14px;">
+              <img id="sim-upi-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=mayursingh24@upi&pn=MyDukaan24&am=390" alt="UPI QR Code" style="width: 170px; height: 170px; display: block;" />
+            </div>
+
+            <div style="font-size: 14px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-bottom: 6px;">
+              Amount to Pay: <span id="sim-modal-upi-amt">₹390</span>
+            </div>
+            <div style="font-size: 12px; color: var(--lp-text-secondary); margin-bottom: 16px;">
+              Scan using PhonePe, Google Pay, Paytm, or BHIM UPI
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button class="lp-btn-primary" style="flex: 1; justify-content: center; font-size: 12.5px; background: #10B981;" onclick="SimPOS.simulatePaymentSuccess()">
+                ✓ Simulate Customer Payment
+              </button>
+              <button class="lp-btn-secondary" style="padding: 10px 14px; font-size: 12.5px;" onclick="SimPOS.closeModals()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulator Thermal Slip Modal -->
+        <div class="lp-sim-modal-overlay" id="sim-receipt-modal" onclick="if(event.target===this) SimPOS.closeModals()">
+          <div class="lp-sim-modal-content" style="max-width: 340px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 12px; font-weight: 700; color: #94A3B8;">80mm Thermal Slip Preview</span>
+              <button onclick="SimPOS.closeModals()" style="color: var(--lp-text-muted); font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+
+            <div class="lp-sim-receipt-paper" id="sim-receipt-body">
+              <div style="text-align: center; border-bottom: 1px dashed #9CA3AF; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px;">MYDUKAAN24 STORE</div>
+                <div style="font-size: 10px; color: #4B5563;">Hazratganj, Lucknow (UP) • GSTIN: 09AAACM1234F1Z5</div>
+                <div style="font-size: 10px; color: #4B5563;">Date: Today • Cashier: Mayur Singh</div>
+              </div>
+              <div id="sim-receipt-items-table" style="margin-bottom: 8px;">
+                <!-- Populated by JS -->
+              </div>
+              <div style="border-top: 1px dashed #9CA3AF; padding-top: 6px; font-weight: 800; display: flex; justify-content: space-between; font-size: 12px;">
+                <span>TOTAL PAID:</span>
+                <span id="sim-receipt-grand">₹390</span>
+              </div>
+              <div style="text-align: center; margin-top: 12px; font-size: 9px; color: #6B7280;">
+                *** THANK YOU FOR SHOPPING! ***<br>
+                Powered by MyDukaan24 • Mayur Singh
+              </div>
+            </div>
+
+            <button class="lp-btn-primary" style="width: 100%; justify-content: center; margin-top: 14px; font-size: 12px;" onclick="SimPOS.closeModals()">
+              Done Viewing Slip
+            </button>
           </div>
         </div>
       </section>
@@ -389,5 +614,340 @@
       </div>
     </footer>
   </div>
+
+  <!-- INTERACTIVE PLAYGROUND & ANIMATIONS JAVASCRIPT -->
+  <script>
+    // 1. Audio Synthesizer (Zero-latency Web Audio API)
+    const SimAudio = {
+      enabled: true,
+      ctx: null,
+      getCtx() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        return this.ctx;
+      },
+      beep(freq = 1850, duration = 0.08) {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        } catch(e) {}
+      },
+      chime() {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.08 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.08);
+            osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
+          });
+        } catch(e) {}
+      }
+    };
+
+    // 2. Interactive Kirana POS Simulator Controller
+    const SimPOS = {
+      products: {
+        p1: { id: 'p1', name: 'Aashirvaad Chakki Atta 5kg', price: 235, mrp: 270, icon: '🌾' },
+        p2: { id: 'p2', name: 'Fortune Sunlite Oil 1L', price: 155, mrp: 180, icon: '🫙' },
+        p3: { id: 'p3', name: 'Amul Butter 500g', price: 275, mrp: 290, icon: '🧈' },
+        p4: { id: 'p4', name: 'Tata Tea Gold 500g', price: 310, mrp: 350, icon: '☕' },
+        p5: { id: 'p5', name: 'Surf Excel Quick Wash 1kg', price: 140, mrp: 160, icon: '🧼' },
+        p6: { id: 'p6', name: 'Cadbury Dairy Milk Silk', price: 90, mrp: 105, icon: '🍫' }
+      },
+      cart: [
+        { id: 'p1', qty: 1 },
+        { id: 'p2', qty: 1 }
+      ],
+      aiQuotes: {
+        p1: "🌾 Atta detected: 74% of buyers also take 1L Cooking Oil or Ghee. Suggest Fortune Sunlite for +₹25 margin.",
+        p2: "🫙 Sunflower Oil detected: Current batch has 8 months expiry. High-turnover Kirana essential.",
+        p3: "🧈 Butter in bill: Ramesh Sharma often takes Britannia Bread on Tuesdays. Recommend breakfast pairing.",
+        p4: "☕ Premium Tea: Customer appreciates quality. Offer festive discount on 1kg pack next week.",
+        p5: "🧼 Detergent added: Suggest fabric conditioner pouch near billing counter for impulse buy.",
+        p6: "🍫 Silk chocolate: Ramesh has kids! High margin confectionery item (+28% retail margin)."
+      },
+
+      init() {
+        this.renderCart();
+      },
+
+      toggleAudio() {
+        SimAudio.enabled = !SimAudio.enabled;
+        const btn = document.getElementById('sim-audio-btn');
+        if (btn) {
+          btn.textContent = SimAudio.enabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+          btn.style.color = SimAudio.enabled ? '#CBD5E1' : '#F87171';
+        }
+      },
+
+      addItem(id) {
+        SimAudio.beep(1950, 0.08);
+        const item = this.cart.find(i => i.id === id);
+        if (item) {
+          item.qty++;
+        } else {
+          this.cart.push({ id, qty: 1 });
+        }
+        this.renderCart();
+        this.updateAIAdvice(id);
+      },
+
+      changeQty(id, delta) {
+        const item = this.cart.find(i => i.id === id);
+        if (!item) return;
+        item.qty += delta;
+        if (item.qty <= 0) {
+          this.cart = this.cart.filter(i => i.id !== id);
+        }
+        SimAudio.beep(delta > 0 ? 1950 : 1200, 0.06);
+        this.renderCart();
+      },
+
+      resetCart() {
+        this.cart = [{ id: 'p1', qty: 1 }];
+        SimAudio.beep(1400, 0.1);
+        this.renderCart();
+      },
+
+      simulateBarcodeGun() {
+        const laser = document.getElementById('sim-laser');
+        if (laser) {
+          laser.style.display = 'block';
+          setTimeout(() => {
+            laser.style.display = 'none';
+          }, 800);
+        }
+
+        const keys = Object.keys(this.products);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        this.addItem(randomKey);
+      },
+
+      updateAIAdvice(lastId) {
+        const adviceEl = document.getElementById('sim-ai-advice');
+        if (!adviceEl) return;
+        adviceEl.innerHTML = this.aiQuotes[lastId] || "Cart updated. MyDukaan AI is monitoring margin, stock thresholds, and customer purchase cadence.";
+      },
+
+      renderCart() {
+        const container = document.getElementById('sim-cart-items');
+        const countBadge = document.getElementById('sim-cart-count');
+        const mrpEl = document.getElementById('sim-mrp-total');
+        const discEl = document.getElementById('sim-discount-val');
+        const grandEl = document.getElementById('sim-grand-total');
+
+        if (!container) return;
+
+        let totalMrp = 0;
+        let grandTotal = 0;
+        let totalUnits = 0;
+
+        if (this.cart.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 28px 10px; color: var(--lp-text-muted); font-size: 12px;">
+              Cart is empty. Click any Kirana item on the left to start billing!
+            </div>
+          `;
+        } else {
+          container.innerHTML = this.cart.map(item => {
+            const p = this.products[item.id];
+            if (!p) return '';
+            const linePrice = p.price * item.qty;
+            const lineMrp = p.mrp * item.qty;
+            totalMrp += lineMrp;
+            grandTotal += linePrice;
+            totalUnits += item.qty;
+
+            return `
+              <div class="lp-sim-cart-item pop-active">
+                <div class="lp-sim-item-title">
+                  <span>${p.icon}</span>
+                  <div>
+                    <div style="color: #fff;">${p.name}</div>
+                    <div style="font-size: 10px; color: var(--lp-text-muted); font-family: var(--font-mono);">
+                      ₹${p.price} × ${item.qty}
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-family: var(--font-mono); font-weight: 700; color: #10B981;">₹${linePrice}</span>
+                  <div class="lp-sim-qty-controls">
+                    <button class="lp-sim-qty-btn" onclick="SimPOS.changeQty('${item.id}', -1)">−</button>
+                    <span style="font-size: 11px; font-weight: 700; min-width: 14px; text-align: center;">${item.qty}</span>
+                    <button class="lp-sim-qty-btn" onclick="SimPOS.changeQty('${item.id}', 1)">+</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        const savings = Math.max(0, totalMrp - grandTotal);
+        if (countBadge) countBadge.textContent = totalUnits;
+        if (mrpEl) mrpEl.textContent = `₹${totalMrp}`;
+        if (discEl) discEl.textContent = `-₹${savings}`;
+        if (grandEl) grandEl.textContent = `₹${grandTotal}`;
+
+        this.currentTotal = grandTotal;
+        this.currentSavings = savings;
+      },
+
+      openUPIModal() {
+        const modal = document.getElementById('sim-upi-modal');
+        const amtEl = document.getElementById('sim-modal-upi-amt');
+        const qrImg = document.getElementById('sim-upi-qr-img');
+        const amt = this.currentTotal || 390;
+
+        if (amtEl) amtEl.textContent = `₹${amt}`;
+        if (qrImg) {
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=mayursingh24@upi%26pn=MyDukaan24%26am=${amt}`;
+        }
+        if (modal) modal.classList.add('active');
+        SimAudio.beep(1600, 0.05);
+      },
+
+      simulatePaymentSuccess() {
+        SimAudio.chime();
+        const amt = this.currentTotal || 390;
+        const modalContent = document.querySelector('#sim-upi-modal .lp-sim-modal-content');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div style="text-align: center; padding: 24px 10px;">
+              <div style="font-size: 48px; margin-bottom: 12px;" class="pulse-glow">✅</div>
+              <h3 style="font-family: var(--font-heading); font-size: 20px; color: #10B981; margin-bottom: 6px;">
+                ₹${amt} Received via PhonePe!
+              </h3>
+              <p style="font-size: 13px; color: #94A3B8; margin-bottom: 18px;">
+                Customer Ramesh Sharma paid successfully. Invoice INV-2026 marked PAID.
+              </p>
+              <button class="lp-btn-primary" style="justify-content: center; width: 100%;" onclick="SimPOS.closeModals()">
+                Continue Billing
+              </button>
+            </div>
+          `;
+        }
+        setTimeout(() => {
+          this.closeModals();
+        }, 3200);
+      },
+
+      openReceiptModal() {
+        const modal = document.getElementById('sim-receipt-modal');
+        const table = document.getElementById('sim-receipt-items-table');
+        const grandEl = document.getElementById('sim-receipt-grand');
+
+        if (table) {
+          table.innerHTML = this.cart.map(item => {
+            const p = this.products[item.id];
+            if (!p) return '';
+            return `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>${p.name.substring(0, 18)} (x${item.qty})</span>
+                <span>₹${p.price * item.qty}</span>
+              </div>
+            `;
+          }).join('');
+        }
+
+        if (grandEl) grandEl.textContent = `₹${this.currentTotal || 390}`;
+        if (modal) modal.classList.add('active');
+        SimAudio.beep(1200, 0.05);
+      },
+
+      closeModals() {
+        document.querySelectorAll('.lp-sim-modal-overlay').forEach(m => m.classList.remove('active'));
+      }
+    };
+
+    // 3. Rolling Animated Number Counters
+    function animateCounter(el, target, prefix = '', suffix = '', duration = 1600) {
+      if (!el) return;
+      let startTime = null;
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(easeOut * target);
+        el.textContent = `${prefix}${current.toLocaleString('en-IN')}${suffix}`;
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          el.textContent = `${prefix}${target.toLocaleString('en-IN')}${suffix}`;
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    // 4. Spotlight Mouse Follower on Cards
+    document.addEventListener('pointermove', (e) => {
+      const cards = document.querySelectorAll('.lp-feat-card, .spotlight-card, .comparison-card');
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
+
+    // 5. Scroll Reveal & Counter Triggering
+    window.addEventListener('DOMContentLoaded', () => {
+      SimPOS.init();
+
+      // Trigger metric animation when simulator enters viewport
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateCounter(document.getElementById('kpi-rev-counter'), 14850, '₹', '');
+            animateCounter(document.getElementById('kpi-sku-counter'), 128, '', ' SKUs');
+            animateCounter(document.getElementById('kpi-low-counter'), 3, '', ' Items');
+            animateCounter(document.getElementById('kpi-udh-counter'), 5700, '₹', '');
+            obs.disconnect();
+          }
+        });
+      }, { threshold: 0.25 });
+
+      const previewEl = document.getElementById('preview');
+      if (previewEl) observer.observe(previewEl);
+
+      // Section Scroll Reveals
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-active');
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.lp-section, .lp-feat-card, .comparison-card').forEach(el => {
+        el.classList.add('reveal-init');
+        revealObserver.observe(el);
+      });
+    });
+  </script>
 </body>
 </html>
