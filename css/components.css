@@ -478,6 +478,27 @@
   border-radius: var(--radius-md);
 }
 
+/* Google Search Barcode Lookup Animation */
+.google-rainbow-bar {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, #4285F4, #EA4335, #FBBC05, #34A853, #4285F4);
+  background-size: 200% 100%;
+  border-radius: 99px;
+  animation: googleRainbow 1.4s infinite linear, googleSlide 1.6s infinite ease-in-out;
+}
+
+@keyframes googleRainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes googleSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(200%); }
+}
+
 /* Modals & Dialogs */
 .modal-backdrop {
   position: fixed;

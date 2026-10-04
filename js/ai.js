@@ -539,6 +539,121 @@ ${storeContext}`;
     App.toast('success', 'Gemini AI Online!', 'Key saved successfully');
   }
 
+  // Lookup barcode details online using Netlify serverless /api/gemini or direct client Gemini fallback
+  async lookupBarcodeOnline(barcode) {
+    const cleanBarcode = String(barcode).trim();
+    if (!cleanBarcode) return null;
+
+    const db = DB.getData();
+    const clientApiKey = db.geminiKey ? db.geminiKey.trim() : '';
+
+    // 1. Try serverless backend (/api/gemini)
+    try {
+      const resp = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'lookupBarcode',
+          barcode: cleanBarcode,
+          apiKey: clientApiKey || undefined
+        })
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.found && data.product) {
+          return data.product;
+        }
+      }
+    } catch (e) {
+      console.warn('[Dukaan AI] Serverless barcode lookup fallback:', e);
+    }
+
+    // 2. Direct client call if key is present
+    if (clientApiKey) {
+      try {
+        return await this.callGeminiBarcodeDirect(cleanBarcode, clientApiKey);
+      } catch (e) {
+        console.warn('[Dukaan AI] Direct client barcode lookup error:', e);
+      }
+    }
+
+    return null;
+  }
+
+  // Direct client barcode call with failover
+  async callGeminiBarcodeDirect(barcode, apiKey) {
+    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-3.8-flash'];
+    const prompt = `Search Google and retail barcode databases for product barcode/EAN-13: "${barcode}".
+In India/global FMCG/grocery retail, what exact commercial product has this barcode?
+Respond ONLY with a strict JSON object:
+{
+  "found": true,
+  "barcode": "${barcode}",
+  "name": "Exact Product Name & Variant",
+  "brand": "Brand Name",
+  "cat": "Category",
+  "mrp": 20,
+  "price": 20,
+  "cost": 17,
+  "stock": 25,
+  "unit": "pack",
+  "emoji": "📦"
+}`;
+
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const payload = {
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          tools: [{ googleSearch: {} }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 500 }
+        };
+
+        let res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok && res.status === 400) {
+          delete payload.tools;
+          res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          let raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (raw) {
+            raw = raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.found !== false && parsed.name) {
+              const price = Number(parsed.price) || Number(parsed.mrp) || 20;
+              const mrp = Number(parsed.mrp) || price || 20;
+              return {
+                barcode,
+                name: parsed.name,
+                brand: parsed.brand || '',
+                cat: parsed.cat || 'Grocery',
+                mrp: mrp,
+                price: price,
+                cost: Number(parsed.cost) || Math.round(price * 0.85),
+                stock: Number(parsed.stock) || 25,
+                unit: parsed.unit || 'pack',
+                emoji: parsed.emoji || '📦'
+              };
+            }
+          }
+        }
+      } catch (err) {}
+    }
+    return null;
+  }
+
   closeModal() {
     const el = document.getElementById('mydukaan-ai-modal');
     if (el) el.remove();

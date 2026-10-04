@@ -223,7 +223,8 @@ class InventoryEngine {
                   <label class="form-label">Barcode / EAN-13</label>
                   <div style="display: flex; gap: 6px;">
                     <input type="text" id="prod-form-barcode" class="form-input" style="font-family: var(--font-mono);" placeholder="8901234567890" value="${isEdit ? product.barcode : (prefilledBarcode || '')}" />
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="BarcodeScanner.openScannerModal(code => document.getElementById('prod-form-barcode').value = code)">📷</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="BarcodeScanner.openScannerModal(code => { document.getElementById('prod-form-barcode').value = code; Inventory.fetchBarcodeFromGoogle(); })" title="Scan with camera">📷</button>
+                    <button type="button" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg, #4285F4, #34A853);white-space:nowrap;padding:4px 8px;font-size:11px;" onclick="Inventory.fetchBarcodeFromGoogle()" title="Auto-fill details from Google">🌐 Auto-Fill</button>
                   </div>
                 </div>
                 <div class="form-group">
@@ -316,6 +317,74 @@ class InventoryEngine {
     App.toast('success', 'Catalog Updated', `${name} successfully saved`);
     this.render();
     if (window.POS) POS.renderCatalog();
+  }
+
+  async fetchBarcodeFromGoogle() {
+    const barcodeInput = document.getElementById('prod-form-barcode');
+    const barcode = barcodeInput ? barcodeInput.value.trim() : '';
+    if (!barcode) {
+      App.toast('warning', 'Barcode Missing', 'Please enter or scan a barcode first');
+      return;
+    }
+
+    App.toast('info', 'Searching Google...', `Looking up details for ${barcode}`);
+
+    try {
+      let prod = null;
+      if (window.DukaanAI && typeof DukaanAI.lookupBarcodeOnline === 'function') {
+        prod = await DukaanAI.lookupBarcodeOnline(barcode);
+      }
+
+      if (!prod) {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`).then(r => r.json());
+        if (res && res.status === 1 && res.product) {
+          const p = res.product;
+          const name = p.product_name || p.product_name_en || p.generic_name || '';
+          const brand = p.brands || '';
+          const qty = p.quantity || '';
+          if (name) {
+            prod = {
+              name: [brand, name, qty].filter(Boolean).join(' '),
+              cat: 'Grocery',
+              mrp: 30,
+              price: 30,
+              cost: 25,
+              emoji: '📦',
+              unit: 'pack'
+            };
+          }
+        }
+      }
+
+      if (prod && prod.name) {
+        const nameEl = document.getElementById('prod-form-name');
+        const priceEl = document.getElementById('prod-form-price');
+        const mrpEl = document.getElementById('prod-form-mrp');
+        const costEl = document.getElementById('prod-form-cost');
+        const catEl = document.getElementById('prod-form-cat');
+        const emojiEl = document.getElementById('prod-form-emoji');
+
+        if (nameEl) nameEl.value = prod.name;
+        if (priceEl && prod.price) priceEl.value = prod.price;
+        if (mrpEl && prod.mrp) mrpEl.value = prod.mrp;
+        if (costEl && prod.cost) costEl.value = prod.cost;
+        if (catEl && prod.cat) {
+          const matchOpt = Array.from(catEl.options).find(o => o.value.toLowerCase() === prod.cat.toLowerCase());
+          if (matchOpt) catEl.value = matchOpt.value;
+        }
+        if (emojiEl && prod.emoji) {
+          const matchEmoji = Array.from(emojiEl.options).find(o => o.value === prod.emoji);
+          if (matchEmoji) emojiEl.value = matchEmoji.value;
+        }
+
+        App.toast('success', 'Google Details Found! 🎉', `Auto-filled: ${prod.name}`);
+      } else {
+        App.toast('warning', 'Not Found on Google', 'Please enter product details manually');
+      }
+    } catch (err) {
+      console.warn('[Inventory Google Fetch Error]', err);
+      App.toast('error', 'Lookup Failed', 'Could not fetch details. Please fill manually.');
+    }
   }
 
   closeModal() {
