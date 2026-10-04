@@ -3,15 +3,15 @@
  * Created & Deployed by Mayur Singh
  */
 
-const STORAGE_KEY = 'mydukaan_pro_v4';
+const STORAGE_KEY = 'mydukaan24_prod_db';
 
 const DEFAULT_SHOP = {
-  name: "MyDukaan Mart",
+  name: "MyDukaan24 Mart",
   owner: "Mayur Singh",
   phone: "+91 98765 43210",
-  address: "Shop #4, Metro Market, Connaught Place, New Delhi",
-  gstin: "07AAAAA0000A1Z5",
-  upiId: "mydukaan@upi",
+  address: "Hazratganj Market, Lucknow, Uttar Pradesh, India",
+  gstin: "09AAAAA0000A1Z5",
+  upiId: "mydukaan24@upi",
   currency: "₹",
   taxRate: 5 // Default GST 5%
 };

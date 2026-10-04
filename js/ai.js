@@ -1,58 +1,153 @@
 /**
- * MyDukaan Pro — Dukaan AI (Powered by Gemini 3.8 Flash)
- * Created & Deployed by Mayur Singh
+ * MyDukaan24 — Real Online AI Business Advisor (Gemini 3.8 Flash)
+ * Created & Deployed by Mayur Singh (Lucknow, India)
+ * Architecture: Client -> Secure Netlify Serverless Backend (/api/gemini) -> Google Gemini 3.8 Flash
  */
 
 class DukaanAIEngine {
   constructor() {
     this.modelName = "gemini-3.8-flash";
     this.chatHistory = [];
+    this.lastFailedPrompt = null;
+    this.isRequestInProgress = false;
   }
 
-  // Open AI Assistant Drawer / Modal
+  // Generate structured real-time business context snapshot
+  getLiveBusinessContext() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const products = db.products || [];
+    const customers = db.customers || [];
+    const invoices = db.invoices || [];
+    const expenses = db.expenses || [];
+
+    const lowStockItems = products
+      .filter(p => p.stock <= p.minStock)
+      .map(p => `${p.name} (Stock: ${p.stock} ${p.unit}, Min: ${p.minStock}, Price: ₹${p.price})`);
+
+    const customersWithDue = customers
+      .filter(c => (c.balanceDue || 0) > 0)
+      .map(c => `${c.name}: Due ₹${c.balanceDue} (Phone: ${c.phone})`);
+
+    const totalRevenue = invoices.reduce((s, i) => s + (i.paid || 0), 0);
+    const totalPendingDues = customers.reduce((s, c) => s + (c.balanceDue || 0), 0);
+    const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+
+    const recentBills = invoices.slice(0, 5).map(i => 
+      `${i.id} (${i.date}): ₹${i.total} (${i.paymentMode}, ${i.status}) - Customer: ${i.customerName}`
+    );
+
+    return `
+Store Information:
+- Store Name: ${shop.name || 'MyDukaan24 Store'}
+- Owner: ${shop.owner || 'Mayur Singh'}
+- Location: ${shop.address || 'India'}
+- GSTIN: ${shop.gstin || 'None'}
+- UPI ID: ${shop.upiId || 'Not set'}
+
+Real-time Financial Snapshot:
+- Total Sales Recorded: ₹${totalRevenue.toLocaleString('en-IN')}
+- Outstanding Customer Udhaar: ₹${totalPendingDues.toLocaleString('en-IN')}
+- Total Operating Expenses: ₹${totalExpenses.toLocaleString('en-IN')}
+
+Inventory Status (${products.length} Total SKUs):
+- Low Stock or Out of Stock Items (${lowStockItems.length}):
+  ${lowStockItems.length ? lowStockItems.join('\n  ') : 'All products have healthy stock levels.'}
+
+Customer Udhaar Ledger:
+- Customers with Unpaid Balances (${customersWithDue.length}):
+  ${customersWithDue.length ? customersWithDue.join('\n  ') : 'Zero outstanding customer dues.'}
+
+Recent Invoices:
+  ${recentBills.length ? recentBills.join('\n  ') : 'No sales recorded yet.'}
+`.trim();
+  }
+
+  // Open the Premium Full-Screen / Modal AI Chat Interface
   openChatModal() {
     const modalHtml = `
-      <div class="modal-backdrop" id="dukaan-ai-modal" onclick="if(event.target === this) DukaanAI.closeModal()">
-        <div class="modal-card" style="max-width: 520px; height: 85vh; display: flex; flex-direction: column;">
-          <div class="modal-header" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(59, 130, 246, 0.08));">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7C3AED, #9333EA); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-                ✨
-              </div>
+      <div class="modal-backdrop" id="mydukaan-ai-modal" onclick="if(event.target === this) DukaanAI.closeModal()">
+        <div class="modal-card ai-chat-modal-window">
+          <!-- AI Header -->
+          <div class="modal-header ai-modal-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="ai-avatar-badge">✨</div>
               <div>
-                <div style="font-weight: 800; font-size: 15px; color: var(--text-primary);">Dukaan AI Advisor</div>
-                <div style="font-size: 11px; color: var(--purple); font-weight: 600;">Powered by Gemini 3.8 Flash • Smart Retail Brain</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-weight: 800; font-size: 16px; color: var(--text-primary);">MyDukaan24 AI</span>
+                  <span class="badge badge-primary" style="font-size: 10px; font-weight: 700;">Gemini 3.8 Flash Online</span>
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
+                  Live Real-Time Store Brain • Contextually Grounded
+                </div>
               </div>
             </div>
-            <button class="topbar-icon-btn" onclick="DukaanAI.closeModal()">✕</button>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.clearHistory()" title="Clear Chat History">🗑️ Clear</button>
+              <button class="topbar-icon-btn" onclick="DukaanAI.closeModal()">✕</button>
+            </div>
           </div>
 
-          <!-- Chat Conversation Area -->
-          <div id="ai-chat-messages" style="flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <!-- Conversation Area -->
+          <div id="ai-chat-thread" class="ai-chat-thread">
+            ${!DB.getData().geminiKey ? `
+              <!-- In-App API Key Setup Banner -->
+              <div id="ai-key-setup-banner" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(124, 58, 237, 0.35); border-radius: 12px; padding: 16px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--purple); font-size: 14px;">
+                  <span>🔑</span>
+                  <span>Connect Your Gemini API Key</span>
+                </div>
+                <p style="font-size: 12.5px; color: var(--text-secondary); margin: 6px 0 12px; line-height: 1.5;">
+                  To unlock real online AI business advice, enter your Google Gemini API key. It is 100% free from Google AI Studio.
+                </p>
+                <div style="display: flex; gap: 8px;">
+                  <input type="password" id="inline-gemini-key-input" class="form-input" style="height: 38px; font-size: 12.5px;" placeholder="Paste API key here (AIzaSy...)" />
+                  <button class="btn btn-ai btn-sm" style="white-space: nowrap;" onclick="DukaanAI.saveInlineKey()">
+                    Save & Activate
+                  </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+                  Don't have a key? <a href="https://aistudio.google.com" target="_blank" style="color: var(--primary); text-decoration: underline;">Get free key at aistudio.google.com</a>
+                </div>
+              </div>
+            ` : ''}
+
             <!-- Greeting Message -->
-            <div style="display: flex; gap: 10px; align-items: flex-start;">
-              <div style="width: 28px; height: 28px; border-radius: 50%; background: #7C3AED; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">✨</div>
-              <div style="background: var(--bg-card); padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-subtle); font-size: 13.5px; line-height: 1.5; color: var(--text-primary); max-width: 85%;">
-                Namaste <strong>${DB.getData().shop.owner || 'Mayur Singh'}</strong>! 🙏 I am your smart business advisor for <strong>${DB.getData().shop.name}</strong>.
-                <br/><br/>
-                I have live access to your inventory, customer Udhaar khata, and sales ledger. Ask me anything!
+            <div class="ai-msg-row ai">
+              <div class="ai-msg-avatar">✨</div>
+              <div class="ai-msg-bubble">
+                <div style="font-weight: 700; margin-bottom: 4px; color: var(--purple);">Namaste! 🙏 Welcome to MyDukaan24 AI</div>
+                <p>I am your dedicated store intelligence consultant. I have real-time access to your live inventory, customer Udhaar ledger, and sales records.</p>
+                <p style="margin-top: 6px; font-size: 12px; color: var(--text-muted);">Ask me any business question or pick from the suggested prompts below:</p>
               </div>
             </div>
           </div>
 
-          <!-- Quick Suggestion Chips -->
-          <div style="padding: 10px 16px; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;">
-            <button class="cat-chip" onclick="DukaanAI.askQuick('Which products are low on stock and need urgent reordering?')">📦 Low Stock Alert</button>
-            <button class="cat-chip" onclick="DukaanAI.askQuick('Who owes the highest Udhaar and how can I recover dues?')">⏳ Recover Dues</button>
-            <button class="cat-chip" onclick="DukaanAI.askQuick('Give me 3 practical ideas to increase my shop gross margin this month')">💡 Boost Margins</button>
-            <button class="cat-chip" onclick="DukaanAI.askQuick('Draft a friendly WhatsApp festive discount offer for my top customers')">📱 Draft Promo</button>
+          <!-- Suggested Quick Prompts -->
+          <div class="ai-prompt-chips-row">
+            <button class="cat-chip" onclick="DukaanAI.askSuggested('Which products are low in stock and need reordering?')">
+              📦 Low Stock Alert
+            </button>
+            <button class="cat-chip" onclick="DukaanAI.askSuggested('Who owes me the most money in pending Udhaar?')">
+              ⏳ Pending Dues
+            </button>
+            <button class="cat-chip" onclick="DukaanAI.askSuggested('Give me a full business health summary of my shop today')">
+              📊 Store Health Summary
+            </button>
+            <button class="cat-chip" onclick="DukaanAI.askSuggested('What are 3 practical ways I can increase my profit margin this month?')">
+              💡 Increase Margins
+            </button>
+            <button class="cat-chip" onclick="DukaanAI.askSuggested('Draft a polite WhatsApp reminder message for customers with pending dues')">
+              📱 WhatsApp Due Draft
+            </button>
           </div>
 
           <!-- Input Footer -->
-          <div style="padding: 14px 18px; background: var(--bg-input); border-top: 1px solid var(--border-subtle); display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="ai-user-input" class="form-input" style="height: 42px;" placeholder="Ask about sales, stock, customers, or pricing..." onkeydown="if(event.key === 'Enter') DukaanAI.sendUserMessage()" />
-            <button class="btn btn-ai" style="height: 42px; padding: 0 18px;" onclick="DukaanAI.sendUserMessage()">
-              Send ➤
+          <div class="ai-input-footer">
+            <textarea id="ai-chat-textarea" class="form-input ai-textarea" rows="1" placeholder="Ask anything about your stock, dues, margins, or sales..." onkeydown="DukaanAI.handleKeydown(event)"></textarea>
+            <button id="ai-send-btn" class="btn btn-ai" onclick="DukaanAI.submitPrompt()">
+              <span>Send</span>
+              <span>➤</span>
             </button>
           </div>
         </div>
@@ -61,174 +156,369 @@ class DukaanAIEngine {
 
     this.closeModal();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Restore previous session conversation if any
+    if (this.chatHistory.length) {
+      this.renderHistory();
+    }
+
     setTimeout(() => {
-      const inp = document.getElementById('ai-user-input');
-      if (inp) inp.focus();
-    }, 150);
+      const textarea = document.getElementById('ai-chat-textarea');
+      if (textarea) textarea.focus();
+    }, 120);
   }
 
-  askQuick(text) {
-    const input = document.getElementById('ai-user-input');
-    if (input) {
-      input.value = text;
-      this.sendUserMessage();
+  handleKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      this.submitPrompt();
     }
   }
 
-  async sendUserMessage() {
-    const input = document.getElementById('ai-user-input');
-    if (!input || !input.value.trim()) return;
-
-    const query = input.value.trim();
-    input.value = '';
-
-    const container = document.getElementById('ai-chat-messages');
-    if (!container) return;
-
-    // Append User Message
-    container.innerHTML += `
-      <div style="display: flex; justify-content: flex-end;">
-        <div style="background: var(--primary); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 13.5px; max-width: 80%;">
-          ${query}
-        </div>
-      </div>
-    `;
-
-    // Typing Loader
-    const typingId = `typing-${Date.now()}`;
-    container.innerHTML += `
-      <div id="${typingId}" style="display: flex; gap: 10px; align-items: center; color: var(--text-muted); font-size: 12px;">
-        <div style="width: 24px; height: 24px; border-radius: 50%; background: #7C3AED; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px;">✨</div>
-        <span>Dukaan AI analyzing live ledger...</span>
-      </div>
-    `;
-    container.scrollTop = container.scrollHeight;
-
-    // Get live retail context
-    const reply = await this.generateResponse(query);
-
-    const loader = document.getElementById(typingId);
-    if (loader) loader.remove();
-
-    container.innerHTML += `
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: #7C3AED; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">✨</div>
-        <div style="background: var(--bg-card); padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-subtle); font-size: 13.5px; line-height: 1.6; color: var(--text-primary); max-width: 85%;">
-          ${reply}
-        </div>
-      </div>
-    `;
-    container.scrollTop = container.scrollHeight;
+  askSuggested(text) {
+    const input = document.getElementById('ai-chat-textarea');
+    if (input) {
+      input.value = text;
+      this.submitPrompt();
+    }
   }
 
-  async generateResponse(userPrompt) {
-    const db = DB.getData();
-    const shop = db.shop;
-    const key = db.geminiKey ? db.geminiKey.trim() : "";
+  // Send Prompt to Online AI
+  async submitPrompt(retryText = null) {
+    if (this.isRequestInProgress) return;
 
-    // Live store summary for context
-    const lowStock = db.products.filter(p => p.stock <= p.minStock).map(p => `${p.name} (${p.stock} left)`).join(', ');
-    const topDues = db.customers.filter(c => c.balanceDue > 0).map(c => `${c.name}: ₹${c.balanceDue}`).join(', ');
-    const totalSales = db.invoices.reduce((s, i) => s + i.paid, 0);
+    const input = document.getElementById('ai-chat-textarea');
+    const promptText = (retryText || (input ? input.value : '')).trim();
 
-    const systemPrompt = `You are "Dukaan AI", an expert retail business consultant for an Indian shop called "${shop.name}".
-Live Store Context:
-- Owner: ${shop.owner}
-- Total Catalog Items: ${db.products.length}
-- Low Stock Items: ${lowStock || 'None, inventory is healthy'}
-- Total Uncollected Customer Dues: ${topDues || 'No outstanding customer dues'}
-- Total Recorded Sales: ₹${totalSales}
-- Location: ${shop.address}
+    if (!promptText) return;
 
-Instructions:
-- Be concise, direct, helpful, and culturally relevant to Indian Kirana/Retail shops.
-- Use Indian Rupee (₹) and metrics.
-- Keep responses within 2 to 3 practical, actionable bullet points or short paragraphs.
-- No generic fluff.`;
+    if (input) {
+      input.value = '';
+      input.style.height = 'auto';
+    }
 
-    if (key) {
+    this.lastFailedPrompt = promptText;
+    this.isRequestInProgress = true;
+    this.updateSendButtonState(true);
+
+    const thread = document.getElementById('ai-chat-thread');
+    if (!thread) return;
+
+    // Append User Message to UI & History
+    this.appendMessage('user', promptText);
+
+    // Append Animated Typing Indicator
+    const loaderId = `loader-${Date.now()}`;
+    const loaderHtml = `
+      <div id="${loaderId}" class="ai-msg-row ai">
+        <div class="ai-msg-avatar">✨</div>
+        <div class="ai-msg-bubble" style="display: flex; align-items: center; gap: 8px;">
+          <div class="typing-dots-spinner">
+            <span></span><span></span><span></span>
+          </div>
+          <span style="font-size: 12.5px; color: var(--text-muted);">Consulting Gemini 3.8 Flash Online...</span>
+        </div>
+      </div>
+    `;
+    thread.insertAdjacentHTML('beforeend', loaderHtml);
+    thread.scrollTop = thread.scrollHeight;
+
+    try {
+      const storeContext = this.getLiveBusinessContext();
+      const db = DB.getData();
+      const clientApiKey = db.geminiKey ? db.geminiKey.trim() : "";
+
+      let responseText = "";
+
+      // 1. Attempt connection via Netlify Serverless Backend (/api/gemini)
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${key}`;
-        const response = await fetch(url, {
+        const netlifyResponse = await fetch('/api/gemini', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [
-              { role: "user", parts: [{ text: `${systemPrompt}\n\nUser Question: ${userPrompt}` }] }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 600
-            }
+            prompt: promptText,
+            storeContext: storeContext,
+            apiKey: clientApiKey || undefined
           })
         });
 
-        const data = await response.json();
-        if (data && data.candidates && data.candidates[0].content) {
-          const rawText = data.candidates[0].content.parts[0].text;
-          return rawText.replace(/\n/g, '<br/>');
-        } else if (data.error) {
-          console.warn("[Gemini Error]", data.error);
+        if (netlifyResponse.ok) {
+          const result = await netlifyResponse.json();
+          if (result && result.text) {
+            responseText = result.text;
+          } else if (result && result.error) {
+            throw new Error(result.error);
+          }
+        } else {
+          // If Netlify function returned a specific client error, parse it
+          const errBody = await netlifyResponse.json().catch(() => ({}));
+          if (errBody && errBody.error) {
+            throw new Error(errBody.error);
+          }
+          throw new Error(`Netlify function returned status ${netlifyResponse.status}`);
         }
-      } catch (err) {
-        console.warn("[Gemini API Call Failed]", err);
-      }
-    }
+      } catch (backendErr) {
+        console.warn('[Dukaan AI] Backend route unavailable, checking direct client connection:', backendErr.message);
 
-    // High-Fidelity Local Offline Intelligence Fallback
-    return this.generateOfflineInsight(userPrompt, db);
+        // 2. Direct client fallback for localhost / file:// testing if key is present
+        if (clientApiKey) {
+          responseText = await this.callGeminiDirect(promptText, storeContext, clientApiKey);
+        } else {
+          throw new Error(backendErr.message || 'No API key configured.');
+        }
+      }
+
+      // Remove loader
+      const loader = document.getElementById(loaderId);
+      if (loader) loader.remove();
+
+      // Append real AI response
+      this.appendMessage('ai', responseText);
+      this.lastFailedPrompt = null;
+
+    } catch (error) {
+      console.error('[Dukaan AI Error]', error);
+
+      const loader = document.getElementById(loaderId);
+      if (loader) loader.remove();
+
+      this.renderErrorMessage(error.message || 'Unknown network error');
+    } finally {
+      this.isRequestInProgress = false;
+      this.updateSendButtonState(false);
+    }
   }
 
-  generateOfflineInsight(prompt, db) {
-    const q = prompt.toLowerCase();
-    const lowStock = db.products.filter(p => p.stock <= p.minStock);
-    const topDues = db.customers.filter(c => c.balanceDue > 0);
-    const totalSales = db.invoices.reduce((s, i) => s + i.paid, 0);
+  // Direct client call to Gemini 3.8 Flash (Used when running in dev/preview without Netlify Functions)
+  async callGeminiDirect(prompt, storeContext, apiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${apiKey}`;
 
-    if (q.includes('stock') || q.includes('reorder')) {
-      if (lowStock.length) {
-        return `⚠️ <strong>Inventory Reorder Advice:</strong><br/>
-        You have <strong>${lowStock.length} items</strong> critically low or out of stock:<br/>
-        ${lowStock.map(p => `• <strong>${p.name}</strong>: only ${p.stock} ${p.unit} remaining (Min: ${p.minStock})`).join('<br/>')}<br/><br/>
-        💡 <em>Recommendation: Order wholesale batches before the weekend to prevent lost revenue.</em>`;
+    const systemPrompt = `You are "MyDukaan24 AI", an expert retail business advisor for small businesses and Kirana stores in India.
+Always format currency in Indian Rupees (₹).
+Keep answers structured, concise, and focused on business growth, inventory health, cash flow, and customer relationships.
+
+Current Live Business Context:
+${storeContext}`;
+
+    const payload = {
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `${systemPrompt}\n\nUser Question: ${prompt}` }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 800
       }
-      return `✅ <strong>Inventory Health:</strong> All your items currently have stock levels above the threshold. Keep tracking fast-moving items!`;
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || `Google Gemini API returned status ${response.status}`);
     }
 
-    if (q.includes('due') || q.includes('udhaar') || q.includes('recover')) {
-      if (topDues.length) {
-        const total = topDues.reduce((s, c) => s + c.balanceDue, 0);
-        return `⏳ <strong>Udhaar Recovery Plan:</strong><br/>
-        Total pending in the market: <strong>₹${total.toLocaleString('en-IN')}</strong> across ${topDues.length} customers.<br/>
-        Top pending accounts:<br/>
-        ${topDues.slice(0, 3).map(c => `• <strong>${c.name}</strong>: ₹${c.balanceDue.toLocaleString('en-IN')}`).join('<br/>')}<br/><br/>
-        💡 <em>Action: Use the one-click WhatsApp Reminder button in the Udhaar Khata tab to send gentle payment links.</em>`;
-      }
-      return `🎉 Great news! You have ₹0 pending Udhaar. All customer bills are fully settled.`;
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!reply) {
+      throw new Error('Received an empty response from Gemini 3.8 Flash.');
     }
 
-    if (q.includes('margin') || q.includes('profit') || q.includes('increase')) {
-      return `📈 <strong>3 Profit Margin Accelerators:</strong><br/>
-      1. <strong>Bundle High & Low Margin Items:</strong> Pair high-margin snacks/confectionery near the billing counter with daily staples like Atta and Oil.<br/>
-      2. <strong>Early Supplier Settlement Discounts:</strong> Negotiate 2-3% cash discounts with FMCG distributors by paying upfront.<br/>
-      3. <strong>Promote Private / Bulk Brands:</strong> Selling 5kg packs yields 12% higher net margin than single 1kg packs.`;
+    return reply;
+  }
+
+  // Append user or AI message into UI & history
+  appendMessage(role, text) {
+    this.chatHistory.push({ role, text, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+
+    const thread = document.getElementById('ai-chat-thread');
+    if (!thread) return;
+
+    const isAi = role === 'ai';
+    const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+
+    const formattedText = isAi ? this.formatMarkdown(text) : this.escapeHtml(text);
+
+    const msgHtml = `
+      <div class="ai-msg-row ${role}" id="${msgId}">
+        <div class="ai-msg-avatar">${isAi ? '✨' : '👤'}</div>
+        <div class="ai-msg-bubble">
+          <div class="ai-msg-text">${formattedText}</div>
+          <div class="ai-msg-footer">
+            <span style="font-size: 10px; color: var(--text-muted);">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            ${isAi ? `
+              <button class="ai-copy-btn" onclick="DukaanAI.copyText('${msgId}')" title="Copy reply">
+                📋 Copy
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+
+    thread.insertAdjacentHTML('beforeend', msgHtml);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  // Display user-friendly error card with Retry & Settings CTAs
+  renderErrorMessage(errorText) {
+    const thread = document.getElementById('ai-chat-thread');
+    if (!thread) return;
+
+    let guidance = "";
+    if (errorText.toLowerCase().includes('key') || errorText.toLowerCase().includes('unauthorized') || errorText.toLowerCase().includes('401')) {
+      guidance = `
+        <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+          <strong>How to fix:</strong> Get your free API key at 
+          <a href="https://aistudio.google.com" target="_blank" style="color: var(--primary); text-decoration: underline;">aistudio.google.com</a>
+          and paste it in <strong>Store Settings → AI Key</strong>, or configure <code>GEMINI_API_KEY</code> in Netlify Environment Variables.
+        </div>
+      `;
     }
 
-    if (q.includes('whatsapp') || q.includes('promo') || q.includes('festival')) {
-      return `📱 <strong>Ready-to-send WhatsApp Promo Copy:</strong><br/>
-      <em>"Namaste! 🙏 Special weekend offer at ${db.shop.name}! Get flat ₹100 OFF on orders above ₹1,000 this Friday & Saturday. Fresh stock of daily essentials ready for free doorstep delivery. Call/WhatsApp us to order!"</em><br/><br/>
-      Copy and share with your customer list!`;
-    }
+    const errorHtml = `
+      <div class="ai-msg-row ai">
+        <div class="ai-msg-avatar" style="background: var(--danger-light); color: var(--danger);">⚠️</div>
+        <div class="ai-msg-bubble" style="border-color: var(--danger-border); background: var(--bg-card);">
+          <div style="font-weight: 700; color: var(--danger); font-size: 13.5px;">API Connection Error</div>
+          <div style="font-size: 12.5px; color: var(--text-primary); margin-top: 4px;">${this.escapeHtml(errorText)}</div>
+          ${guidance}
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            ${this.lastFailedPrompt ? `
+              <button class="btn btn-primary btn-sm" onclick="DukaanAI.retryLastPrompt()">
+                🔄 Retry Question
+              </button>
+            ` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="DukaanAI.closeModal(); App.navigate('settings');">
+              ⚙️ Open AI Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
 
-    return `💡 <strong>Business Summary for ${db.shop.name}:</strong><br/>
-    • Total recorded revenue: <strong>₹${totalSales.toLocaleString('en-IN')}</strong><br/>
-    • Active product catalog: <strong>${db.products.length} SKUs</strong><br/>
-    • Pending Udhaar: <strong>₹${topDues.reduce((s, c) => s + c.balanceDue, 0).toLocaleString('en-IN')}</strong><br/><br/>
-    <em>To activate full live AI reasoning via Google Cloud, add your free Gemini 3.8 Flash key in Settings.</em>`;
+    thread.insertAdjacentHTML('beforeend', errorHtml);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  retryLastPrompt() {
+    if (this.lastFailedPrompt) {
+      this.submitPrompt(this.lastFailedPrompt);
+    }
+  }
+
+  renderHistory() {
+    const thread = document.getElementById('ai-chat-thread');
+    if (!thread) return;
+
+    // Preserve first greeting, render stored messages
+    const stored = this.chatHistory;
+    stored.forEach(msg => {
+      const isAi = msg.role === 'ai';
+      const msgId = `msg-hist-${Math.random().toString(36).substr(2, 6)}`;
+      const formattedText = isAi ? this.formatMarkdown(msg.text) : this.escapeHtml(msg.text);
+
+      thread.insertAdjacentHTML('beforeend', `
+        <div class="ai-msg-row ${msg.role}" id="${msgId}">
+          <div class="ai-msg-avatar">${isAi ? '✨' : '👤'}</div>
+          <div class="ai-msg-bubble">
+            <div class="ai-msg-text">${formattedText}</div>
+            <div class="ai-msg-footer">
+              <span style="font-size: 10px; color: var(--text-muted);">${msg.timestamp || ''}</span>
+              ${isAi ? `<button class="ai-copy-btn" onclick="DukaanAI.copyText('${msgId}')">📋 Copy</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `);
+    });
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  copyText(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const textEl = el.querySelector('.ai-msg-text');
+    if (textEl) {
+      navigator.clipboard.writeText(textEl.innerText || textEl.textContent)
+        .then(() => App.toast('success', 'Copied!', 'AI response copied to clipboard'))
+        .catch(() => {});
+    }
+  }
+
+  clearHistory() {
+    this.chatHistory = [];
+    const thread = document.getElementById('ai-chat-thread');
+    if (thread) {
+      thread.innerHTML = `
+        <div class="ai-msg-row ai">
+          <div class="ai-msg-avatar">✨</div>
+          <div class="ai-msg-bubble">
+            <p>Chat history cleared. How can I assist your shop today?</p>
+          </div>
+        </div>
+      `;
+    }
+    App.toast('info', 'Chat Cleared', 'Conversation history reset');
+  }
+
+  updateSendButtonState(isWaiting) {
+    const btn = document.getElementById('ai-send-btn');
+    if (!btn) return;
+    btn.disabled = isWaiting;
+    btn.innerHTML = isWaiting ? '<span>Thinking...</span>' : '<span>Send</span> <span>➤</span>';
+  }
+
+  formatMarkdown(text) {
+    if (!text) return "";
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code style="background: var(--bg-input); padding: 2px 4px; border-radius: 4px; font-family: monospace;">$1</code>')
+      .replace(/\n\n/g, '<br/><br/>')
+      .replace(/\n/g, '<br/>')
+      .replace(/• /g, '•&nbsp;');
+  }
+
+  escapeHtml(str) {
+    return (str || '').replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+  }
+
+  saveInlineKey() {
+    const input = document.getElementById('inline-gemini-key-input');
+    if (!input || !input.value.trim()) {
+      App.toast('warning', 'Key Required', 'Please paste your Gemini API key');
+      return;
+    }
+    const key = input.value.trim();
+    const db = DB.getData();
+    db.geminiKey = key;
+    DB.saveData(db);
+
+    const banner = document.getElementById('ai-key-setup-banner');
+    if (banner) {
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="color: var(--success); font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <span>✓</span> <span>Gemini 3.8 Flash Online Activated!</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">Ready to assist</span>
+        </div>
+      `;
+      setTimeout(() => banner.remove(), 2500);
+    }
+    App.toast('success', 'Gemini AI Online!', 'Key saved successfully');
   }
 
   closeModal() {
-    const el = document.getElementById('dukaan-ai-modal');
+    const el = document.getElementById('mydukaan-ai-modal');
     if (el) el.remove();
   }
 }

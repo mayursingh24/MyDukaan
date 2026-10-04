@@ -1,8 +1,9 @@
-# Netlify Redirects for MyDukaan Pro
+# Netlify Redirects for MyDukaan24
 # Created & Deployed by Mayur Singh
 
-/terminal    /app.html    200
-/pos         /app.html    200
-/billing     /app.html    200
-/app         /app.html    200
-/*           /index.html  200
+/api/gemini    /.netlify/functions/gemini    200
+/terminal      /app.html                     200
+/pos           /app.html                     200
+/billing       /app.html                     200
+/app           /app.html                     200
+/*             /index.html                   200

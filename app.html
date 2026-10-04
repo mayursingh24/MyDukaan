@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MyDukaan Pro — Retail Business OS & POS Terminal</title>
+  <title>MyDukaan24 — Modern Retail Business OS & POS Terminal</title>
   <meta name="description" content="AI-Powered POS Billing, Barcode Scanner, and Udhaar Khata for Indian Retailers. Created & Deployed by Mayur Singh." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
   
@@ -20,52 +20,84 @@
         <div class="brand-logo-icon">⚡</div>
         <div class="brand-details">
           <div class="brand-name">
-            MyDukaan <span class="brand-badge">PRO</span>
+            MyDukaan24 <span class="brand-badge">SaaS</span>
           </div>
-          <div class="brand-sub">Modern Business OS</div>
+          <div class="brand-sub">Retail Business OS</div>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-title">Billing & Sales</div>
-        <a href="javascript:void(0)" class="nav-link active" data-view="pos" onclick="App.navigate('pos')">
+        <!-- Section: Overview -->
+        <div class="nav-section-title">Overview</div>
+        <a href="javascript:void(0)" class="nav-link active" data-view="dashboard" onclick="App.navigate('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+
+        <!-- Section: Shop -->
+        <div class="nav-section-title">Shop</div>
+        <a href="javascript:void(0)" class="nav-link" data-view="pos" onclick="App.navigate('pos')">
           <span class="nav-icon">⚡</span>
           <span>Quick Billing POS</span>
           <span class="nav-tag nav-tag-green">Live</span>
         </a>
-        <a href="javascript:void(0)" class="nav-link" data-view="dashboard" onclick="App.navigate('dashboard')">
-          <span class="nav-icon">📊</span>
-          <span>Executive Dashboard</span>
-        </a>
-
-        <div class="nav-section-title">Store Management</div>
-        <a href="javascript:void(0)" class="nav-link" data-view="inventory" onclick="App.navigate('inventory')">
+        <a href="javascript:void(0)" class="nav-link" data-view="products" onclick="App.navigate('products')">
           <span class="nav-icon">📦</span>
+          <span>Products</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="inventory" onclick="App.navigate('inventory')">
+          <span class="nav-icon">🏷️</span>
           <span>Inventory & Stock</span>
         </a>
-        <a href="javascript:void(0)" class="nav-link" data-view="khata" onclick="App.navigate('khata')">
+        <a href="javascript:void(0)" class="nav-link" data-view="customers" onclick="App.navigate('customers')">
+          <span class="nav-icon">👥</span>
+          <span>Customers</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="udhaar" onclick="App.navigate('udhaar')">
           <span class="nav-icon">📒</span>
           <span>Udhaar Khata</span>
           <span class="nav-tag nav-tag-amber">Ledger</span>
         </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="invoices" onclick="App.navigate('invoices')">
+          <span class="nav-icon">🧾</span>
+          <span>Invoices & Receipts</span>
+        </a>
+
+        <!-- Section: People -->
+        <div class="nav-section-title">People</div>
+        <a href="javascript:void(0)" class="nav-link" data-view="employees" onclick="App.navigate('employees')">
+          <span class="nav-icon">👔</span>
+          <span>Employees</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="attendance" onclick="App.navigate('attendance')">
+          <span class="nav-icon">📅</span>
+          <span>Attendance</span>
+        </a>
+
+        <!-- Section: Insights -->
+        <div class="nav-section-title">Insights</div>
         <a href="javascript:void(0)" class="nav-link" data-view="analytics" onclick="App.navigate('analytics')">
           <span class="nav-icon">📈</span>
           <span>Analytics & P&L</span>
         </a>
-        <a href="javascript:void(0)" class="nav-link" data-view="staff" onclick="App.navigate('staff')">
-          <span class="nav-icon">👔</span>
-          <span>Staff & Attendance</span>
-        </a>
 
-        <div class="nav-section-title">Intelligence & Setup</div>
+        <!-- Section: AI -->
+        <div class="nav-section-title">AI</div>
         <a href="javascript:void(0)" class="nav-link" onclick="DukaanAI.openChatModal()">
           <span class="nav-icon">✨</span>
-          <span>Dukaan AI Advisor</span>
+          <span>MyDukaan AI</span>
           <span class="nav-tag nav-tag-ai">Gemini</span>
         </a>
+
+        <!-- Section: System -->
+        <div class="nav-section-title">System</div>
         <a href="javascript:void(0)" class="nav-link" data-view="settings" onclick="App.navigate('settings')">
           <span class="nav-icon">⚙️</span>
-          <span>Store Settings</span>
+          <span>Settings</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="help" onclick="App.navigate('help')">
+          <span class="nav-icon">❓</span>
+          <span>Help & Workflow</span>
         </a>
         <a href="index.html" class="nav-link">
           <span class="nav-icon">🌐</span>
@@ -81,7 +113,7 @@
             <div class="creator-name">
               Mayur Singh <span style="color: var(--success); font-size: 11px;">✓</span>
             </div>
-            <div class="creator-role">Lead Creator & Deployer</div>
+            <div class="creator-role">Lucknow, India</div>
           </div>
         </div>
       </div>
@@ -102,7 +134,7 @@
         </div>
 
         <div class="topbar-right">
-          <!-- Direct Barcode Camera Trigger Button -->
+          <!-- Barcode Camera Scanner Trigger -->
           <button class="quick-scan-btn" onclick="BarcodeScanner.openScannerModal()">
             <span>📷</span>
             <span>Barcode Scanner</span>
@@ -114,14 +146,14 @@
           </button>
 
           <!-- AI Assistant Quick Launch -->
-          <button class="topbar-icon-btn" style="color: var(--purple);" onclick="DukaanAI.openChatModal()" title="Ask Dukaan AI">
+          <button class="topbar-icon-btn" style="color: var(--purple);" onclick="DukaanAI.openChatModal()" title="Ask MyDukaan AI">
             ✨
           </button>
 
           <!-- Store Chip -->
           <div class="shop-chip">
             <span class="shop-chip-icon">🏪</span>
-            <span class="shop-chip-name">MyDukaan Mart</span>
+            <span class="shop-chip-name">MyDukaan24 Mart</span>
           </div>
         </div>
       </header>
@@ -133,32 +165,36 @@
 
   <!-- Mobile Bottom Dock Navigation -->
   <nav class="mobile-bottom-nav">
-    <a href="javascript:void(0)" class="mobile-nav-item active" data-view="pos" onclick="App.navigate('pos')">
+    <a href="javascript:void(0)" class="mobile-nav-item active" data-view="dashboard" onclick="App.navigate('dashboard')">
+      <span class="mobile-nav-icon">📊</span>
+      <span>Home</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-view="pos" onclick="App.navigate('pos')">
       <span class="mobile-nav-icon">⚡</span>
       <span>Billing</span>
-    </a>
-    <a href="javascript:void(0)" class="mobile-nav-item" data-view="inventory" onclick="App.navigate('inventory')">
-      <span class="mobile-nav-icon">📦</span>
-      <span>Stock</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" onclick="BarcodeScanner.openScannerModal()" style="color: var(--primary);">
       <span class="mobile-nav-icon">📷</span>
       <span>Scan</span>
     </a>
-    <a href="javascript:void(0)" class="mobile-nav-item" data-view="khata" onclick="App.navigate('khata')">
+    <a href="javascript:void(0)" class="mobile-nav-item" data-view="inventory" onclick="App.navigate('inventory')">
+      <span class="mobile-nav-icon">📦</span>
+      <span>Stock</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-view="udhaar" onclick="App.navigate('udhaar')">
       <span class="mobile-nav-icon">📒</span>
       <span>Khata</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-view="settings" onclick="App.navigate('settings')">
       <span class="mobile-nav-icon">⚙️</span>
-      <span>More</span>
+      <span>Settings</span>
     </a>
   </nav>
 
   <!-- Notification Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- JavaScript Modules -->
+  <!-- Modular JavaScript Engine -->
   <script src="js/storage.js"></script>
   <script src="js/scanner.js"></script>
   <script src="js/pos.js"></script>
