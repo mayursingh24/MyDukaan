@@ -1,19 +1,19 @@
 /* ==========================================================================
-   MyDukaan Pro — Components & POS Styles
-   Barcode Scanner, POS Terminal, Modal, Khata, Thermal Receipts
+   MyDukaan — Components, POS Terminal, Modals & Responsive Layouts
+   Crafted with human precision for real-world retail store operations.
    ========================================================================== */
 
-/* Forms & Inputs */
+/* Forms & Clean Input System */
 .form-group {
   margin-bottom: 14px;
 }
 
 .form-label {
   display: block;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -23,16 +23,16 @@
   background-color: var(--bg-input);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 13.5px;
+  padding: 9px 12px;
+  font-size: 13px;
   color: var(--text-primary);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .form-row-2 {
@@ -47,24 +47,20 @@
   gap: 10px;
 }
 
-/* POS Terminal Layout */
+/* ==========================================================================
+   POS TERMINAL LAYOUT & HIGH-SPEED BILLING
+   ========================================================================== */
 .pos-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 390px;
   gap: 20px;
   align-items: start;
-}
-
-@media (max-width: 1024px) {
-  .pos-layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .pos-catalog-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .pos-search-row {
@@ -80,24 +76,26 @@
 
 .pos-search-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
-  font-size: 16px;
+  display: flex;
+  align-items: center;
 }
 
 .pos-search-input {
   width: 100%;
-  padding-left: 42px;
+  padding-left: 38px;
   padding-right: 14px;
-  height: 44px;
+  height: 42px;
   border-radius: var(--radius-md);
+  font-size: 13.5px;
 }
 
 .category-chips {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: none;
@@ -108,32 +106,35 @@
 }
 
 .cat-chip {
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-full);
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   background: var(--bg-card);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   white-space: nowrap;
   transition: all 0.15s;
+  cursor: pointer;
 }
 
 .cat-chip:hover {
   border-color: var(--border-medium);
   color: var(--text-primary);
+  background: var(--bg-card-hover);
 }
 
 .cat-chip.active {
   background: var(--primary);
-  color: #fff;
+  color: #FFFFFF;
   border-color: var(--primary);
+  font-weight: 600;
 }
 
-/* POS Product Cards Grid */
+/* POS Products Grid */
 .pos-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 12px;
 }
 
@@ -141,58 +142,79 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 12px;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.12s, border-color 0.12s, background-color 0.12s;
   display: flex;
   flex-direction: column;
   position: relative;
+  user-select: none;
 }
 
 .pos-prod-card:hover {
   transform: translateY(-2px);
-  border-color: var(--primary);
+  border-color: var(--border-focus);
+  background-color: var(--bg-card-hover);
+}
+
+.pos-prod-card:active {
+  transform: scale(0.98);
 }
 
 .pos-prod-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-.pos-prod-emoji {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+.pos-prod-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-input);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
 }
 
-.pos-prod-barcode-badge {
+.pos-prod-sku {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
-  background: var(--bg-input);
-  padding: 2px 6px;
-  border-radius: 4px;
 }
 
 .pos-prod-title {
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.35;
   margin-bottom: 4px;
+  min-height: 34px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pos-prod-mrp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
 }
 
 .pos-prod-mrp {
-  font-size: 11px;
   color: var(--text-muted);
   text-decoration: line-through;
+}
+
+.pos-prod-save {
+  color: var(--success);
+  font-weight: 600;
+  font-size: 10px;
 }
 
 .pos-prod-price-row {
@@ -204,53 +226,63 @@
 }
 
 .pos-prod-price {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--primary);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .pos-prod-stock {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-/* POS Cart Drawer */
+/* POS Cart / Register Panel */
 .pos-cart-panel {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: calc(var(--topbar-h) + 16px);
-  max-height: calc(100vh - var(--topbar-h) - 36px);
+  max-height: calc(100vh - var(--topbar-h) - 32px);
+  box-shadow: var(--shadow-sm);
 }
 
 .pos-cart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
+}
+
+.pos-cart-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .pos-cart-items-list {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 0;
+  padding: 10px 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-height: 180px;
-  max-height: 280px;
+  gap: 8px;
+  min-height: 150px;
+  max-height: 250px;
 }
 
 .cart-item-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 7px 9px;
   background: var(--bg-card);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
@@ -262,11 +294,12 @@
 }
 
 .cart-item-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 
 .cart-item-sub {
@@ -277,7 +310,7 @@
 .cart-qty-ctrl {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: var(--bg-input);
   padding: 2px 4px;
   border-radius: var(--radius-sm);
@@ -292,11 +325,13 @@
   justify-content: center;
   font-weight: 700;
   color: var(--text-primary);
-  border-radius: 4px;
+  border-radius: 3px;
+  background: var(--bg-card);
+  transition: background-color 0.1s;
 }
 
 .cart-qty-btn:hover {
-  background: var(--bg-card-hover);
+  background: var(--bg-elevated);
 }
 
 .cart-qty-val {
@@ -304,30 +339,37 @@
   font-weight: 700;
   min-width: 18px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .cart-item-total {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
-  min-width: 55px;
+  min-width: 50px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .cart-item-del {
   color: var(--text-muted);
-  font-size: 14px;
-  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
 }
 
 .cart-item-del:hover {
   color: var(--danger);
+  background: var(--danger-light);
 }
 
-/* Cart Summary & Checkout */
+/* Cart Financial Summary & Checkout */
 .pos-cart-summary {
   border-top: 1px solid var(--border-subtle);
-  padding-top: 12px;
+  padding-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -341,7 +383,7 @@
 }
 
 .summary-line.total {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--text-primary);
   padding-top: 8px;
@@ -349,11 +391,12 @@
   margin-top: 4px;
 }
 
+/* Fast Payment Mode Selector */
 .payment-modes-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  margin: 12px 0 8px;
+  margin: 10px 0 8px;
 }
 
 .pm-btn {
@@ -364,8 +407,12 @@
   color: var(--text-secondary);
   font-size: 11.5px;
   font-weight: 600;
-  text-align: center;
-  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.12s;
+  cursor: pointer;
 }
 
 .pm-btn:hover {
@@ -376,23 +423,54 @@
 .pm-btn.active {
   background: var(--primary-light);
   border-color: var(--primary);
-  color: var(--primary);
-  font-weight: 700;
+  color: #60A5FA;
+}
+
+/* Fast Cash Denominations */
+.cash-tender-row {
+  display: flex;
+  gap: 5px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+.cash-note-chip {
+  flex: 1;
+  padding: 5px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.cash-note-chip:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+}
+
+/* Mobile Sticky POS Checkout Bar */
+.mobile-pos-sticky-bar {
+  display: none;
 }
 
 /* ==========================================================================
-   BARCODE SCANNER MODAL & VIEWFINDER
+   BARCODE CAMERA SCANNER MODAL
    ========================================================================== */
 .scanner-modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  z-index: 1000;
+  backdrop-filter: blur(6px);
+  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
 }
 
 .scanner-box {
@@ -400,7 +478,7 @@
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -408,7 +486,7 @@
 }
 
 .scanner-header {
-  padding: 16px 20px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -418,7 +496,7 @@
 .scanner-viewport-wrap {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 260px;
   background: #000;
   overflow: hidden;
   display: flex;
@@ -432,14 +510,13 @@
   object-fit: cover;
 }
 
-/* Animated Scanner Laser Beam & Crosshair */
 .scanner-target-reticle {
   position: absolute;
   width: 220px;
-  height: 140px;
-  border: 2px solid rgba(59, 130, 246, 0.8);
-  border-radius: 12px;
-  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.55);
+  height: 130px;
+  border: 2px solid rgba(59, 130, 246, 0.9);
+  border-radius: 10px;
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -449,233 +526,99 @@
   width: 100%;
   height: 2px;
   background: #EF4444;
-  box-shadow: 0 0 10px #EF4444, 0 0 20px #EF4444;
+  box-shadow: 0 0 8px #EF4444;
   animation: scanLaserAnim 1.8s ease-in-out infinite alternate;
 }
 
 @keyframes scanLaserAnim {
-  0% { transform: translateY(-60px); }
-  100% { transform: translateY(60px); }
+  0% { transform: translateY(-50px); }
+  100% { transform: translateY(50px); }
 }
 
-/* Scanned Product Info Overlay */
 .scanned-detection-card {
-  padding: 14px 18px;
+  padding: 12px 16px;
   background: var(--bg-card);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.scanned-item-match {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  background: var(--success-light);
-  border: 1px solid var(--success-border);
-  border-radius: var(--radius-md);
-}
-
-/* Google Search Barcode Lookup Animation */
-.google-rainbow-bar {
-  height: 100%;
-  width: 50%;
-  background: linear-gradient(90deg, #4285F4, #EA4335, #FBBC05, #34A853, #4285F4);
-  background-size: 200% 100%;
-  border-radius: 99px;
-  animation: googleRainbow 1.4s infinite linear, googleSlide 1.6s infinite ease-in-out;
-}
-
-@keyframes googleRainbow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
-
-@keyframes googleSlide {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(200%); }
-}
-
-/* Modals & Dialogs */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(6px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: modalFadeIn 0.15s ease;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  width: 100%;
-  max-width: 520px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-}
-
-.modal-header {
-  padding: 18px 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.modal-body {
-  padding: 20px 22px;
-}
-
-/* Data Tables */
-.table-container {
-  overflow-x: auto;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  text-align: left;
-}
-
-.data-table th {
-  background: var(--bg-input);
-  padding: 10px 14px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.data-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-}
-
-.data-table tr:hover {
-  background-color: var(--bg-card);
-}
-
-/* Toasts */
-.toast-container {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
-  max-width: 380px;
-}
-
-.toast-msg {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  animation: toastSlide 0.2s ease;
-}
-
-@keyframes toastSlide {
-  from { transform: translateX(20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* Printable Bill Styling */
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #printable-receipt-area, #printable-receipt-area * {
-    visibility: visible;
-  }
-  #printable-receipt-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    margin: 0;
-    padding: 10px;
-    background: #fff;
-    color: #000;
-    font-family: monospace;
-    font-size: 12px;
-  }
 }
 
 /* ==========================================================================
-   AI CHAT INTERFACE & CONVERSATION THREAD
+   THERMAL RECEIPT & PRINT VIEW
+   ========================================================================== */
+.thermal-receipt-modal {
+  max-width: 380px;
+  background: #FFFFFF;
+  color: #111827;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.thermal-receipt-body {
+  padding: 20px 18px;
+  background: #FFFFFF;
+  color: #000000;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.thermal-shop-name {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.thermal-divider {
+  border-top: 1px dashed #71717A;
+  margin: 10px 0;
+}
+
+.thermal-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.thermal-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   AI COPILOT MODAL & CHAT INTERFACE
    ========================================================================== */
 .ai-chat-modal-window {
-  max-width: 580px;
-  height: 85vh;
+  max-width: 600px;
+  height: 620px;
   display: flex;
   flex-direction: column;
 }
 
 .ai-modal-header {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(59, 130, 246, 0.08));
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 16px 20px;
-}
-
-.ai-avatar-badge {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #7C3AED, #9333EA);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  padding: 14px 18px;
 }
 
 .ai-chat-thread {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  background: var(--bg-surface);
 }
 
 .ai-msg-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-start;
-  animation: fadeInMsg 0.2s ease;
-}
-
-@keyframes fadeInMsg {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .ai-msg-row.user {
@@ -683,76 +626,46 @@
 }
 
 .ai-msg-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  background: var(--primary-light);
+  color: var(--primary);
   flex-shrink: 0;
 }
 
-.ai-msg-row.ai .ai-msg-avatar {
-  background: #7C3AED;
-  color: #fff;
-}
-
 .ai-msg-row.user .ai-msg-avatar {
-  background: var(--primary);
-  color: #fff;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
 }
 
 .ai-msg-bubble {
   max-width: 82%;
-  padding: 12px 16px;
-  border-radius: 14px;
-  font-size: 13.5px;
-  line-height: 1.6;
-}
-
-.ai-msg-row.ai .ai-msg-bubble {
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  line-height: 1.5;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  border-top-left-radius: 4px;
 }
 
 .ai-msg-row.user .ai-msg-bubble {
   background: var(--primary);
-  color: #fff;
-  border-top-right-radius: 4px;
-}
-
-.ai-msg-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.ai-copy-btn {
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-
-.ai-copy-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-input);
+  color: #FFFFFF;
+  border-color: var(--primary);
+  border-bottom-right-radius: 4px;
 }
 
 .ai-prompt-chips-row {
-  padding: 10px 16px;
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
   background: var(--bg-surface);
   border-top: 1px solid var(--border-subtle);
-  display: flex;
-  gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -762,76 +675,154 @@
 }
 
 .ai-input-footer {
-  padding: 14px 18px;
-  background: var(--bg-input);
+  padding: 12px 16px;
   border-top: 1px solid var(--border-subtle);
+  background: var(--bg-input);
   display: flex;
-  gap: 10px;
-  align-items: flex-end;
+  gap: 8px;
+  align-items: center;
 }
 
 .ai-textarea {
-  min-height: 42px;
-  max-height: 120px;
+  flex: 1;
   resize: none;
-}
-
-/* Typing Indicator Animation */
-.typing-dots-spinner {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.typing-dots-spinner span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--purple);
-  animation: typingBounce 1.2s infinite ease-in-out;
-}
-
-.typing-dots-spinner span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots-spinner span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typingBounce {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
+  height: 38px;
+  padding: 8px 12px;
+  font-size: 13px;
 }
 
 /* ==========================================================================
-   EMPTY STATE CARDS
+   NOTIFICATION CENTER & DROPDOWN
    ========================================================================== */
-.empty-state-card {
-  text-align: center;
-  padding: 48px 24px;
-  background: var(--bg-card);
-  border: 1px dashed var(--border-medium);
+.notification-popover {
+  position: absolute;
+  top: calc(var(--topbar-h) + 6px);
+  right: 20px;
+  width: 340px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 500;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideUp 0.15s ease-out;
+}
+
+.notification-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 12px 0;
-}
-
-.empty-state-icon {
-  font-size: 42px;
-  margin-bottom: 12px;
-}
-
-.empty-state-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-.empty-state-desc {
+  justify-content: space-between;
   font-size: 13px;
-  color: var(--text-secondary);
-  max-width: 380px;
-  margin-bottom: 18px;
-  line-height: 1.5;
+  font-weight: 700;
 }
 
+.notification-list {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  transition: background-color 0.12s;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background-color: var(--bg-card);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN RULES FOR MOBILE & TABLETS
+   ========================================================================== */
+@media (max-width: 900px) {
+  .pos-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .pos-cart-panel {
+    position: fixed;
+    top: auto;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    max-height: 80vh;
+    border-radius: 16px 16px 0 0;
+    z-index: 92;
+    transform: translateY(110%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .pos-cart-panel.open-mobile {
+    transform: translateY(0);
+  }
+
+  .mobile-pos-sticky-bar {
+    display: flex;
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: var(--primary);
+    color: #FFFFFF;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 91;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .form-row-2, .form-row-3 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .payment-modes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ai-chat-modal-window {
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* Print Rules for 80mm Receipts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #thermal-printable-area, #thermal-printable-area * {
+    visibility: visible;
+  }
+  #thermal-printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 10px;
+    background: #FFF;
+    color: #000;
+  }
+}

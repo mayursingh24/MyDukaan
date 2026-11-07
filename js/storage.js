@@ -6,7 +6,7 @@
 const STORAGE_KEY = 'mydukaan24_prod_db';
 
 const DEFAULT_SHOP = {
-  name: "MyDukaan24 Mart",
+  name: "MyDukkan24 Mart",
   owner: "Mayur Singh",
   phone: "+91 98765 43210",
   address: "Hazratganj Market, Lucknow, Uttar Pradesh, India",

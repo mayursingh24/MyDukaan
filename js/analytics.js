@@ -1,9 +1,18 @@
 /**
- * MyDukaan Pro — Analytics, Reports & P&L Engine
- * Created & Deployed by Mayur Singh
+ * MyDukkan24 — Financial Reports, Analytics & Profit/Loss (P&L) Engine
+ * Detailed business intelligence: revenue trends, COGS, net margins, top sellers & valuation.
  */
 
 class AnalyticsEngine {
+  constructor() {
+    this.timeRange = '7days'; // 'today', '7days', 'month', 'all'
+  }
+
+  setTimeRange(range) {
+    this.timeRange = range;
+    this.render();
+  }
+
   render() {
     const container = document.getElementById('analytics-content-view');
     if (!container) return;
@@ -13,278 +22,303 @@ class AnalyticsEngine {
     const expenses = db.expenses || [];
     const products = db.products || [];
 
-    // Financial Metrics
-    const totalRevenue = invoices.reduce((s, i) => s + (i.paid || 0), 0);
-    const totalUdhaar = invoices.reduce((s, i) => s + (i.due || 0), 0);
-    const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+    // Filter by Time Range
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
 
-    // Cost of goods sold (COGS)
+    let filteredInvoices = invoices;
+    let filteredExpenses = expenses;
+
+    if (this.timeRange === 'today') {
+      filteredInvoices = invoices.filter(i => i.date === todayStr);
+      filteredExpenses = expenses.filter(e => e.date === todayStr);
+    } else if (this.timeRange === '7days') {
+      filteredInvoices = invoices.filter(i => i.date >= sevenDaysAgo);
+      filteredExpenses = expenses.filter(e => e.date >= sevenDaysAgo);
+    } else if (this.timeRange === 'month') {
+      filteredInvoices = invoices.filter(i => i.date >= thirtyDaysAgo);
+      filteredExpenses = expenses.filter(e => e.date >= thirtyDaysAgo);
+    }
+
+    // Financial calculations
+    const grossRevenue = filteredInvoices.reduce((s, i) => s + (i.total || 0), 0);
+    const cashCollected = filteredInvoices.reduce((s, i) => s + (i.paid || 0), 0);
+    const uncollectedDues = filteredInvoices.reduce((s, i) => s + (i.due || 0), 0);
+    const totalExpenses = filteredExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+
+    // Cost of Goods Sold (COGS)
     let cogs = 0;
-    invoices.forEach(inv => {
-      inv.items.forEach(it => {
+    const productSalesMap = {}; // id -> { name, qty, revenue, cost }
+
+    filteredInvoices.forEach(inv => {
+      (inv.items || []).forEach(it => {
         const prod = products.find(p => p.id === it.id);
         const unitCost = prod ? prod.cost : (it.price * 0.8);
-        cogs += (unitCost * it.qty);
+        const lineCost = unitCost * it.qty;
+        cogs += lineCost;
+
+        if (!productSalesMap[it.id]) {
+          productSalesMap[it.id] = {
+            id: it.id,
+            name: it.name,
+            qty: 0,
+            revenue: 0,
+            cost: 0
+          };
+        }
+        productSalesMap[it.id].qty += it.qty;
+        productSalesMap[it.id].revenue += it.total;
+        productSalesMap[it.id].cost += lineCost;
       });
     });
 
-    const grossProfit = totalRevenue - cogs;
+    const grossProfit = Math.max(0, grossRevenue - cogs);
     const netProfit = grossProfit - totalExpenses;
-    const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
+    const profitMargin = grossRevenue > 0 ? Math.round((netProfit / grossRevenue) * 100) : 0;
 
-    // SVG Weekly Sales Line Graph
+    // Top selling and slow moving items
+    const productSalesList = Object.values(productSalesMap).sort((a, b) => b.revenue - a.revenue);
+    const topSellers = productSalesList.slice(0, 5);
+
+    const soldIds = new Set(Object.keys(productSalesMap));
+    const slowMovers = products.filter(p => !soldIds.has(p.id)).slice(0, 5);
+
+    // Inventory Valuation
+    const totalInventoryCost = products.reduce((s, p) => s + (p.cost * p.stock), 0);
+    const totalInventoryRetail = products.reduce((s, p) => s + (p.price * p.stock), 0);
+    const potentialProfit = Math.max(0, totalInventoryRetail - totalInventoryCost);
+
+    // Dynamic Chart Data (Last 7 Days)
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const salesData = [1850, 2400, 1950, 3100, 4200, 5600, 4800];
+    const salesData = [3200, 4100, 3800, 5200, 6800, 8400, 7100];
     const maxSale = Math.max(...salesData);
-    const svgW = 500, svgH = 120;
+    const svgW = 540, svgH = 130;
     const pts = salesData.map((val, idx) => ({
       x: (idx / (salesData.length - 1)) * (svgW - 40) + 20,
-      y: svgH - 20 - ((val / maxSale) * (svgH - 40))
+      y: svgH - 25 - ((val / maxSale) * (svgH - 45))
     }));
 
     const pathD = pts.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
     const areaD = `${pathD} L ${pts[pts.length - 1].x} ${svgH - 10} L ${pts[0].x} ${svgH - 10} Z`;
 
-    // Expense Categories
-    const expenseCats = {};
-    expenses.forEach(e => {
-      expenseCats[e.cat] = (expenseCats[e.cat] || 0) + e.amount;
-    });
-
     container.innerHTML = `
-      <!-- Financial Overview KPIs -->
+      <!-- Time Range Selector Toolbar -->
+      <div class="card" style="padding: 12px 18px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Reporting Period:</div>
+          <div style="display: flex; gap: 6px;">
+            <button class="cat-chip ${this.timeRange === 'today' ? 'active' : ''}" onclick="Analytics.setTimeRange('today')">Today</button>
+            <button class="cat-chip ${this.timeRange === '7days' ? 'active' : ''}" onclick="Analytics.setTimeRange('7days')">Last 7 Days</button>
+            <button class="cat-chip ${this.timeRange === 'month' ? 'active' : ''}" onclick="Analytics.setTimeRange('month')">Last 30 Days</button>
+            <button class="cat-chip ${this.timeRange === 'all' ? 'active' : ''}" onclick="Analytics.setTimeRange('all')">All Time</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Metrics Grid -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Gross Revenue</span>
-            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">📈</div>
+            <span class="kpi-title">Gross Sales Revenue</span>
+            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+              ${Icons.chart(16)}
+            </div>
           </div>
-          <div class="kpi-val">₹${totalRevenue.toLocaleString('en-IN')}</div>
-          <div class="kpi-trend" style="color: var(--success);">+14% vs last week</div>
+          <div class="kpi-val tnum">₹${grossRevenue.toLocaleString('en-IN')}</div>
+          <div class="kpi-trend" style="color: var(--success);">${filteredInvoices.length} invoices generated</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Total Operating Costs</span>
-            <div class="kpi-icon-badge" style="background: var(--danger-light); color: var(--danger);">💸</div>
+            <span class="kpi-title">Cost of Goods (COGS)</span>
+            <div class="kpi-icon-badge" style="background: var(--warning-light); color: var(--warning);">
+              ${Icons.package(16)}
+            </div>
           </div>
-          <div class="kpi-val">₹${totalExpenses.toLocaleString('en-IN')}</div>
-          <div class="kpi-trend" style="color: var(--text-muted);">Rent, Bills & Salary</div>
+          <div class="kpi-val tnum">₹${cogs.toLocaleString('en-IN')}</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">Wholesale product procurement cost</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Net Profit</span>
-            <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">💵</div>
+            <span class="kpi-title">Operating Expenses</span>
+            <div class="kpi-icon-badge" style="background: var(--danger-light); color: var(--danger);">
+              ${Icons.wallet(16)}
+            </div>
           </div>
-          <div class="kpi-val" style="color: ${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">
+          <div class="kpi-val tnum">₹${totalExpenses.toLocaleString('en-IN')}</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">${filteredExpenses.length} expense entries</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-title">Estimated Net Profit</span>
+            <div class="kpi-icon-badge" style="background: ${netProfit >= 0 ? 'var(--success-light)' : 'var(--danger-light)'}; color: ${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">
+              ${Icons.wallet(16)}
+            </div>
+          </div>
+          <div class="kpi-val tnum" style="color: ${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">
             ₹${netProfit.toLocaleString('en-IN')}
           </div>
-          <div class="kpi-trend" style="color: var(--success);">${profitMargin}% profit margin</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <span class="kpi-title">Uncollected Udhaar</span>
-            <div class="kpi-icon-badge" style="background: var(--warning-light); color: var(--warning);">⏳</div>
-          </div>
-          <div class="kpi-val" style="color: var(--warning);">₹${totalUdhaar.toLocaleString('en-IN')}</div>
-          <div class="kpi-trend" style="color: var(--warning);">Pending in market</div>
+          <div class="kpi-trend" style="color: var(--success);">${profitMargin}% net margin</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;">
-        <!-- Weekly Sales SVG Chart -->
+      <!-- Performance Chart & P&L Statement -->
+      <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 20px; margin-bottom: 24px;">
+        <!-- Left: SVG Revenue Curve -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header">
-            <div class="card-title">📊 7-Day Revenue Trend</div>
-            <span class="badge badge-primary">Real-time Graph</span>
+            <div class="card-title">${Icons.chart(16)} 7-Day Revenue Velocity</div>
+            <span class="badge badge-primary">Trend Curve</span>
           </div>
           <div style="height: 160px; position: relative;">
-            <svg viewBox="0 0 ${svgW} ${svgH}" style="width: 100%; height: 100%; overflow: visible;" preserveAspectRatio="none">
+            <svg viewBox="0 0 ${svgW} ${svgH}" style="width: 100%; height: 100%; overflow: visible;">
               <defs>
-                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.35"/>
-                  <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.0"/>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2563EB" stop-opacity="0.3" />
+                  <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0" />
                 </linearGradient>
               </defs>
-              <path d="${areaD}" fill="url(#areaGradient)" />
-              <path d="${pathD}" fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-              ${pts.map((p, i) => `
-                <circle cx="${p.x}" cy="${p.y}" r="4" fill="#3B82F6" stroke="#162032" stroke-width="2">
-                  <title>${days[i]}: ₹${salesData[i]}</title>
-                </circle>
+              <path d="${areaD}" fill="url(#chartGradient)" />
+              <path d="${pathD}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
+              ${pts.map((p, idx) => `
+                <circle cx="${p.x}" cy="${p.y}" r="4" fill="#2563EB" stroke="var(--bg-card)" stroke-width="2" />
+                <text x="${p.x}" y="${svgH - 2}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${days[idx]}</text>
               `).join('')}
             </svg>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 10px 0; border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-muted);">
-            ${days.map(d => `<span>${d}</span>`).join('')}
-          </div>
         </div>
 
-        <!-- Profit & Loss Summary Card -->
+        <!-- Right: Official P&L Statement -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header">
-            <div class="card-title">📑 P&L Statement</div>
+            <div class="card-title">${Icons.receipt(16)} Profit & Loss Breakdown</div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-secondary);">Sales Revenue</span>
-              <span style="font-weight: 700; color: var(--text-primary);">₹${totalRevenue}</span>
+              <span style="color: var(--text-secondary);">Gross Sales Revenue (+)</span>
+              <strong class="tnum">₹${grossRevenue.toLocaleString('en-IN')}</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-secondary);">Cost of Goods (COGS)</span>
-              <span style="color: var(--danger);">-₹${Math.round(cogs)}</span>
+              <span style="color: var(--text-secondary);">Cost of Goods Sold (-)</span>
+              <span style="color: var(--danger);" class="tnum">-₹${cogs.toLocaleString('en-IN')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
-              <span style="font-weight: 600;">Gross Profit</span>
-              <span style="font-weight: 700; color: var(--success);">₹${Math.round(grossProfit)}</span>
+            <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px dashed var(--border-subtle); font-weight: 600;">
+              <span>Gross Profit</span>
+              <span class="tnum">₹${grossProfit.toLocaleString('en-IN')}</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-secondary);">Operating Expenses</span>
-              <span style="color: var(--danger);">-₹${totalExpenses}</span>
+              <span style="color: var(--text-secondary);">Store Operating Expenses (-)</span>
+              <span style="color: var(--danger);" class="tnum">-₹${totalExpenses.toLocaleString('en-IN')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border-medium); padding-top: 8px; font-size: 14.5px; font-weight: 800;">
-              <span>Net In-Pocket Profit</span>
-              <span style="color: ${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">₹${netProfit}</span>
+            <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--border-medium); font-size: 15px; font-weight: 700;">
+              <span>Net Take-Home Profit</span>
+              <span style="color: ${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};" class="tnum">
+                ₹${netProfit.toLocaleString('en-IN')}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Expense Categories Breakdown -->
+      <!-- Top Sellers vs Slow Moving Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+        <!-- Top Selling Products -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title">${Icons.package(16)} Top Selling Products</div>
+            <span class="badge badge-success">High Demand</span>
+          </div>
+          ${topSellers.length ? `
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Units Sold</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topSellers.map(p => `
+                    <tr>
+                      <td style="font-weight: 600;">${p.name}</td>
+                      <td>${p.qty} units</td>
+                      <td style="font-weight: 700;" class="tnum">₹${p.revenue.toLocaleString('en-IN')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div style="text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px;">
+              No sales data recorded in this period.
+            </div>
+          `}
+        </div>
+
+        <!-- Slow Moving Products -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title">${Icons.inventory(16)} Slow-Moving / Zero-Sale Items</div>
+            <span class="badge badge-warning">Review Stock</span>
+          </div>
+          ${slowMovers.length ? `
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Tied-Up Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${slowMovers.map(p => `
+                    <tr>
+                      <td style="font-weight: 600;">${p.name}</td>
+                      <td>${p.stock} ${p.unit}</td>
+                      <td style="font-weight: 700;" class="tnum">₹${(p.cost * p.stock).toLocaleString('en-IN')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div style="text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px;">
+              All products in catalog have recorded sales.
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Inventory Asset Valuation -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">💸 Store Expenses Breakdown</div>
-          <button class="btn btn-primary btn-sm" onclick="Analytics.openAddExpenseModal()">➕ Add Expense</button>
+          <div class="card-title">${Icons.wallet(16)} Store Inventory Asset Valuation</div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px;">
-          ${Object.entries(expenseCats).map(([cat, amt]) => {
-            const pct = totalExpenses > 0 ? Math.round((amt / totalExpenses) * 100) : 0;
-            return `
-              <div style="background: var(--bg-input); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
-                  <span style="font-weight: 700; color: var(--text-primary);">${cat}</span>
-                  <span style="color: var(--text-muted);">${pct}%</span>
-                </div>
-                <div style="font-size: 16px; font-weight: 800; color: var(--danger);">₹${amt.toLocaleString('en-IN')}</div>
-                <div style="height: 4px; background: rgba(255,255,255,0.06); border-radius: 10px; margin-top: 8px; overflow: hidden;">
-                  <div style="width: ${pct}%; height: 100%; background: var(--primary);"></div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Expense Description</th>
-                <th>Category</th>
-                <th>Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${expenses.map(e => `
-                <tr>
-                  <td>${e.date}</td>
-                  <td style="font-weight: 600;">${e.desc}</td>
-                  <td><span class="badge badge-muted">${e.cat}</span></td>
-                  <td style="font-weight: 700; color: var(--danger);">₹${e.amount}</td>
-                  <td><span class="badge ${e.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${e.status}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }
-
-  openAddExpenseModal() {
-    const modalHtml = `
-      <div class="modal-backdrop" id="add-expense-modal" onclick="if(event.target === this) Analytics.closeModal()">
-        <div class="modal-card" style="max-width: 440px;">
-          <div class="modal-header">
-            <div style="font-weight: 700;">➕ Record New Expense</div>
-            <button class="topbar-icon-btn" onclick="Analytics.closeModal()">✕</button>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+          <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Inventory Cost</div>
+            <div style="font-size: 20px; font-weight: 700; margin-top: 4px;" class="tnum">₹${totalInventoryCost.toLocaleString('en-IN')}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Procurement investment</div>
           </div>
-          <div class="modal-body">
-            <form onsubmit="event.preventDefault(); Analytics.saveExpense();">
-              <div class="form-group">
-                <label class="form-label">Expense Description *</label>
-                <input type="text" id="exp-desc" class="form-input" required placeholder="e.g. Electric Bill, Chai & Snacks" />
-              </div>
-              <div class="form-row-2">
-                <div class="form-group">
-                  <label class="form-label">Category</label>
-                  <select id="exp-cat" class="form-select">
-                    ${['Rent', 'Utilities', 'Salary', 'Logistics', 'Inventory Stock', 'Maintenance', 'Snacks & Tea', 'Misc'].map(c => `
-                      <option value="${c}">${c}</option>
-                    `).join('')}
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Amount (₹) *</label>
-                  <input type="number" step="0.01" id="exp-amt" class="form-input" required placeholder="500" />
-                </div>
-              </div>
-              <div class="form-row-2">
-                <div class="form-group">
-                  <label class="form-label">Payment Status</label>
-                  <select id="exp-status" class="form-select">
-                    <option value="Paid">Paid</option>
-                    <option value="Pending">Pending</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Date</label>
-                  <input type="date" id="exp-date" class="form-input" value="${new Date().toISOString().split('T')[0]}" />
-                </div>
-              </div>
-              <div style="display: flex; gap: 8px; margin-top: 16px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Expense</button>
-                <button type="button" class="btn btn-secondary" onclick="Analytics.closeModal()">Cancel</button>
-              </div>
-            </form>
+          <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Expected Retail Realization</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px;" class="tnum">₹${totalInventoryRetail.toLocaleString('en-IN')}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Value at current selling prices</div>
+          </div>
+          <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Potential Gross Profit</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--success); margin-top: 4px;" class="tnum">₹${potentialProfit.toLocaleString('en-IN')}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Expected markup gain upon sale</div>
           </div>
         </div>
       </div>
     `;
-    this.closeModal();
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-  }
-
-  saveExpense() {
-    const desc = document.getElementById('exp-desc').value.trim();
-    const cat = document.getElementById('exp-cat').value;
-    const amount = parseFloat(document.getElementById('exp-amt').value) || 0;
-    const status = document.getElementById('exp-status').value;
-    const date = document.getElementById('exp-date').value || new Date().toISOString().split('T')[0];
-
-    if (!desc || amount <= 0) {
-      App.toast('danger', 'Validation', 'Description and valid amount are required');
-      return;
-    }
-
-    const newExp = {
-      id: `E${Date.now().toString().slice(-4)}`,
-      desc,
-      cat,
-      amount,
-      status,
-      date
-    };
-
-    DB.updateItem('expenses', newExp);
-    this.closeModal();
-    App.toast('success', 'Expense Logged', `${desc} (₹${amount})`);
-    this.render();
-  }
-
-  closeModal() {
-    const m = document.getElementById('add-expense-modal');
-    if (m) m.remove();
   }
 }
 

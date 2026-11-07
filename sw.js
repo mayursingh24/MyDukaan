@@ -4,16 +4,18 @@
  * Offline-First Caching for Indian Retailers
  */
 
-const CACHE_NAME = 'mydukaan24-v4-cache';
+const CACHE_NAME = 'mydukkan24-v4-cache';
 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './app.html',
   './manifest.json',
+  './assets/logo.svg',
   './css/style.css',
   './css/components.css',
   './css/landing.css',
+  './js/icons.js',
   './js/storage.js',
   './js/scanner.js',
   './js/pos.js',

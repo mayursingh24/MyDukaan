@@ -45,15 +45,15 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Resolve API key: Priority: Server Environment Variable -> Client-provided key
-    const apiKey = process.env.GEMINI_API_KEY || clientApiKey;
+    // Resolve API key strictly from Netlify Environment Variables
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return {
         statusCode: 401,
         headers,
         body: JSON.stringify({
-          error: 'No Gemini API Key found. Configure GEMINI_API_KEY in your Netlify Environment Variables or enter it in MyDukaan24 Settings.'
+          error: 'GEMINI_API_KEY is not configured in Netlify Environment Variables. Please set GEMINI_API_KEY in your Netlify site settings.'
         })
       };
     }

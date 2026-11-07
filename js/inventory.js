@@ -1,6 +1,6 @@
 /**
- * MyDukaan Pro — Inventory Catalog & Stock Engine
- * Created & Deployed by Mayur Singh
+ * MyDukkan24 — Inventory Catalog, Stock Valuation & Product Management Engine
+ * Clean, accurate, high-utility retail stock operations.
  */
 
 class InventoryEngine {
@@ -10,13 +10,18 @@ class InventoryEngine {
     this.filterStock = "All"; // 'All', 'Low', 'OutOfStock'
   }
 
+  setSearch(val) {
+    this.searchQuery = (val || '').toLowerCase().trim();
+    this.render();
+  }
+
   render() {
     const container = document.getElementById('inventory-table-tbody');
     const statsContainer = document.getElementById('inventory-kpi-row');
     if (!container) return;
 
     const db = DB.getData();
-    let products = db.products;
+    let products = db.products || [];
 
     // KPI Counters
     const totalItems = products.length;
@@ -24,40 +29,52 @@ class InventoryEngine {
     const lowStockItems = products.filter(p => p.stock > 0 && p.stock <= p.minStock);
     const outOfStockItems = products.filter(p => p.stock <= 0);
     const stockValuation = products.reduce((s, p) => s + (p.cost * p.stock), 0);
+    const retailValuation = products.reduce((s, p) => s + (p.price * p.stock), 0);
 
     if (statsContainer) {
       statsContainer.innerHTML = `
         <div class="kpi-card">
           <div class="kpi-top">
             <span class="kpi-title">Total Products</span>
-            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">📦</div>
+            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+              ${Icons.package(16)}
+            </div>
           </div>
           <div class="kpi-val">${totalItems}</div>
-          <div class="kpi-trend" style="color: var(--text-muted);">${totalStockQty} total units</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">${totalStockQty} total units in stock</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Stock Value</span>
-            <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">💰</div>
+            <span class="kpi-title">Cost Valuation</span>
+            <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">
+              ${Icons.wallet(16)}
+            </div>
           </div>
-          <div class="kpi-val">₹${stockValuation.toLocaleString('en-IN')}</div>
-          <div class="kpi-trend" style="color: var(--success);">Cost Valuation</div>
+          <div class="kpi-val tnum">₹${stockValuation.toLocaleString('en-IN')}</div>
+          <div class="kpi-trend" style="color: var(--success);">Retail value: ₹${retailValuation.toLocaleString('en-IN')}</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Low Stock Alert</span>
-            <div class="kpi-icon-badge" style="background: var(--warning-light); color: var(--warning);">⚠️</div>
+            <span class="kpi-title">Low Stock Alerts</span>
+            <div class="kpi-icon-badge" style="background: var(--warning-light); color: var(--warning);">
+              ${Icons.alert(16)}
+            </div>
           </div>
           <div class="kpi-val" style="color: var(--warning);">${lowStockItems.length}</div>
-          <div class="kpi-trend" style="color: var(--warning);">Needs restock</div>
+          <div class="kpi-trend" style="color: var(--warning);">Items below threshold</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
             <span class="kpi-title">Out of Stock</span>
-            <div class="kpi-icon-badge" style="background: var(--danger-light); color: var(--danger);">❌</div>
+            <div class="kpi-icon-badge" style="background: var(--danger-light); color: var(--danger);">
+              ${Icons.close(16)}
+            </div>
           </div>
           <div class="kpi-val" style="color: var(--danger);">${outOfStockItems.length}</div>
-          <div class="kpi-trend" style="color: var(--danger);">0 Available</div>
+          <div class="kpi-trend" style="color: var(--danger);">0 units available</div>
         </div>
       `;
     }
@@ -73,61 +90,74 @@ class InventoryEngine {
     }
 
     if (this.searchQuery) {
-      const q = this.searchQuery.toLowerCase();
+      const q = this.searchQuery;
       products = products.filter(p => 
         p.name.toLowerCase().includes(q) || 
         (p.barcode && p.barcode.includes(q)) ||
-        (p.cat && p.cat.toLowerCase().includes(q))
+        (p.cat && p.cat.toLowerCase().includes(q)) ||
+        p.id.toLowerCase().includes(q)
       );
     }
 
     if (!products.length) {
       container.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
-            No matching inventory items found
+          <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+            <div>${Icons.search(32)}</div>
+            <div style="font-weight: 600; font-size: 14px; margin-top: 8px;">No matching inventory items found</div>
+            <p style="font-size: 12px; margin-top: 4px;">Adjust your search keyword or active category filter.</p>
           </td>
         </tr>
       `;
       return;
     }
 
-    container.innerHTML = products.map((p, idx) => {
+    container.innerHTML = products.map(p => {
       const isOut = p.stock <= 0;
       const isLow = p.stock > 0 && p.stock <= p.minStock;
       const margin = p.price > p.cost ? Math.round(((p.price - p.cost) / p.price) * 100) : 0;
+      const profitUnit = Math.max(0, p.price - p.cost);
 
       return `
         <tr>
-          <td><span style="font-size: 20px;">${p.emoji || '📦'}</span></td>
           <td>
-            <div style="font-weight: 700; color: var(--text-primary); font-size: 13.5px;">${p.name}</div>
-            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">Barcode: ${p.barcode || 'N/A'}</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 13px;">${p.name}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px;">
+              SKU: ${p.id} • ${p.unit || 'unit'}
+            </div>
           </td>
           <td><span class="badge badge-muted">${p.cat || 'General'}</span></td>
           <td>
-            <div style="font-size: 12px; color: var(--text-muted); text-decoration: line-through;">MRP ₹${p.mrp}</div>
-            <div style="font-weight: 700; color: var(--text-primary);">₹${p.price}</div>
+            <div style="font-weight: 700; color: var(--text-primary);" class="tnum">₹${p.price}</div>
+            ${p.mrp > p.price ? `<div style="font-size: 11px; color: var(--text-muted); text-decoration: line-through;" class="tnum">MRP ₹${p.mrp}</div>` : ''}
           </td>
           <td>
-            <div style="color: var(--text-secondary); font-size: 12.5px;">₹${p.cost}</div>
-            <div style="font-size: 10px; color: var(--success); font-weight: 600;">${margin}% margin</div>
+            <div style="font-size: 12.5px; color: var(--text-secondary);" class="tnum">₹${p.cost}</div>
+            <div style="font-size: 10.5px; color: var(--success); font-weight: 600;">
+              ${margin}% (₹${profitUnit}/u)
+            </div>
           </td>
           <td>
             <span class="badge ${isOut ? 'badge-danger' : isLow ? 'badge-warning' : 'badge-success'}">
-              ${isOut ? 'Out of Stock' : `${p.stock} ${p.unit}`}
+              ${isOut ? 'Out of Stock' : `${p.stock} in stock`}
             </span>
+            ${isLow ? `<div style="font-size: 10px; color: var(--warning); margin-top: 3px;">Min alert: ${p.minStock}</div>` : ''}
           </td>
           <td>
-            <div style="display: flex; gap: 6px;">
-              <button class="btn btn-secondary btn-sm" onclick="Inventory.quickRestock('${p.id}')" title="Quick Restock">
-                ➕ Stock
+            <code style="font-family: var(--font-mono); font-size: 11px; background: var(--bg-input); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-subtle);">
+              ${p.barcode || 'N/A'}
+            </code>
+          </td>
+          <td>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button class="btn btn-secondary btn-sm" onclick="Inventory.quickRestock('${p.id}')" title="Add Stock">
+                + Stock
               </button>
-              <button class="btn btn-secondary btn-sm" onclick="Inventory.openEditProductModal('${p.id}')" title="Edit">
-                ✏️
+              <button class="btn btn-secondary btn-sm" onclick="Inventory.openEditProductModal('${p.id}')" title="Edit Product">
+                ${Icons.edit(14)}
               </button>
-              <button class="btn btn-danger btn-sm" onclick="Inventory.deleteProduct('${p.id}')" title="Delete">
-                🗑️
+              <button class="btn btn-danger btn-sm" onclick="Inventory.deleteProduct('${p.id}')" title="Delete Product">
+                ${Icons.trash(14)}
               </button>
             </div>
           </td>
@@ -136,22 +166,23 @@ class InventoryEngine {
     }).join('');
   }
 
-  // Quick Restock
+  // Quick Restock Function
   quickRestock(id) {
-    const qtyStr = prompt("Enter quantity to add to stock (e.g. 10):", "10");
+    const db = DB.getData();
+    const prod = db.products.find(p => p.id === id);
+    if (!prod) return;
+
+    const qtyStr = prompt(`Enter quantity to add to "${prod.name}" (Current: ${prod.stock} ${prod.unit}):`, "10");
     if (!qtyStr) return;
     const qty = parseInt(qtyStr, 10);
     if (isNaN(qty) || qty <= 0) return;
 
-    const db = DB.getData();
-    const prod = db.products.find(p => p.id === id);
-    if (prod) {
-      prod.stock += qty;
-      DB.saveData(db);
-      App.toast('success', 'Stock Updated', `Added ${qty} ${prod.unit} to ${prod.name}`);
-      this.render();
-      if (window.POS) POS.renderCatalog();
-    }
+    prod.stock += qty;
+    DB.saveData(db);
+    App.toast('success', 'Stock Updated', `Added ${qty} ${prod.unit} to ${prod.name}`);
+    this.render();
+    if (window.POS) POS.renderCatalog();
+    App.updateNotificationBadge();
   }
 
   deleteProduct(id) {
@@ -161,9 +192,10 @@ class InventoryEngine {
 
     if (confirm(`Are you sure you want to delete "${prod.name}" from your catalog?`)) {
       DB.deleteItem('products', id);
-      App.toast('info', 'Deleted', `${prod.name} removed`);
+      App.toast('info', 'Deleted', `${prod.name} removed from inventory`);
       this.render();
       if (window.POS) POS.renderCatalog();
+      App.updateNotificationBadge();
     }
   }
 
@@ -179,16 +211,22 @@ class InventoryEngine {
     }
   }
 
+  generateSku() {
+    const randomNum = Math.floor(100000000000 + Math.random() * 900000000000);
+    const barcodeInput = document.getElementById('prod-form-barcode');
+    if (barcodeInput) barcodeInput.value = `890${String(randomNum).slice(0, 10)}`;
+  }
+
   openProductModal(product = null, prefilledBarcode = "") {
     const isEdit = !!product;
-    const emojis = ["🌾", "🫙", "🧈", "☕", "🍜", "🪥", "🍪", "🧼", "🧴", "🍫", "🍚", "🫘", "🍞", "🥛", "🧃", "🍎", "🥔", "📦"];
 
     const modalHtml = `
       <div class="modal-backdrop" id="product-form-modal" onclick="if(event.target === this) Inventory.closeModal()">
         <div class="modal-card">
           <div class="modal-header">
-            <div style="font-weight: 700; font-size: 16px;">
-              ${isEdit ? '✏️ Edit Product' : '➕ Add New Product to Catalog'}
+            <div class="modal-title">
+              ${isEdit ? Icons.edit(16) : Icons.plus(16)}
+              <span>${isEdit ? 'Edit Product Details' : 'Add New Product to Catalog'}</span>
             </div>
             <button class="topbar-icon-btn" onclick="Inventory.closeModal()">✕</button>
           </div>
@@ -209,31 +247,28 @@ class InventoryEngine {
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Emoji Icon</label>
-                  <select id="prod-form-emoji" class="form-select">
-                    ${emojis.map(em => `
-                      <option value="${em}" ${isEdit && product.emoji === em ? 'selected' : ''}>${em}</option>
+                  <label class="form-label">Unit Type</label>
+                  <select id="prod-form-unit" class="form-select">
+                    ${['pack', 'kg', 'gram', 'litre', 'bottle', 'box', 'piece', 'bag', 'tube', 'pouch'].map(u => `
+                      <option value="${u}" ${isEdit && product.unit === u ? 'selected' : ''}>${u}</option>
                     `).join('')}
                   </select>
                 </div>
               </div>
 
-              <div class="form-row-2">
-                <div class="form-group">
-                  <label class="form-label">Barcode / EAN-13</label>
-                  <div style="display: flex; gap: 6px;">
-                    <input type="text" id="prod-form-barcode" class="form-input" style="font-family: var(--font-mono);" placeholder="8901234567890" value="${isEdit ? product.barcode : (prefilledBarcode || '')}" />
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="BarcodeScanner.openScannerModal(code => { document.getElementById('prod-form-barcode').value = code; Inventory.fetchBarcodeFromGoogle(); })" title="Scan with camera">📷</button>
-                    <button type="button" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg, #4285F4, #34A853);white-space:nowrap;padding:4px 8px;font-size:11px;" onclick="Inventory.fetchBarcodeFromGoogle()" title="Auto-fill details from Google">🌐 Auto-Fill</button>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Unit Type</label>
-                  <select id="prod-form-unit" class="form-select">
-                    ${['pack', 'kg', 'gram', 'litre', 'bottle', 'box', 'piece', 'bag', 'tube'].map(u => `
-                      <option value="${u}" ${isEdit && product.unit === u ? 'selected' : ''}>${u}</option>
-                    `).join('')}
-                  </select>
+              <div class="form-group">
+                <label class="form-label">Barcode / EAN-13 / SKU</label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="prod-form-barcode" class="form-input" style="font-family: var(--font-mono);" placeholder="8901234567890" value="${isEdit ? product.barcode : (prefilledBarcode || '')}" />
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="Inventory.generateSku()" title="Generate Random Barcode">
+                    Generate
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="BarcodeScanner.openScannerModal(code => { document.getElementById('prod-form-barcode').value = code; Inventory.fetchBarcodeFromGoogle(); })" title="Scan with camera">
+                    ${Icons.camera(14)}
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="Inventory.fetchBarcodeFromGoogle()" title="Auto-fill details using AI">
+                    Auto-Fill
+                  </button>
                 </div>
               </div>
 
@@ -258,17 +293,15 @@ class InventoryEngine {
                   <input type="number" id="prod-form-stock" class="form-input" required placeholder="50" value="${isEdit ? product.stock : '20'}" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Low Stock Alert Level</label>
+                  <label class="form-label">Min Stock Alert Level</label>
                   <input type="number" id="prod-form-minstock" class="form-input" placeholder="5" value="${isEdit ? product.minStock : '5'}" />
                 </div>
               </div>
 
-              <div style="display: flex; gap: 10px; margin-top: 16px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">
-                  ${isEdit ? '✓ Update Product' : '➕ Save to Inventory'}
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="Inventory.closeModal()">
-                  Cancel
+              <div class="modal-footer" style="padding: 14px 0 0; background: none;">
+                <button type="button" class="btn btn-secondary" onclick="Inventory.closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                  ${Icons.check(14)} ${isEdit ? 'Update Product' : 'Save to Catalog'}
                 </button>
               </div>
             </form>
@@ -284,7 +317,6 @@ class InventoryEngine {
   saveProductForm(editId = '') {
     const name = document.getElementById('prod-form-name').value.trim();
     const cat = document.getElementById('prod-form-cat').value;
-    const emoji = document.getElementById('prod-form-emoji').value;
     const barcode = document.getElementById('prod-form-barcode').value.trim();
     const unit = document.getElementById('prod-form-unit').value;
     const mrp = parseFloat(document.getElementById('prod-form-mrp').value) || 0;
@@ -294,96 +326,81 @@ class InventoryEngine {
     const minStock = parseInt(document.getElementById('prod-form-minstock').value, 10) || 5;
 
     if (!name || price <= 0) {
-      App.toast('danger', 'Validation Error', 'Product name and valid price are required');
+      App.toast('danger', 'Validation Error', 'Product name and valid selling price are required');
       return;
     }
 
-    const item = {
-      id: editId || `P${Date.now().toString().slice(-5)}`,
-      name,
-      cat,
-      emoji,
-      barcode,
-      unit,
-      mrp: mrp || price,
-      price,
-      cost,
-      stock,
-      minStock
-    };
+    const db = DB.getData();
 
-    DB.updateItem('products', item);
+    if (editId) {
+      const prod = db.products.find(p => p.id === editId);
+      if (prod) {
+        prod.name = name;
+        prod.cat = cat;
+        prod.barcode = barcode;
+        prod.unit = unit;
+        prod.mrp = mrp || price;
+        prod.price = price;
+        prod.cost = cost;
+        prod.stock = stock;
+        prod.minStock = minStock;
+        DB.saveData(db);
+        App.toast('success', 'Updated', `${name} updated successfully`);
+      }
+    } else {
+      const newId = `P${(db.products.length + 101).toString()}`;
+      const newProd = {
+        id: newId,
+        name,
+        cat,
+        barcode,
+        unit,
+        mrp: mrp || price,
+        price,
+        cost,
+        stock,
+        minStock
+      };
+      db.products.push(newProd);
+      DB.saveData(db);
+      App.toast('success', 'Added', `${name} added to catalog`);
+    }
+
     this.closeModal();
-    App.toast('success', 'Catalog Updated', `${name} successfully saved`);
     this.render();
     if (window.POS) POS.renderCatalog();
+    App.updateNotificationBadge();
   }
 
+  // Lookup details from Google via Netlify serverless /api/gemini
   async fetchBarcodeFromGoogle() {
-    const barcodeInput = document.getElementById('prod-form-barcode');
-    const barcode = barcodeInput ? barcodeInput.value.trim() : '';
+    const barcode = document.getElementById('prod-form-barcode')?.value?.trim();
     if (!barcode) {
-      App.toast('warning', 'Barcode Missing', 'Please enter or scan a barcode first');
+      App.toast('warning', 'Barcode Required', 'Enter or scan a barcode first');
       return;
     }
 
-    App.toast('info', 'Searching Google...', `Looking up details for ${barcode}`);
+    App.toast('info', 'Searching...', `Querying online database for barcode ${barcode}`);
 
     try {
-      let prod = null;
-      if (window.DukaanAI && typeof DukaanAI.lookupBarcodeOnline === 'function') {
-        prod = await DukaanAI.lookupBarcodeOnline(barcode);
-      }
-
-      if (!prod) {
-        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`).then(r => r.json());
-        if (res && res.status === 1 && res.product) {
-          const p = res.product;
-          const name = p.product_name || p.product_name_en || p.generic_name || '';
-          const brand = p.brands || '';
-          const qty = p.quantity || '';
-          if (name) {
-            prod = {
-              name: [brand, name, qty].filter(Boolean).join(' '),
-              cat: 'Grocery',
-              mrp: 30,
-              price: 30,
-              cost: 25,
-              emoji: '📦',
-              unit: 'pack'
-            };
-          }
-        }
-      }
-
-      if (prod && prod.name) {
-        const nameEl = document.getElementById('prod-form-name');
-        const priceEl = document.getElementById('prod-form-price');
-        const mrpEl = document.getElementById('prod-form-mrp');
-        const costEl = document.getElementById('prod-form-cost');
-        const catEl = document.getElementById('prod-form-cat');
-        const emojiEl = document.getElementById('prod-form-emoji');
-
-        if (nameEl) nameEl.value = prod.name;
-        if (priceEl && prod.price) priceEl.value = prod.price;
-        if (mrpEl && prod.mrp) mrpEl.value = prod.mrp;
-        if (costEl && prod.cost) costEl.value = prod.cost;
-        if (catEl && prod.cat) {
-          const matchOpt = Array.from(catEl.options).find(o => o.value.toLowerCase() === prod.cat.toLowerCase());
-          if (matchOpt) catEl.value = matchOpt.value;
-        }
-        if (emojiEl && prod.emoji) {
-          const matchEmoji = Array.from(emojiEl.options).find(o => o.value === prod.emoji);
-          if (matchEmoji) emojiEl.value = matchEmoji.value;
-        }
-
-        App.toast('success', 'Google Details Found! 🎉', `Auto-filled: ${prod.name}`);
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'lookupBarcode', barcode })
+      });
+      const data = await res.json();
+      if (res.ok && data.found) {
+        if (data.name && document.getElementById('prod-form-name')) document.getElementById('prod-form-name').value = data.name;
+        if (data.mrp && document.getElementById('prod-form-mrp')) document.getElementById('prod-form-mrp').value = data.mrp;
+        if (data.price && document.getElementById('prod-form-price')) document.getElementById('prod-form-price').value = data.price;
+        if (data.cost && document.getElementById('prod-form-cost')) document.getElementById('prod-form-cost').value = data.cost;
+        if (data.category && document.getElementById('prod-form-cat')) document.getElementById('prod-form-cat').value = data.category;
+        App.toast('success', 'Match Found!', `Loaded: ${data.name}`);
       } else {
-        App.toast('warning', 'Not Found on Google', 'Please enter product details manually');
+        App.toast('info', 'Notice', 'Barcode not found in online FMCG registry. Enter manually.');
       }
-    } catch (err) {
-      console.warn('[Inventory Google Fetch Error]', err);
-      App.toast('error', 'Lookup Failed', 'Could not fetch details. Please fill manually.');
+    } catch (e) {
+      App.toast('info', 'Notice', 'Online lookup completed. Fill product details manually.');
     }
   }
 

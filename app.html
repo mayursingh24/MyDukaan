@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MyDukaan24 — Modern Retail Business OS & POS Terminal</title>
-  <meta name="description" content="AI-Powered POS Billing, Barcode Scanner, and Udhaar Khata for Indian Retailers. Created & Deployed by Mayur Singh." />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  <title>MyDukkan24 — Enterprise Retail OS & Smart POS</title>
+  <meta name="description" content="Next-generation shop management platform with high-speed POS billing, barcode vision, Udhaar ledger, and retail analytics." />
   
-  <!-- Fonts -->
+  <!-- Favicon: Official logo -->
+  <link rel="icon" type="image/jpeg" href="assets/LOGO.jpeg" />
+  <link rel="alternate icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="apple-touch-icon" href="assets/LOGO.jpeg" />
+
+  <!-- Typography: Inter (UI & Financials) + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <!-- CSS Stylesheets -->
+  <!-- Core Stylesheets -->
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="manifest" href="manifest.json" />
@@ -20,189 +24,221 @@
 <body>
   <div class="app-layout">
     <!-- Left Navigation Sidebar -->
-    <aside class="app-sidebar">
+    <aside class="app-sidebar" id="app-sidebar">
       <div class="sidebar-header">
-        <div class="brand-logo-icon">⚡</div>
-        <div class="brand-details">
-          <div class="brand-name">
-            MyDukaan24 <span class="brand-badge">SaaS</span>
+        <div class="brand-logo-container" style="display: flex; align-items: center; gap: 10px;">
+          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'; this.onerror=function(){this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';};" class="brand-logo-img" alt="MyDukkan24 Logo" style="width: 34px; height: 34px; object-fit: contain; border-radius: 6px;" />
+          <div class="brand-mark" id="brand-fallback-mark" style="display: none;">M</div>
+          <div class="brand-details">
+            <div class="brand-name">
+              MyDukkan24 <span class="brand-version">v4.0</span>
+            </div>
+            <div class="brand-sub">Retail Business OS</div>
           </div>
-          <div class="brand-sub">Retail Business OS</div>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <!-- Section: Overview -->
-        <div class="nav-section-title">Overview</div>
+        <!-- Section: Cash Counter -->
+        <div class="nav-section-title">Cash Counter</div>
         <a href="javascript:void(0)" class="nav-link active" data-view="dashboard" onclick="App.navigate('dashboard')">
-          <span class="nav-icon">📊</span>
+          <span class="nav-icon" data-icon="dashboard"></span>
           <span>Dashboard</span>
         </a>
-
-        <!-- Section: Shop -->
-        <div class="nav-section-title">Shop</div>
         <a href="javascript:void(0)" class="nav-link" data-view="pos" onclick="App.navigate('pos')">
-          <span class="nav-icon">⚡</span>
+          <span class="nav-icon" data-icon="pos"></span>
           <span>Quick Billing POS</span>
           <span class="nav-tag nav-tag-green">Live</span>
         </a>
-        <a href="javascript:void(0)" class="nav-link" data-view="products" onclick="App.navigate('products')">
-          <span class="nav-icon">📦</span>
-          <span>Products</span>
+        <a href="javascript:void(0)" class="nav-link" onclick="BarcodeScanner.openScannerModal()">
+          <span class="nav-icon" data-icon="scan"></span>
+          <span>Barcode Scanner</span>
         </a>
+
+        <!-- Section: Catalog & Stock -->
+        <div class="nav-section-title">Catalog & Stock</div>
         <a href="javascript:void(0)" class="nav-link" data-view="inventory" onclick="App.navigate('inventory')">
-          <span class="nav-icon">🏷️</span>
+          <span class="nav-icon" data-icon="inventory"></span>
           <span>Inventory & Stock</span>
         </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="products" onclick="App.navigate('products')">
+          <span class="nav-icon" data-icon="package"></span>
+          <span>Product Catalog</span>
+        </a>
+
+        <!-- Section: Accounts & Khata -->
+        <div class="nav-section-title">Accounts & Khata</div>
+        <a href="javascript:void(0)" class="nav-link" data-view="udhaar" onclick="App.navigate('udhaar')">
+          <span class="nav-icon" data-icon="book"></span>
+          <span>Udhaar Khata</span>
+          <span class="nav-tag nav-tag-amber" id="nav-udhaar-badge">Ledger</span>
+        </a>
         <a href="javascript:void(0)" class="nav-link" data-view="customers" onclick="App.navigate('customers')">
-          <span class="nav-icon">👥</span>
+          <span class="nav-icon" data-icon="users"></span>
           <span>Customers</span>
         </a>
-        <a href="javascript:void(0)" class="nav-link" data-view="udhaar" onclick="App.navigate('udhaar')">
-          <span class="nav-icon">📒</span>
-          <span>Udhaar Khata</span>
-          <span class="nav-tag nav-tag-amber">Ledger</span>
-        </a>
         <a href="javascript:void(0)" class="nav-link" data-view="invoices" onclick="App.navigate('invoices')">
-          <span class="nav-icon">🧾</span>
-          <span>Invoices & Receipts</span>
+          <span class="nav-icon" data-icon="receipt"></span>
+          <span>Invoices & History</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="expenses" onclick="App.navigate('expenses')">
+          <span class="nav-icon" data-icon="wallet"></span>
+          <span>Daily Expenses</span>
         </a>
 
-        <!-- Section: People -->
-        <div class="nav-section-title">People</div>
-        <a href="javascript:void(0)" class="nav-link" data-view="employees" onclick="App.navigate('employees')">
-          <span class="nav-icon">👔</span>
-          <span>Employees</span>
-        </a>
-        <a href="javascript:void(0)" class="nav-link" data-view="attendance" onclick="App.navigate('attendance')">
-          <span class="nav-icon">📅</span>
-          <span>Attendance</span>
-        </a>
-
-        <!-- Section: Insights -->
-        <div class="nav-section-title">Insights</div>
+        <!-- Section: Analytics & People -->
+        <div class="nav-section-title">Analytics & Team</div>
         <a href="javascript:void(0)" class="nav-link" data-view="analytics" onclick="App.navigate('analytics')">
-          <span class="nav-icon">📈</span>
-          <span>Analytics & P&L</span>
+          <span class="nav-icon" data-icon="chart"></span>
+          <span>Reports & P&L</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="employees" onclick="App.navigate('employees')">
+          <span class="nav-icon" data-icon="staff"></span>
+          <span>Staff & Attendance</span>
         </a>
 
-        <!-- Section: AI -->
-        <div class="nav-section-title">AI</div>
-        <a href="javascript:void(0)" class="nav-link" onclick="DukaanAI.openChatModal()">
-          <span class="nav-icon">✨</span>
-          <span>MyDukaan AI</span>
-          <span class="nav-tag nav-tag-ai">Gemini</span>
-        </a>
-
-        <!-- Section: System -->
+        <!-- Section: Intelligence & System -->
         <div class="nav-section-title">System</div>
+        <a href="javascript:void(0)" class="nav-link" onclick="DukaanAI.openChatModal()">
+          <span class="nav-icon" data-icon="sparkles" style="color: #60A5FA;"></span>
+          <span>Dukkan Copilot</span>
+        </a>
         <a href="javascript:void(0)" class="nav-link" data-view="settings" onclick="App.navigate('settings')">
-          <span class="nav-icon">⚙️</span>
+          <span class="nav-icon" data-icon="settings"></span>
           <span>Settings</span>
         </a>
         <a href="javascript:void(0)" class="nav-link" data-view="help" onclick="App.navigate('help')">
-          <span class="nav-icon">❓</span>
-          <span>Help & Workflow</span>
+          <span class="nav-icon" data-icon="help"></span>
+          <span>Help & Shortcuts</span>
         </a>
         <a href="index.html" class="nav-link">
-          <span class="nav-icon">🌐</span>
-          <span>Landing Page</span>
+          <span class="nav-icon" data-icon="store"></span>
+          <span>Store Landing Page</span>
         </a>
       </nav>
 
-      <!-- Creator Spotlight Footer Card -->
+      <!-- Sidebar Status Footer -->
       <div class="sidebar-footer">
-        <div class="creator-card">
-          <div class="creator-avatar">M</div>
-          <div class="creator-info">
-            <div class="creator-name">
-              Mayur Singh <span style="color: var(--success); font-size: 11px;">✓</span>
-            </div>
-            <div class="creator-role">Lucknow, India</div>
-          </div>
+        <div class="system-status-indicator">
+          <span class="status-dot-live"></span>
+          <span>System Online • Local DB</span>
         </div>
+        <button class="topbar-icon-btn" style="width: 28px; height: 28px;" onclick="App.toggleTheme()" title="Toggle Theme" id="sidebar-theme-btn">
+          <span id="sidebar-theme-icon"></span>
+        </button>
       </div>
     </aside>
 
-    <!-- Main Content Shell -->
+    <!-- Main Content Area -->
     <div class="app-main">
       <!-- Sticky Topbar Header -->
       <header class="app-topbar">
         <div class="topbar-left">
-          <button class="mobile-menu-btn" onclick="App.toggleMobileSidebar()">☰</button>
+          <button class="mobile-menu-btn" onclick="App.toggleMobileSidebar()" aria-label="Toggle Navigation">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
           
-          <div class="search-shortcut-bar" onclick="BarcodeScanner.openScannerModal()">
-            <span>🔍</span>
-            <span>Scan barcode or search...</span>
+          <div class="search-command-bar" onclick="BarcodeScanner.openScannerModal()">
+            <span class="search-icon-span"></span>
+            <span>Search items or scan barcode...</span>
             <span class="search-shortcut-kbd">Ctrl+K</span>
           </div>
         </div>
 
         <div class="topbar-right">
-          <!-- Barcode Camera Scanner Trigger -->
-          <button class="quick-scan-btn" onclick="BarcodeScanner.openScannerModal()">
-            <span>📷</span>
-            <span>Barcode Scanner</span>
+          <!-- Quick Barcode Scanner Trigger -->
+          <button class="btn-topbar-action" onclick="BarcodeScanner.openScannerModal()">
+            <span id="topbar-scan-icon"></span>
+            <span>Scan Barcode</span>
           </button>
+
+          <!-- Notification Bell Trigger -->
+          <div style="position: relative;">
+            <button class="topbar-icon-btn" onclick="App.toggleNotificationPopover()" title="Notifications" id="notification-bell-btn">
+              <span id="topbar-bell-icon"></span>
+              <span id="notification-badge-count" style="display: none; position: absolute; top: -3px; right: -3px; width: 16px; height: 16px; background: var(--danger); color: #fff; font-size: 9.5px; font-weight: 700; border-radius: 50%; align-items: center; justify-content: center;">0</span>
+            </button>
+            <div id="notification-popover-container"></div>
+          </div>
 
           <!-- Theme Toggle -->
           <button class="topbar-icon-btn" onclick="App.toggleTheme()" title="Toggle Theme">
-            <span id="theme-toggle-icon">🌙</span>
+            <span id="theme-toggle-icon"></span>
           </button>
 
-          <!-- AI Assistant Quick Launch -->
-          <button class="topbar-icon-btn" style="color: var(--purple);" onclick="DukaanAI.openChatModal()" title="Ask MyDukaan AI">
-            ✨
+          <!-- Dukaan Copilot AI Quick Trigger -->
+          <button class="topbar-icon-btn" style="color: #60A5FA;" onclick="DukaanAI.openChatModal()" title="Ask Dukkan Copilot">
+            <span id="topbar-sparkles-icon"></span>
           </button>
 
-          <!-- Store Chip -->
+          <!-- Store Profile Chip -->
           <div class="shop-chip">
-            <span class="shop-chip-icon">🏪</span>
-            <span class="shop-chip-name">MyDukaan24 Mart</span>
+            <span id="shop-chip-icon"></span>
+            <span class="shop-chip-name" id="topbar-shop-name">MyDukkan24 Store</span>
           </div>
         </div>
       </header>
 
-      <!-- Dynamic View Mounting Point -->
+      <!-- Dynamic View Container -->
       <main class="page-container" id="main-view-container"></main>
     </div>
   </div>
 
-  <!-- Mobile Bottom Dock Navigation -->
+  <!-- Mobile Bottom Dock Navigation Bar -->
   <nav class="mobile-bottom-nav">
     <a href="javascript:void(0)" class="mobile-nav-item active" data-view="dashboard" onclick="App.navigate('dashboard')">
-      <span class="mobile-nav-icon">📊</span>
+      <span class="mobile-nav-icon" data-icon="dashboard"></span>
       <span>Home</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-view="pos" onclick="App.navigate('pos')">
-      <span class="mobile-nav-icon">⚡</span>
+      <span class="mobile-nav-icon" data-icon="pos"></span>
       <span>Billing</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" onclick="BarcodeScanner.openScannerModal()" style="color: var(--primary);">
-      <span class="mobile-nav-icon">📷</span>
+      <span class="mobile-nav-icon" data-icon="camera"></span>
       <span>Scan</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-view="inventory" onclick="App.navigate('inventory')">
-      <span class="mobile-nav-icon">📦</span>
+      <span class="mobile-nav-icon" data-icon="inventory"></span>
       <span>Stock</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-view="udhaar" onclick="App.navigate('udhaar')">
-      <span class="mobile-nav-icon">📒</span>
+      <span class="mobile-nav-icon" data-icon="book"></span>
       <span>Khata</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-view="settings" onclick="App.navigate('settings')">
-      <span class="mobile-nav-icon">⚙️</span>
+      <span class="mobile-nav-icon" data-icon="settings"></span>
       <span>Settings</span>
     </a>
   </nav>
 
-  <!-- Notification Container -->
+  <!-- Mobile Sticky Bottom POS Cart Action Bar (Visible only in POS view on mobile) -->
+  <div class="mobile-pos-sticky-bar" id="mobile-pos-sticky-bar" onclick="POS.toggleMobileCartDrawer()">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span id="mobile-cart-icon"></span>
+      <span>Cart: <strong id="mobile-cart-count">0</strong> items</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span id="mobile-cart-total" style="font-size: 15px; font-weight: 700;">₹0</span>
+      <span>View Bill →</span>
+    </div>
+  </div>
+
+  <!-- Global Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- External Barcode Vision Library (Universal Cross-Browser Support) -->
+  <!-- Printable Thermal Area (Invisible on screen, visible during window.print) -->
+  <div id="thermal-printable-area" style="display: none;"></div>
+
+  <!-- Barcode Vision Library -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-  <!-- Modular JavaScript Engine -->
+  <!-- Modular Application Engine -->
+  <script src="js/icons.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/scanner.js"></script>
   <script src="js/pos.js"></script>

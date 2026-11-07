@@ -1,11 +1,16 @@
 /**
- * MyDukaan Pro — Customer Udhaar Khata & CRM Ledger Engine
- * Created & Deployed by Mayur Singh
+ * MyDukkan24 — Customer Management & Digital Udhaar Khata (Credit Ledger)
+ * Engineered for Indian retail stores to track debts, settlements, and WhatsApp reminders.
  */
 
 class KhataEngine {
   constructor() {
     this.searchQuery = "";
+  }
+
+  setSearch(val) {
+    this.searchQuery = (val || '').toLowerCase().trim();
+    this.render();
   }
 
   render() {
@@ -14,113 +19,143 @@ class KhataEngine {
     if (!listContainer) return;
 
     const db = DB.getData();
-    let customers = db.customers;
+    let customers = db.customers || [];
 
     const totalCustomers = customers.length;
     const totalDues = customers.reduce((sum, c) => sum + (c.balanceDue || 0), 0);
     const totalCollected = customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
     const customersWithDue = customers.filter(c => (c.balanceDue || 0) > 0);
 
+    // Update Udhaar badge in sidebar
+    const navBadge = document.getElementById('nav-udhaar-badge');
+    if (navBadge) {
+      navBadge.textContent = totalDues > 0 ? `₹${totalDues.toLocaleString('en-IN')}` : 'Clear';
+    }
+
     if (summaryRow) {
       summaryRow.innerHTML = `
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Total Udhaar (Dues)</span>
-            <div class="kpi-icon-badge" style="background: var(--warning-light); color: var(--warning);">⏳</div>
+            <span class="kpi-title">Total Outstanding Dues</span>
+            <div class="kpi-icon-badge" style="background: var(--danger-light); color: var(--danger);">
+              ${Icons.book(16)}
+            </div>
           </div>
-          <div class="kpi-val" style="color: var(--warning);">₹${totalDues.toLocaleString('en-IN')}</div>
-          <div class="kpi-trend" style="color: var(--warning);">${customersWithDue.length} customers pending</div>
+          <div class="kpi-val tnum" style="color: ${totalDues > 0 ? 'var(--danger)' : 'var(--success)'};">
+            ₹${totalDues.toLocaleString('en-IN')}
+          </div>
+          <div class="kpi-trend" style="color: var(--danger);">
+            ${customersWithDue.length} accounts with pending balance
+          </div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Total Revenue Collected</span>
-            <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">💰</div>
+            <span class="kpi-title">Total Lifetime Spend</span>
+            <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">
+              ${Icons.wallet(16)}
+            </div>
           </div>
-          <div class="kpi-val" style="color: var(--success);">₹${totalCollected.toLocaleString('en-IN')}</div>
-          <div class="kpi-trend" style="color: var(--success);">Lifetime spent</div>
+          <div class="kpi-val tnum">₹${totalCollected.toLocaleString('en-IN')}</div>
+          <div class="kpi-trend" style="color: var(--success);">Recorded revenue from khata profiles</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Customer Base</span>
-            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">👥</div>
+            <span class="kpi-title">Active Customer Accounts</span>
+            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+              ${Icons.users(16)}
+            </div>
           </div>
           <div class="kpi-val">${totalCustomers}</div>
-          <div class="kpi-trend" style="color: var(--text-muted);">Registered profiles</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">Registered customer directory</div>
         </div>
       `;
     }
 
     if (this.searchQuery) {
-      const q = this.searchQuery.toLowerCase();
+      const q = this.searchQuery;
       customers = customers.filter(c => 
         c.name.toLowerCase().includes(q) || 
-        c.phone.includes(q)
+        (c.phone && c.phone.includes(q)) ||
+        (c.notes && c.notes.toLowerCase().includes(q))
       );
     }
 
     if (!customers.length) {
       listContainer.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-          No customer accounts found
+        <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+          <div>${Icons.users(36)}</div>
+          <div style="font-weight: 600; font-size: 14px; margin-top: 8px;">No customer accounts found</div>
+          <p style="font-size: 12px; margin-top: 4px;">Click "Add Customer" to create your first credit khata profile.</p>
         </div>
       `;
       return;
     }
 
     listContainer.innerHTML = customers.map(c => {
-      const hasDue = c.balanceDue > 0;
+      const hasDue = (c.balanceDue || 0) > 0;
       const db = DB.getData();
-      const shop = db.shop;
+      const shop = db.shop || {};
 
-      // WhatsApp Due Reminder Link
+      // Build WhatsApp reminder message
       const cleanPhone = (c.phone || '').replace(/\D/g, '');
-      const reminderMsg = `Namaste ${encodeURIComponent(c.name)} ji 🙏,%0A%0A` +
-        `This is a gentle reminder regarding your pending balance of *₹${c.balanceDue.toLocaleString('en-IN')}* at *${encodeURIComponent(shop.name)}*.%0A%0A` +
-        `You can easily pay via UPI to: *${encodeURIComponent(shop.upiId)}*%0A%0A` +
-        `Thank you for your cooperation! Billed via MyDukaan24 • Dev: Mayur Singh`;
+      const reminderMsg = `Namaste ${encodeURIComponent(c.name)} ji,%0A%0A` +
+        `This is a gentle payment reminder from *${encodeURIComponent(shop.name || 'MyDukkan24')}*.%0A` +
+        `Your outstanding balance due is: *₹${(c.balanceDue || 0).toLocaleString('en-IN')}*.%0A%0A` +
+        `You can conveniently pay via UPI to: *${encodeURIComponent(shop.upiId || 'mydukaan24@upi')}*%0A%0A` +
+        `Thank you for shopping with us! Billed via MyDukkan24.`;
 
-      const waLink = cleanPhone ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${reminderMsg}` : `https://wa.me/?text=${reminderMsg}`;
+      const waLink = cleanPhone ? 
+        `https://wa.me/91${cleanPhone.slice(-10)}?text=${reminderMsg}` : 
+        `https://wa.me/?text=${reminderMsg}`;
 
       return `
-        <div class="card" style="margin-bottom: 12px; padding: 16px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div class="card" style="margin-bottom: 12px; padding: 14px 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 44px; height: 44px; border-radius: 10px; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: var(--primary);">
-                ${c.name.charAt(0)}
+              <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-input); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--primary);">
+                ${c.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                  ${c.name}
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                  <span>${c.name}</span>
                   <span class="badge ${c.tier === 'Gold' ? 'badge-warning' : c.tier === 'Silver' ? 'badge-primary' : 'badge-muted'}">
                     ${c.tier || 'Regular'}
                   </span>
                 </div>
-                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                  📞 ${c.phone} ${c.notes ? `• ${c.notes}` : ''}
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                  Phone: ${c.phone || 'N/A'} ${c.notes ? `• ${c.notes}` : ''}
                 </div>
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 18px; margin-left: auto;">
               <div style="text-align: right;">
-                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Outstanding Due</div>
-                <div style="font-size: 18px; font-weight: 800; color: ${hasDue ? 'var(--warning)' : 'var(--success)'};">
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Balance Due</div>
+                <div style="font-size: 16px; font-weight: 700; color: ${hasDue ? 'var(--danger)' : 'var(--success)'};" class="tnum">
                   ${hasDue ? `₹${c.balanceDue.toLocaleString('en-IN')}` : '₹0 (Clear)'}
                 </div>
-                <div style="font-size: 11px; color: var(--text-muted);">Points: ⭐ ${c.points || 0}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Points: ${c.points || 0}</div>
               </div>
 
-              <div style="display: flex; gap: 6px;">
+              <div style="display: flex; gap: 6px; align-items: center;">
                 ${hasDue ? `
                   <button class="btn btn-success btn-sm" onclick="Khata.openRecordPaymentModal('${c.id}')">
-                    💰 Receive Cash
+                    ${Icons.wallet(14)} Settle
                   </button>
-                  <a href="${waLink}" target="_blank" class="btn btn-secondary btn-sm" title="Send WhatsApp Reminder">
-                    📱 WhatsApp
+                  <a href="${waLink}" target="_blank" class="btn btn-secondary btn-sm" title="Send WhatsApp Due Reminder">
+                    ${Icons.whatsapp(14)} Remind
                   </a>
                 ` : ''}
-                <button class="btn btn-secondary btn-sm" onclick="Khata.openCustomerLedger('${c.id}')">
-                  📋 Ledger
+                <button class="btn btn-secondary btn-sm" onclick="Khata.openCustomerLedger('${c.id}')" title="View Order History">
+                  ${Icons.receipt(14)} History
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="Khata.openCustomerModal(DB.getData().customers.find(x => x.id === '${c.id}'))" title="Edit Customer">
+                  ${Icons.edit(14)}
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="Khata.deleteCustomer('${c.id}')" title="Delete Profile">
+                  ${Icons.trash(14)}
                 </button>
               </div>
             </div>
@@ -140,13 +175,15 @@ class KhataEngine {
       <div class="modal-backdrop" id="khata-payment-modal" onclick="if(event.target === this) Khata.closeModal()">
         <div class="modal-card" style="max-width: 420px;">
           <div class="modal-header">
-            <div style="font-weight: 700;">💰 Record Udhaar Payment — ${customer.name}</div>
+            <div class="modal-title">
+              ${Icons.wallet(16)} Settle Udhaar — ${customer.name}
+            </div>
             <button class="topbar-icon-btn" onclick="Khata.closeModal()">✕</button>
           </div>
           <div class="modal-body">
-            <div style="background: var(--bg-input); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
-              <div style="font-size: 12px; color: var(--text-muted);">Current Pending Due</div>
-              <div style="font-size: 22px; font-weight: 800; color: var(--warning);">₹${customer.balanceDue}</div>
+            <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 14px;">
+              <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Current Pending Balance</div>
+              <div style="font-size: 22px; font-weight: 800; color: var(--danger); margin-top: 2px;" class="tnum">₹${customer.balanceDue.toLocaleString('en-IN')}</div>
             </div>
 
             <form onsubmit="event.preventDefault(); Khata.savePaymentRecord('${customer.id}');">
@@ -156,7 +193,7 @@ class KhataEngine {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Payment Method *</label>
+                <label class="form-label">Payment Mode *</label>
                 <select id="khata-pay-mode" class="form-select">
                   <option value="Cash">Cash</option>
                   <option value="UPI">UPI</option>
@@ -165,13 +202,15 @@ class KhataEngine {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Notes (Optional)</label>
-                <input type="text" id="khata-pay-notes" class="form-input" placeholder="e.g. Paid in shop" />
+                <label class="form-label">Payment Notes (Optional)</label>
+                <input type="text" id="khata-pay-notes" class="form-input" placeholder="e.g. Paid cash at counter" />
               </div>
 
-              <div style="display: flex; gap: 8px; margin-top: 16px;">
-                <button type="submit" class="btn btn-success" style="flex: 1;">✓ Confirm Payment</button>
+              <div class="modal-footer" style="padding: 14px 0 0; background: none;">
                 <button type="button" class="btn btn-secondary" onclick="Khata.closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">
+                  ${Icons.check(14)} Confirm Payment
+                </button>
               </div>
             </form>
           </div>
@@ -189,7 +228,7 @@ class KhataEngine {
     const notes = document.getElementById('khata-pay-notes').value.trim();
 
     if (amount <= 0) {
-      App.toast('danger', 'Invalid Amount', 'Enter a positive amount');
+      App.toast('danger', 'Invalid Amount', 'Enter a valid payment amount');
       return;
     }
 
@@ -202,59 +241,64 @@ class KhataEngine {
 
     DB.playCashChime();
     this.closeModal();
-    App.toast('success', 'Payment Received', `₹${amount} recorded for ${customer.name}`);
+    App.toast('success', 'Payment Settled', `Received ₹${amount} from ${customer.name}`);
     this.render();
   }
 
-  // Customer Ledger Modal
+  // Customer Ledger Modal (Purchase History)
   openCustomerLedger(customerId) {
     const db = DB.getData();
     const customer = db.customers.find(c => c.id === customerId);
     if (!customer) return;
 
-    const invoices = db.invoices.filter(i => i.customerId === customerId);
+    const invoices = (db.invoices || []).filter(i => i.customerId === customerId);
 
     const modalHtml = `
       <div class="modal-backdrop" id="khata-ledger-modal" onclick="if(event.target === this) Khata.closeModal()">
-        <div class="modal-card" style="max-width: 580px;">
+        <div class="modal-card" style="max-width: 560px;">
           <div class="modal-header">
             <div>
-              <div style="font-weight: 700; font-size: 16px;">📋 Khata Ledger — ${customer.name}</div>
-              <div style="font-size: 11px; color: var(--text-muted);">${customer.phone} • Balance: ₹${customer.balanceDue}</div>
+              <div class="modal-title">${Icons.receipt(16)} Ledger — ${customer.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Phone: ${customer.phone} • Pending Balance: ₹${customer.balanceDue}
+              </div>
             </div>
             <button class="topbar-icon-btn" onclick="Khata.closeModal()">✕</button>
           </div>
           <div class="modal-body">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Order & Bill History (${invoices.length})</div>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Bill #</th>
-                    <th>Items</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${invoices.length ? invoices.map(inv => `
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Order History (${invoices.length} transactions)</div>
+            ${invoices.length ? `
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
                     <tr>
-                      <td>${inv.date}</td>
-                      <td style="font-family: var(--font-mono); font-weight: 600;">${inv.id}</td>
-                      <td>${inv.items.length} items</td>
-                      <td style="font-weight: 700;">₹${inv.total}</td>
-                      <td>
-                        <span class="badge ${inv.status === 'Paid' ? 'badge-success' : 'badge-warning'}">
-                          ${inv.status}
-                        </span>
-                      </td>
+                      <th>Date</th>
+                      <th>Invoice #</th>
+                      <th>Items</th>
+                      <th>Total</th>
+                      <th>Status</th>
                     </tr>
-                  `).join('') : `
-                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No past invoices recorded</td></tr>
-                  `}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${invoices.map(inv => `
+                      <tr>
+                        <td>${inv.date}</td>
+                        <td style="font-family: var(--font-mono); font-weight: 600;">${inv.id}</td>
+                        <td>${inv.items.length} items</td>
+                        <td style="font-weight: 700;" class="tnum">₹${inv.total}</td>
+                        <td><span class="badge ${inv.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${inv.status}</span></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : `
+              <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">
+                No orders recorded for this customer yet.
+              </div>
+            `}
+            <div class="modal-footer" style="padding: 14px 0 0; background: none;">
+              <button class="btn btn-secondary" onclick="Khata.closeModal()">Close</button>
             </div>
           </div>
         </div>
@@ -265,76 +309,135 @@ class KhataEngine {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
-  // Add new customer modal
-  openAddCustomerModal() {
+  // Add / Edit Customer Modal
+  openCustomerModal(customer = null) {
+    const isEdit = !!customer;
+
     const modalHtml = `
-      <div class="modal-backdrop" id="add-cust-modal" onclick="if(event.target === this) Khata.closeModal()">
-        <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-backdrop" id="customer-form-modal" onclick="if(event.target === this) Khata.closeModal()">
+        <div class="modal-card" style="max-width: 460px;">
           <div class="modal-header">
-            <div style="font-weight: 700;">➕ Register New Customer</div>
+            <div class="modal-title">
+              ${isEdit ? Icons.edit(16) : Icons.users(16)}
+              <span>${isEdit ? 'Edit Customer Profile' : 'Add New Customer Profile'}</span>
+            </div>
             <button class="topbar-icon-btn" onclick="Khata.closeModal()">✕</button>
           </div>
           <div class="modal-body">
-            <form onsubmit="event.preventDefault(); Khata.saveCustomerForm();">
+            <form onsubmit="event.preventDefault(); Khata.saveCustomerForm('${isEdit ? customer.id : ''}');">
               <div class="form-group">
                 <label class="form-label">Customer Name *</label>
-                <input type="text" id="cust-name-input" class="form-input" required placeholder="e.g. Rajesh Kumar" />
+                <input type="text" id="cust-name" class="form-input" required placeholder="e.g. Ramesh Sharma" value="${isEdit ? customer.name : ''}" />
               </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="text" id="cust-phone" class="form-input" required placeholder="e.g. 9876543210" value="${isEdit ? customer.phone : ''}" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Loyalty Tier</label>
+                  <select id="cust-tier" class="form-select">
+                    <option value="Bronze" ${isEdit && customer.tier === 'Bronze' ? 'selected' : ''}>Bronze Tier</option>
+                    <option value="Silver" ${isEdit && customer.tier === 'Silver' ? 'selected' : ''}>Silver Tier</option>
+                    <option value="Gold" ${isEdit && customer.tier === 'Gold' ? 'selected' : ''}>Gold Tier</option>
+                  </select>
+                </div>
+              </div>
+
               <div class="form-group">
-                <label class="form-label">Phone Number *</label>
-                <input type="tel" id="cust-phone-input" class="form-input" required placeholder="10-digit mobile number" />
+                <label class="form-label">Email Address (Optional)</label>
+                <input type="email" id="cust-email" class="form-input" placeholder="e.g. ramesh@gmail.com" value="${isEdit ? customer.email || '' : ''}" />
               </div>
+
               <div class="form-group">
-                <label class="form-label">Starting Udhaar Balance (₹)</label>
-                <input type="number" id="cust-due-input" class="form-input" placeholder="0" value="0" />
+                <label class="form-label">Opening Udhaar Balance (₹)</label>
+                <input type="number" id="cust-balance" class="form-input" placeholder="0" value="${isEdit ? customer.balanceDue : '0'}" />
               </div>
+
               <div class="form-group">
-                <label class="form-label">Notes</label>
-                <input type="text" id="cust-notes-input" class="form-input" placeholder="e.g. Regular neighbour" />
+                <label class="form-label">Notes (Optional)</label>
+                <input type="text" id="cust-notes" class="form-input" placeholder="e.g. Regular neighbourhood buyer" value="${isEdit ? customer.notes || '' : ''}" />
               </div>
-              <div style="display: flex; gap: 8px; margin-top: 16px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Customer</button>
+
+              <div class="modal-footer" style="padding: 14px 0 0; background: none;">
                 <button type="button" class="btn btn-secondary" onclick="Khata.closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                  ${Icons.check(14)} ${isEdit ? 'Update Customer' : 'Save Customer'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       </div>
     `;
+
     this.closeModal();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
-  saveCustomerForm() {
-    const name = document.getElementById('cust-name-input').value.trim();
-    const phone = document.getElementById('cust-phone-input').value.trim();
-    const balanceDue = parseFloat(document.getElementById('cust-due-input').value) || 0;
-    const notes = document.getElementById('cust-notes-input').value.trim();
+  saveCustomerForm(editId = '') {
+    const name = document.getElementById('cust-name').value.trim();
+    const phone = document.getElementById('cust-phone').value.trim();
+    const tier = document.getElementById('cust-tier').value;
+    const email = document.getElementById('cust-email').value.trim();
+    const balanceDue = parseFloat(document.getElementById('cust-balance').value) || 0;
+    const notes = document.getElementById('cust-notes').value.trim();
 
     if (!name || !phone) {
-      App.toast('danger', 'Validation', 'Name and Phone are required');
+      App.toast('danger', 'Validation Error', 'Customer name and phone number are required');
       return;
     }
 
-    const newCust = {
-      id: `C${Date.now().toString().slice(-4)}`,
-      name,
-      phone,
-      balanceDue,
-      totalSpent: 0,
-      points: 0,
-      tier: "Regular",
-      notes
-    };
+    const db = DB.getData();
 
-    DB.updateItem('customers', newCust);
+    if (editId) {
+      const cust = db.customers.find(c => c.id === editId);
+      if (cust) {
+        cust.name = name;
+        cust.phone = phone;
+        cust.tier = tier;
+        cust.email = email;
+        cust.balanceDue = balanceDue;
+        cust.notes = notes;
+        DB.saveData(db);
+        App.toast('success', 'Updated', `${name} profile updated`);
+      }
+    } else {
+      const newCust = {
+        id: `C${Date.now().toString().slice(-4)}`,
+        name,
+        phone,
+        email,
+        tier,
+        balanceDue,
+        totalSpent: 0,
+        points: 0,
+        notes
+      };
+      db.customers.unshift(newCust);
+      DB.saveData(db);
+      App.toast('success', 'Created', `${name} added to khata`);
+    }
+
     this.closeModal();
-    App.toast('success', 'Customer Registered', name);
     this.render();
   }
 
+  deleteCustomer(id) {
+    const db = DB.getData();
+    const cust = db.customers.find(c => c.id === id);
+    if (!cust) return;
+
+    if (confirm(`Delete khata profile for "${cust.name}"?`)) {
+      DB.deleteItem('customers', id);
+      App.toast('info', 'Deleted', `${cust.name} removed from customer list`);
+      this.render();
+    }
+  }
+
   closeModal() {
-    ['khata-payment-modal', 'khata-ledger-modal', 'add-cust-modal'].forEach(id => {
+    ['khata-payment-modal', 'khata-ledger-modal', 'customer-form-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.remove();
     });
