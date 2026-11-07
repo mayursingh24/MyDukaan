@@ -861,104 +861,241 @@ class AppController {
   renderSettingsView(container) {
     const db = DB.getData();
     const shop = db.shop || {};
+    const theme = db.theme || 'dark';
+    const isSound = db.soundEnabled !== false;
 
     container.innerHTML = `
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>Store Settings & Configurations</h1>
-          <p>Manage store profile, GSTIN, UPI ID, system audio, and local database backups</p>
+          <p>Control business profile, thermal receipt formatting, audio sound effects, Netlify AI, and backups</p>
+        </div>
+      </div>
+
+      <!-- Settings Quick Metric Bar -->
+      <div class="kpi-grid" style="margin-bottom: 20px;">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-title">Store Identity</span>
+            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+              ${Icons.store(16)}
+            </div>
+          </div>
+          <div class="kpi-val" style="font-size: 17px; font-weight: 800;">${shop.name || 'MyDukkan24 Mart'}</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">UPI: ${shop.upiId || 'mydukaan24@upi'}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-title">Interface Theme</span>
+            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+              ${theme === 'dark' ? Icons.moon(16) : Icons.sun(16)}
+            </div>
+          </div>
+          <div class="kpi-val" style="font-size: 17px; font-weight: 800; text-transform: capitalize;">${theme} Theme</div>
+          <div class="kpi-trend">
+            <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px; margin-top: 2px;" onclick="App.toggleTheme(); App.renderSettingsView(document.getElementById('main-view-container'));">
+              Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode
+            </button>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-title">Audio Feedback</span>
+            <div class="kpi-icon-badge" style="background: ${isSound ? 'var(--success-light)' : 'var(--danger-light)'}; color: ${isSound ? 'var(--success)' : 'var(--danger)'};">
+              ${isSound ? Icons.volume(16) : Icons.volumeX(16)}
+            </div>
+          </div>
+          <div class="kpi-val" style="font-size: 17px; font-weight: 800; color: ${isSound ? 'var(--success)' : 'var(--danger)'};">${isSound ? 'Sound ON' : 'Muted'}</div>
+          <div class="kpi-trend">
+            <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px; margin-top: 2px;" onclick="App.toggleSound()">
+              Toggle ${isSound ? 'Mute' : 'Enable'}
+            </button>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-title">AI Engine Status</span>
+            <div class="kpi-icon-badge" style="background: rgba(99, 102, 241, 0.15); color: #818CF8;">
+              ${Icons.sparkles(16)}
+            </div>
+          </div>
+          <div class="kpi-val" style="font-size: 17px; font-weight: 800; color: #818CF8;">Gemini 2.5 / 3.8</div>
+          <div class="kpi-trend" style="color: var(--success); font-weight: 600;">Netlify Serverless Ready</div>
         </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <!-- Store Information -->
-        <div class="card" style="margin-bottom: 0;">
-          <div class="card-header">
-            <div class="card-title">${Icons.store(16)} Shop Business Profile</div>
+        <!-- Column 1: Store Profile & Receipt Settings -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <!-- Store Profile Card -->
+          <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <div class="card-title">${Icons.store(16)} Shop Business Profile</div>
+              <span class="badge badge-primary">Primary Details</span>
+            </div>
+            <form onsubmit="event.preventDefault(); App.saveShopSettings();">
+              <div class="form-group">
+                <label class="form-label">Shop Name *</label>
+                <input type="text" id="set-shop-name" class="form-input" value="${shop.name || 'MyDukkan24 Mart'}" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Owner Name</label>
+                <input type="text" id="set-shop-owner" class="form-input" value="${shop.owner || 'Mayur Singh'}" />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="text" id="set-shop-phone" class="form-input" value="${shop.phone || '+91 98765 43210'}" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">GSTIN Tax Number</label>
+                  <input type="text" id="set-shop-gstin" class="form-input" value="${shop.gstin || '09AAAAA0000A1Z5'}" placeholder="e.g. 09AAAAA0000A1Z5" />
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">UPI ID for Dynamic QR *</label>
+                  <input type="text" id="set-shop-upi" class="form-input" value="${shop.upiId || 'mydukaan24@upi'}" required placeholder="yourname@upi" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Default GST Tax Rate (%)</label>
+                  <select id="set-shop-tax" class="form-select">
+                    <option value="0" ${shop.taxRate === 0 ? 'selected' : ''}>0% (Tax Exempted)</option>
+                    <option value="5" ${shop.taxRate === 5 || !shop.taxRate ? 'selected' : ''}>5% Standard GST</option>
+                    <option value="12" ${shop.taxRate === 12 ? 'selected' : ''}>12% FMCG / Processed</option>
+                    <option value="18" ${shop.taxRate === 18 ? 'selected' : ''}>18% Goods / Services</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Store Address</label>
+                <textarea id="set-shop-address" class="form-textarea" rows="2">${shop.address || 'Hazratganj Market, Lucknow, Uttar Pradesh, India'}</textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                ${Icons.check(14)} Save Store Profile
+              </button>
+            </form>
           </div>
-          <form onsubmit="event.preventDefault(); App.saveShopSettings();">
-            <div class="form-group">
-              <label class="form-label">Shop Name *</label>
-              <input type="text" id="set-shop-name" class="form-input" value="${shop.name || 'MyDukkan24 Mart'}" required />
+
+          <!-- Thermal Receipt Format Card -->
+          <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <div class="card-title">${Icons.receipt(16)} Thermal Receipt Slip Setup</div>
+              <button class="btn btn-secondary btn-sm" onclick="App.testPrintSampleSlip()">
+                ${Icons.print(14)} Preview Slip
+              </button>
             </div>
-            <div class="form-group">
-              <label class="form-label">Owner Name</label>
-              <input type="text" id="set-shop-owner" class="form-input" value="${shop.owner || 'Mayur Singh'}" />
-            </div>
-            <div class="form-row-2">
+            <form onsubmit="event.preventDefault(); App.saveReceiptSettings();">
               <div class="form-group">
-                <label class="form-label">Phone Number</label>
-                <input type="text" id="set-shop-phone" class="form-input" value="${shop.phone || '+91 98765 43210'}" />
+                <label class="form-label">Receipt Header Tagline</label>
+                <input type="text" id="set-rcpt-header" class="form-input" value="${shop.rcptHeader || 'HAZRATGANJ, LUCKNOW • TAX INVOICE'}" placeholder="e.g. HAZRATGANJ MARKET • TAX INVOICE" />
               </div>
               <div class="form-group">
-                <label class="form-label">GSTIN Tax Number</label>
-                <input type="text" id="set-shop-gstin" class="form-input" value="${shop.gstin || '09AAAAA0000A1Z5'}" />
+                <label class="form-label">Receipt Footer Thank You Message</label>
+                <input type="text" id="set-rcpt-footer" class="form-input" value="${shop.rcptFooter || 'THANK YOU FOR SHOPPING! VISIT AGAIN'}" placeholder="e.g. THANK YOU FOR SHOPPING!" />
               </div>
-            </div>
-            <div class="form-row-2">
-              <div class="form-group">
-                <label class="form-label">UPI ID for Payment QR *</label>
-                <input type="text" id="set-shop-upi" class="form-input" value="${shop.upiId || 'mydukaan24@upi'}" required />
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">Paper Slip Width</label>
+                  <select id="set-rcpt-width" class="form-select">
+                    <option value="80mm" ${shop.rcptWidth === '80mm' || !shop.rcptWidth ? 'selected' : ''}>80mm (Standard POS Printer)</option>
+                    <option value="58mm" ${shop.rcptWidth === '58mm' ? 'selected' : ''}>58mm (Compact Mobile Printer)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                  <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                    ${Icons.check(14)} Save Receipt Format
+                  </button>
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Default GST Tax Rate (%)</label>
-                <input type="number" id="set-shop-tax" class="form-input" value="${shop.taxRate !== undefined ? shop.taxRate : 5}" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Store Address</label>
-              <textarea id="set-shop-address" class="form-textarea" rows="2">${shop.address || 'Hazratganj Market, Lucknow, Uttar Pradesh, India'}</textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">
-              ${Icons.check(14)} Save Store Profile
-            </button>
-          </form>
+            </form>
+          </div>
         </div>
 
-        <!-- System, AI Serverless & Backup Section -->
+        <!-- Column 2: System, Sound, AI & Database Backups -->
         <div style="display: flex; flex-direction: column; gap: 20px;">
-          <!-- Netlify AI Serverless Status (NO Manual Key Entry!) -->
+          <!-- Sound Effects & Audio Engine -->
+          <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <div class="card-title">${Icons.volume(16)} Sound Effects & Audio Synthesizer</div>
+              <span class="badge ${isSound ? 'badge-success' : 'badge-danger'}">${isSound ? 'Active' : 'Muted'}</span>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+              Hardware barcode supermarket scanner beeps and cash payment registration chimes.
+            </p>
+            <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="App.toggleSound()">
+                ${isSound ? Icons.volumeX(14) : Icons.volume(14)} ${isSound ? 'Mute Sounds' : 'Turn Sounds ON'}
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="App.testAudioBeep()">
+                🔊 Test Scan Beep
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="App.testCashChime()">
+                🔔 Test Cash Chime
+              </button>
+            </div>
+          </div>
+
+          <!-- Netlify AI Serverless Status -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
               <div class="card-title">
-                ${Icons.sparkles(16)} Google Gemini AI Engine
+                ${Icons.sparkles(16)} Google Gemini AI Copilot
               </div>
               <span class="badge badge-success">Netlify Serverless</span>
             </div>
             <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
-              MyDukkan24 AI Copilot is securely connected to the Netlify Serverless Backend (<code>/api/gemini</code>).
+              MyDukkan24 AI Copilot connects directly to Netlify Functions (<code>/api/gemini</code>) without exposing API keys in frontend code.
             </p>
             <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin: 12px 0;">
-              <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Security & Credentials:</div>
-              <div style="font-size: 12.5px; color: var(--text-primary); margin-top: 4px; font-weight: 500;">
-                ✓ API Key configured via Netlify Environment Variables (<code>GEMINI_API_KEY</code>).
+              <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Netlify Environment Variable Setup:</div>
+              <div style="font-size: 12.5px; color: var(--text-primary); margin-top: 4px; font-weight: 600;">
+                Variable Name: <code style="color: #60A5FA; background: rgba(37,99,235,0.15); padding: 2px 6px; border-radius: 4px;">GEMINI_API_KEY</code>
               </div>
-              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                Zero exposure in frontend browser storage or network payloads.
+              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">
+                Netlify Dashboard → Site configuration → Environment variables → Add <code>GEMINI_API_KEY</code> → Trigger Re-deploy.
               </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="App.testNetlifyBackend()">
-              ${Icons.refresh(14)} Test Backend Connection
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="btn btn-primary btn-sm" onclick="App.testNetlifyBackend()">
+                ${Icons.refresh(14)} Test Backend Connection
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.openChatModal()">
+                ${Icons.sparkles(14)} Open Copilot Window
+              </button>
+            </div>
           </div>
 
-          <!-- Database Backup & Portability -->
+          <!-- Complete Database Backups & Portability -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
-              <div class="card-title">${Icons.download(16)} Database Backup & Restore</div>
+              <div class="card-title">${Icons.download(16)} Data Backups & Migration</div>
               <span class="badge badge-primary">Offline First</span>
             </div>
             <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
-              Your data is stored securely in this browser's zero-latency engine. Download regular backups to safeguard your business.
+              Export full store data (products, invoices, customers, khata balances, expenses) into an encrypted portable file.
             </p>
-            <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
-              <button class="btn btn-secondary" onclick="App.exportFullBackup()">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+              <button class="btn btn-secondary btn-sm" onclick="App.exportFullBackup()">
                 ${Icons.download(14)} Export Backup (.json)
               </button>
-              <label class="btn btn-secondary" style="cursor: pointer; margin: 0;">
-                ${Icons.upload(14)} Restore Backup
+              <label class="btn btn-secondary btn-sm" style="cursor: pointer; margin: 0; justify-content: center;">
+                ${Icons.upload(14)} Restore Backup (.json)
                 <input type="file" accept=".json" style="display: none;" onchange="App.importFullBackup(event)" />
               </label>
+              <button class="btn btn-secondary btn-sm" onclick="DB.downloadFile(DB.exportCSV('products'), 'products.csv')">
+                ${Icons.package(14)} Export Products CSV
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="DB.downloadFile(DB.exportCSV('customers'), 'customers_khata.csv')">
+                ${Icons.users(14)} Export Khata CSV
+              </button>
+            </div>
+
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11.5px; color: var(--text-muted);">Reset entire local DB to fresh demo data:</span>
               <button class="btn btn-danger btn-sm" onclick="App.resetToFactoryDefaults()">
                 Reset Demo Data
               </button>
@@ -967,6 +1104,62 @@ class AppController {
         </div>
       </div>
     `;
+  }
+
+  // Save Thermal Receipt Settings
+  saveReceiptSettings() {
+    const db = DB.getData();
+    if (!db.shop) db.shop = {};
+    db.shop.rcptHeader = (document.getElementById('set-rcpt-header').value || '').trim();
+    db.shop.rcptFooter = (document.getElementById('set-rcpt-footer').value || '').trim();
+    db.shop.rcptWidth = document.getElementById('set-rcpt-width').value || '80mm';
+    DB.saveData(db);
+    this.toast('success', 'Saved', 'Thermal receipt layout updated');
+  }
+
+  // Toggle Sound Feedback
+  toggleSound() {
+    const db = DB.getData();
+    db.soundEnabled = db.soundEnabled === false ? true : false;
+    DB.saveData(db);
+    this.toast('info', 'Sound FX', `Audio sound feedback is now ${db.soundEnabled ? 'Enabled' : 'Muted'}`);
+    if (this.currentView === 'settings') {
+      const container = document.getElementById('main-view-container');
+      if (container) this.renderSettingsView(container);
+    }
+  }
+
+  testAudioBeep() {
+    DB.playScanBeep();
+    this.toast('info', 'Audio Test', 'Barcode scanner beep tone played');
+  }
+
+  testCashChime() {
+    DB.playCashChime();
+    this.toast('success', 'Audio Test', 'Cash register payment chime played');
+  }
+
+  testPrintSampleSlip() {
+    const sampleInv = {
+      id: "INV-DEMO",
+      date: new Date().toISOString().split('T')[0],
+      time: "12:00 PM",
+      customerName: "Ramesh Sharma",
+      customerPhone: "9876543210",
+      items: [
+        { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", qty: 1, price: 235, mrp: 260, total: 235 },
+        { id: "P103", name: "Amul Butter 100g", qty: 2, price: 55, mrp: 58, total: 110 }
+      ],
+      subtotal: 345,
+      tax: 17,
+      discount: 0,
+      total: 362,
+      paid: 362,
+      due: 0,
+      paymentMode: "UPI",
+      status: "Paid"
+    };
+    if (window.POS) POS.openReceiptModal(sampleInv);
   }
 
   // Save Shop Settings Form
