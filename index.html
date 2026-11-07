@@ -12,18 +12,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/landing.css" />
+  <link rel="stylesheet" href="css/landing.css?v=4.1" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
   <div class="lp-bg-ambient"></div>
 
   <div class="lp-content-wrapper">
+    <!-- Top Live Status Banner -->
+    <div class="lp-top-announcement">
+      <span>⚡ <strong>MyDukkan24 v4.0 is Live:</strong> Next-Gen Retail OS & POS Billing with Barcode Scanner & Digital Khata</span>
+      <a href="app.html" class="lp-announcement-link">Open Full App Terminal →</a>
+    </div>
+
     <!-- Floating Frosted Pill Navbar -->
     <div class="lp-navbar-wrapper">
       <header class="lp-navbar">
-        <div class="lp-brand">
-          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'; this.onerror=function(){this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';};" class="brand-logo-img" alt="MyDukkan24 Logo" style="width: 30px; height: 30px; object-fit: contain; border-radius: 6px;" />
+        <div class="lp-brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'; this.onerror=function(){this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';};" class="brand-logo-img" alt="MyDukkan24 Logo" />
           <div class="lp-brand-mark" style="display: none;">M</div>
           <div class="lp-brand-name">
             MyDukkan24 <span class="lp-brand-tag">v4.0</span>
@@ -41,7 +47,7 @@
 
         <div style="display: flex; align-items: center; gap: 10px;">
           <a href="app.html" class="lp-nav-cta">
-            Open Terminal →
+            ⚡ Launch App →
           </a>
         </div>
       </header>
@@ -66,11 +72,11 @@
         </p>
 
         <div class="lp-hero-cta-group">
-          <a href="app.html" class="lp-btn-primary">
-            Get Started (Open App) →
+          <a href="app.html" class="lp-btn-primary" style="padding: 14px 28px; font-size: 15px;">
+            🚀 Open POS Terminal (Full App) →
           </a>
-          <a href="#features" class="lp-btn-secondary">
-            Explore All Features
+          <a href="#preview" class="lp-btn-secondary" style="padding: 14px 24px; font-size: 15px;">
+            ⚡ Try Interactive Simulator ↓
           </a>
         </div>
 
@@ -556,16 +562,24 @@
       </section>
 
       <!-- Final Call To Action -->
-      <section class="lp-hero" style="padding: 60px 24px 80px;">
-        <h2 style="font-family: var(--font-heading); font-size: clamp(30px, 4.8vw, 52px); font-weight: 900; color: #fff; margin-bottom: 16px;">
-          "Your shop. Your data. Your business, simplified."
-        </h2>
-        <p style="font-size: 16px; color: var(--lp-text-secondary); max-width: 600px; margin: 0 auto 32px;">
-          Join the digital retail revolution today. Inbuilt database, 100% offline-ready, zero setup needed.
-        </p>
-        <a href="app.html" class="lp-btn-primary" style="padding: 16px 36px; font-size: 16px;">
-          Get Started
-        </a>
+      <section class="lp-section" style="padding: 50px 20px 40px;">
+        <div style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(79, 70, 229, 0.14) 100%); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--lp-radius-xl); padding: 50px 30px; text-align: center; max-width: 900px; margin: 0 auto; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);">
+          <div class="lp-section-tag" style="color: #60A5FA;">Get Started In Under 60 Seconds</div>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(26px, 4vw, 42px); font-weight: 900; color: #FFFFFF; margin-bottom: 14px; letter-spacing: -0.8px; line-height: 1.2;">
+            Your Shop. Your Data. Business, Simplified.
+          </h2>
+          <p style="font-size: 15.5px; color: var(--lp-text-secondary); max-width: 620px; margin: 0 auto 28px; line-height: 1.6;">
+            Join modern Indian retailers using MyDukkan24. High-speed billing, automated Udhaar ledger, offline-ready database, zero monthly fees.
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="app.html" class="lp-btn-primary" style="padding: 14px 32px; font-size: 15px;">
+              🚀 Open POS Terminal Now →
+            </a>
+            <a href="#why" class="lp-btn-secondary" style="padding: 14px 24px; font-size: 15px;">
+              Learn More
+            </a>
+          </div>
+        </div>
       </section>
 
       <!-- Developer Profile Section -->
@@ -615,6 +629,20 @@
         © 2026 Mayur Singh (Lucknow, India). All rights reserved. Deployed on Netlify.
       </div>
     </footer>
+
+    <!-- Mobile Sticky Terminal Launch Dock -->
+    <div class="lp-mobile-dock">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 28px; height: 28px; border-radius: 6px; object-fit: contain; background: #141B2D; padding: 2px;" alt="Logo" />
+        <div>
+          <div style="font-weight: 800; font-size: 13px; color: #fff; line-height: 1.2;">MyDukkan24</div>
+          <div style="font-size: 10px; color: #60A5FA; font-family: var(--font-mono);">Retail Business OS</div>
+        </div>
+      </div>
+      <a href="app.html" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12.5px; border-radius: var(--lp-radius-full);">
+        ⚡ Open App →
+      </a>
+    </div>
   </div>
 
   <!-- INTERACTIVE PLAYGROUND & ANIMATIONS JAVASCRIPT -->
