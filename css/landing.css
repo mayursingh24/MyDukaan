@@ -104,9 +104,10 @@ button {
   transform: translateX(-50%);
   width: 900px;
   height: 600px;
-  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.22) 0%, rgba(124, 58, 237, 0.12) 40%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.28) 0%, rgba(124, 58, 237, 0.16) 40%, transparent 70%);
   filter: blur(80px);
-  opacity: 0.85;
+  opacity: 0.9;
+  animation: floatAura 12s infinite ease-in-out alternate;
 }
 
 .lp-bg-ambient::after {
@@ -114,10 +115,17 @@ button {
   position: absolute;
   top: 45%;
   left: 10%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle at center, rgba(16, 185, 129, 0.1) 0%, transparent 60%);
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle at center, rgba(16, 185, 129, 0.16) 0%, rgba(6, 182, 212, 0.08) 45%, transparent 65%);
   filter: blur(90px);
+  animation: floatAura 16s infinite ease-in-out alternate-reverse;
+}
+
+@keyframes floatAura {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(25px) scale(1.08); }
+  100% { transform: translateY(0) scale(1); }
 }
 
 .lp-grid-pattern {
@@ -324,9 +332,17 @@ button {
 }
 
 .lp-hero-h1 span {
-  background: linear-gradient(135deg, #818CF8 0%, #C084FC 50%, #60A5FA 100%);
+  background: linear-gradient(90deg, #818CF8 0%, #C084FC 25%, #38BDF8 50%, #818CF8 75%, #34D399 100%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: textShine 6s linear infinite;
+}
+
+@keyframes textShine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .lp-hero-p {
@@ -628,23 +644,24 @@ button {
 }
 
 .lp-sim-product-card {
-  background: rgba(18, 24, 40, 0.9);
-  border: 1px solid var(--lp-border);
+  background: linear-gradient(180deg, rgba(22, 28, 50, 0.9) 0%, rgba(13, 17, 32, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--lp-radius-md);
-  padding: 12px;
+  padding: 13px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, box-shadow 0.18s ease;
   user-select: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .lp-sim-product-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(28, 36, 60, 0.9);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-3px);
+  border-color: #6366F1;
+  background: linear-gradient(180deg, rgba(30, 38, 68, 0.95) 0%, rgba(16, 22, 42, 0.98) 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(99, 102, 241, 0.35);
 }
 
 .lp-sim-prod-icon {
@@ -930,21 +947,24 @@ button {
 .bento-col-12 { grid-column: span 12; }
 
 .lp-feat-card {
-  background: var(--lp-card);
-  border: 1px solid var(--lp-border);
+  background: linear-gradient(180deg, rgba(20, 26, 46, 0.75) 0%, rgba(11, 15, 28, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--lp-radius-lg);
-  padding: 26px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .lp-feat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(99, 102, 241, 0.45);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  transform: translateY(-6px);
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(99, 102, 241, 0.25);
 }
 
 .lp-feat-icon {

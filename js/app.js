@@ -16,7 +16,6 @@ class AppController {
     this.initKeyboardShortcuts();
     this.updateNotificationBadge();
     this.updateHeaderStoreName();
-    this.updateBranchSwitcher();
     this.updateI18nLabels();
     this.navigate(this.currentView);
 
@@ -1048,33 +1047,33 @@ class AppController {
             </form>
           </div>
 
-          <!-- Multiple Branches Card -->
+          <!-- Daily Cash Counter & Closing Register Card -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
-              <div class="card-title">${Icons.store(16)} Multiple Store Branches</div>
-              <button class="btn btn-secondary btn-sm" onclick="App.switchActiveShop('NEW')">
-                + Add Branch
-              </button>
+              <div class="card-title">${Icons.wallet(16)} Daily Cash Counter & Closing Register</div>
+              <span class="badge badge-success">Counter #1 Live</span>
             </div>
-            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
-              Switch between multiple retail outlets or counter locations seamlessly.
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+              Monitor real-time cash drawer tally, digital UPI collections, and print day-end reconciliation reports.
             </p>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              ${(db.shops || [shop]).map(s => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid ${s.id === db.activeShopId ? 'var(--primary)' : 'var(--border-subtle)'};">
-                  <div>
-                    <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">${s.name}</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">${s.address || 'Local Branch'} • ${s.phone || ''}</div>
-                  </div>
-                  ${s.id === db.activeShopId ? `
-                    <span class="badge badge-success">Active Branch</span>
-                  ` : `
-                    <button class="btn btn-secondary btn-sm" onclick="App.switchActiveShop('${s.id}')">
-                      Switch Here
-                    </button>
-                  `}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+              <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Today's Cash In Drawer</div>
+                <div style="font-size: 18px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-top: 2px;">
+                  ₹${(db.invoices || []).filter(i => i.paymentMode === 'Cash').reduce((sum, i) => sum + (Number(i.paid) || 0), 0).toLocaleString('en-IN')}
                 </div>
-              `).join('')}
+              </div>
+              <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Today's UPI Collection</div>
+                <div style="font-size: 18px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 2px;">
+                  ₹${(db.invoices || []).filter(i => i.paymentMode === 'UPI').reduce((sum, i) => sum + (Number(i.paid) || 0), 0).toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="App.openCashDrawerModal()">
+                ${Icons.receipt(14)} View Closing Sheet & Print
+              </button>
             </div>
           </div>
         </div>
@@ -1487,6 +1486,9 @@ class AppController {
       } else if (e.key === 'F2') {
         e.preventDefault();
         this.navigate('pos');
+      } else if (e.key === 'F4') {
+        e.preventDefault();
+        this.openCashDrawerModal();
       }
     });
   }
@@ -1673,61 +1675,105 @@ class AppController {
     }
   }
 
-  // Multi-shop Switcher Logic
-  updateBranchSwitcher() {
+  // Day-End Cash Register & Closing Z-Report Modal
+  openCashDrawerModal() {
     const db = DB.getData();
-    const shops = db.shops || [db.shop || { id: 'SHOP-1', name: 'Main Branch' }];
-    const activeId = db.activeShopId || 'SHOP-1';
+    const today = new Date().toISOString().split('T')[0];
+    const invoices = (db.invoices || []).filter(i => i.date === today);
+    const expenses = (db.expenses || []).filter(e => e.date === today);
 
-    const select = document.getElementById('branch-select');
-    if (!select) return;
+    let cashSales = 0, upiSales = 0, cardSales = 0, udhaarSales = 0, totalSales = 0;
+    invoices.forEach(inv => {
+      const amt = Number(inv.total) || 0;
+      totalSales += amt;
+      if (inv.paymentMode === 'Cash') cashSales += (Number(inv.paid) || amt);
+      else if (inv.paymentMode === 'UPI') upiSales += (Number(inv.paid) || amt);
+      else if (inv.paymentMode === 'Card') cardSales += (Number(inv.paid) || amt);
+      else if (inv.paymentMode === 'Udhaar') udhaarSales += (Number(inv.due) || amt);
+    });
 
-    select.innerHTML = shops.map(s => `
-      <option value="${s.id}" ${s.id === activeId ? 'selected' : ''}>
-        ${s.name.replace('MyDukkan24 ', '')}
-      </option>
-    `).join('') + `<option value="NEW">+ Add New Store</option>`;
+    const totalExp = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const netCashInDrawer = Math.max(0, cashSales - totalExp);
+
+    const modalHtml = `
+      <div class="modal-backdrop" id="cash-drawer-modal" onclick="if(event.target===this) App.closeCashDrawerModal()">
+        <div class="modal-card" style="max-width: 440px;">
+          <div class="modal-header">
+            <div class="modal-title">💰 Day-End Cash Register (Counter #1)</div>
+            <button class="topbar-icon-btn" onclick="App.closeCashDrawerModal()">✕</button>
+          </div>
+          <div class="modal-body" style="padding: 16px;">
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 14px; font-family: var(--font-mono);">
+              Date: ${today} • Store: ${db.shop?.name || 'MyDukkan24 Mart'}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Cash Sales</div>
+                <div style="font-size: 17px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-top: 2px;">
+                  ₹${cashSales.toLocaleString('en-IN')}
+                </div>
+              </div>
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">UPI Digital</div>
+                <div style="font-size: 17px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 2px;">
+                  ₹${upiSales.toLocaleString('en-IN')}
+                </div>
+              </div>
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Card POS</div>
+                <div style="font-size: 17px; font-weight: 800; color: #A78BFA; font-family: var(--font-mono); margin-top: 2px;">
+                  ₹${cardSales.toLocaleString('en-IN')}
+                </div>
+              </div>
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Udhaar Issued</div>
+                <div style="font-size: 17px; font-weight: 800; color: #F43F5E; font-family: var(--font-mono); margin-top: 2px;">
+                  ₹${udhaarSales.toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
+                <span>Total Bills Issued:</span>
+                <span style="font-weight: 700; font-family: var(--font-mono);">${invoices.length} Bills</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
+                <span>Total Gross Sales:</span>
+                <span style="font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);">₹${totalSales.toLocaleString('en-IN')}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #F87171; margin-bottom: 4px;">
+                <span>Today's Cash Expenses:</span>
+                <span style="font-weight: 700; font-family: var(--font-mono);">-₹${totalExp.toLocaleString('en-IN')}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; border-top: 1px dashed var(--border-medium); padding-top: 8px; margin-top: 6px;">
+                <span style="color: #fff;">Net Cash in Counter Drawer:</span>
+                <span style="color: #10B981; font-family: var(--font-mono); font-size: 17px;">₹${netCashInDrawer.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" style="flex: 1; justify-content: center;" onclick="window.print()">
+                ${Icons.print(14)} Print Day-End Z-Report
+              </button>
+              <button class="btn btn-secondary" onclick="App.closeCashDrawerModal()">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const existing = document.getElementById('cash-drawer-modal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
-  switchActiveShop(shopId) {
-    const db = DB.getData();
-    if (!db.shops) db.shops = [db.shop];
-
-    if (shopId === 'NEW') {
-      const name = prompt('Enter New Shop / Branch Name (e.g. MyDukkan24 Branch 2):', 'MyDukkan24 Branch 2');
-      if (!name) {
-        this.updateBranchSwitcher();
-        return;
-      }
-      const newShop = {
-        id: `SHOP-${Date.now().toString().slice(-4)}`,
-        name: name.trim(),
-        owner: db.shop.owner || 'Mayur Singh',
-        phone: db.shop.phone || '+91 98765 00000',
-        address: 'Branch Location',
-        gstin: db.shop.gstin || '',
-        upiId: db.shop.upiId || '6306437348@upi'
-      };
-      db.shops.push(newShop);
-      db.activeShopId = newShop.id;
-      db.shop = newShop;
-      DB.saveData(db);
-      this.toast('success', 'New Store Created', `Switched to ${newShop.name}`);
-      this.updateBranchSwitcher();
-      this.updateHeaderStoreName();
-      this.navigate(this.currentView);
-      return;
-    }
-
-    const targetShop = db.shops.find(s => s.id === shopId);
-    if (targetShop) {
-      db.activeShopId = targetShop.id;
-      db.shop = targetShop;
-      DB.saveData(db);
-      this.toast('success', 'Branch Switched', `Active store: ${targetShop.name}`);
-      this.updateHeaderStoreName();
-      this.navigate(this.currentView);
-    }
+  closeCashDrawerModal() {
+    const modal = document.getElementById('cash-drawer-modal');
+    if (modal) modal.remove();
   }
 
   updateI18nLabels() {

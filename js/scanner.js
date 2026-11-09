@@ -246,6 +246,7 @@ class BarcodeScannerEngine {
       }
 
       resultArea.style.display = 'block';
+      resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       const discount = product.mrp > product.price ? product.mrp - product.price : 0;
 
       resultArea.innerHTML = `
@@ -645,6 +646,8 @@ class BarcodeScannerEngine {
         </div>
       `;
     }
+
+    freshArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   normalizeCategory(catStr) {

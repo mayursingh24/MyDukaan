@@ -177,15 +177,17 @@
             </select>
           </div>
 
-          <!-- Multi-Shop Branch Switcher -->
-          <div class="shop-branch-switcher" id="shop-branch-switcher" style="display: flex; align-items: center; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 4px 6px;">
-            <span style="font-size: 12px; margin-right: 3px;">🏪</span>
-            <select id="branch-select" style="background: transparent; border: none; color: var(--text-primary); font-size: 11.5px; font-weight: 700; cursor: pointer; outline: none; max-width: 140px;" onchange="App.switchActiveShop(this.value)">
-              <option value="SHOP-1">Main Branch</option>
-              <option value="SHOP-2">Express Branch</option>
-              <option value="NEW">+ Add Store</option>
-            </select>
+          <!-- Live Store Counter Status & Day-End Cash Register Trigger -->
+          <div class="counter-status-chip" onclick="App.openCashDrawerModal()" title="View Today's Cash & UPI Register (F4)" style="display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 5px 10px; cursor: pointer;">
+            <span class="status-dot-live" style="width: 7px; height: 7px; background: #10B981; border-radius: 50%; box-shadow: 0 0 8px #10B981;"></span>
+            <span style="font-size: 11.5px; font-weight: 700; color: #10B981;">Counter #1 Active</span>
+            <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">[F4]</span>
           </div>
+
+          <!-- Quick Fast New Bill Action -->
+          <button class="btn btn-primary btn-sm" onclick="App.navigate('pos')" title="New Bill (F2)" style="display: flex; align-items: center; gap: 5px; padding: 5px 12px; font-weight: 700; border-radius: var(--radius-md);">
+            <span>⚡ New Sale</span>
+          </button>
 
           <!-- Quick Barcode Scanner Trigger -->
           <button class="btn-topbar-action" onclick="BarcodeScanner.openScannerModal()" title="Scan Barcode (Camera / Gun)">
