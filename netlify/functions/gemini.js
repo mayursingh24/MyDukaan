@@ -125,7 +125,10 @@ If no commercial product can be identified with reasonable certainty for barcode
 
           let response = await fetch(geminiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
             body: JSON.stringify(payload)
           });
 
@@ -134,7 +137,10 @@ If no commercial product can be identified with reasonable certainty for barcode
             delete payload.tools;
             response = await fetch(geminiUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+              },
               body: JSON.stringify(payload)
             });
           }
@@ -267,7 +273,10 @@ ${storeContext || 'No store data provided.'}`;
 
         const response = await fetch(geminiUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           body: JSON.stringify(payload)
         });
 
