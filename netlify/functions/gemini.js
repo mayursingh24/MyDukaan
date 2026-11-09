@@ -58,8 +58,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Candidate models in preference order (gemini-2.0-flash and flash-lite are universally available)
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
+    // Current generation models for Google AI Studio accounts
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
     let lastError = null;
     let successfulResult = null;
 
