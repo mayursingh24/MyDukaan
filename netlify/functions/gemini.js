@@ -58,8 +58,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Candidate models in preference order (gemini-2.0-flash and gemini-1.5-flash are universally available for all AI Studio keys)
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    // Candidate models in preference order (gemini-2.0-flash and flash-lite are universally available)
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
     let lastError = null;
     let successfulResult = null;
 
@@ -258,6 +258,7 @@ Keep answers structured, concise, and focused on business growth, inventory heal
 Current Live Business Context:
 ${storeContext || 'No store data provided.'}`;
 
+    const attempts = [];
     for (const model of modelsToTry) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -300,6 +301,7 @@ ${storeContext || 'No store data provided.'}`;
 
         const errMsg = data.error?.message || `Google API error (Status ${response.status})`;
         lastError = errMsg;
+        attempts.push({ model, status: response.status, error: errMsg });
 
         // Abort ONLY if the API key itself is fundamentally invalid
         if (data.error?.status === 'INVALID_ARGUMENT' && errMsg.toLowerCase().includes('api key')) {
@@ -314,6 +316,7 @@ ${storeContext || 'No store data provided.'}`;
         console.warn(`[Gemini Failover] Model ${model} returned status ${response.status} (${errMsg}). Switching to next model...`);
       } catch (err) {
         lastError = err.message;
+        attempts.push({ model, error: err.message });
       }
     }
 
@@ -325,6 +328,7 @@ ${storeContext || 'No store data provided.'}`;
         body: JSON.stringify({
           error: lastError || 'Failed to get response from Gemini API.',
           authError: Boolean(isAuthError),
+          attempts: attempts,
           hint: isAuthError ? 'Please generate a standard API key in Google AI Studio (aistudio.google.com) by clicking "Create API key in new project".' : undefined
         })
       };
