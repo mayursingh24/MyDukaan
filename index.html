@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/landing.css?v=6.0" />
+  <link rel="stylesheet" href="css/landing.css?v=7.0" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
@@ -37,11 +37,12 @@
         </div>
 
         <nav class="lp-nav-links">
-          <a href="#why" class="lp-nav-link">Why MyDukaan24</a>
+          <a href="#why" class="lp-nav-link">Why Us</a>
           <a href="#features" class="lp-nav-link">Features</a>
-          <a href="#preview" class="lp-nav-link">Simulator</a>
-          <a href="#download" class="lp-nav-link" style="color: #10B981; font-weight: 700;">Download App</a>
-          <a href="#testimonials" class="lp-nav-link">Testimonials</a>
+          <a href="#preview" class="lp-nav-link">POS Simulator</a>
+          <a href="#roi" class="lp-nav-link" style="color: #A5B4FC;">ROI Calc</a>
+          <a href="#download" class="lp-nav-link" style="color: #10B981; font-weight: 700;">Download APK</a>
+          <a href="#testimonials" class="lp-nav-link">Reviews</a>
           <a href="#faq" class="lp-nav-link">FAQs</a>
           <a href="#contact" class="lp-nav-link">Contact</a>
         </nav>
@@ -76,7 +77,8 @@
       <div class="lp-mobile-drawer-links">
         <a href="#why" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Why MyDukaan24 <span>→</span></a>
         <a href="#features" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Platform Features <span>→</span></a>
-        <a href="#preview" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Interactive Simulator <span>→</span></a>
+        <a href="#preview" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Interactive POS Simulator <span>→</span></a>
+        <a href="#roi" class="lp-mobile-drawer-link" style="color: #A5B4FC;" onclick="toggleLandingMobileNav()">💰 Kirana ROI Calculator <span>→</span></a>
         <a href="#download" class="lp-mobile-drawer-link" style="color: #10B981;" onclick="toggleLandingMobileNav()">📱 Download Android APK <span>↓</span></a>
         <a href="#testimonials" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Customer Stories <span>→</span></a>
         <a href="#faq" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Frequently Asked Questions <span>→</span></a>
@@ -127,6 +129,31 @@
           <span>Created & Deployed by <strong>Mayur Singh</strong> (Lucknow, India)</span>
           <span style="color: var(--lp-text-muted);">|</span>
           <span style="color: #818CF8; font-family: var(--font-mono);">Verified Production SaaS</span>
+        </div>
+
+        <!-- 3 Floating Live Feature Badges -->
+        <div class="lp-hero-float-strip">
+          <div class="lp-hero-float-badge" style="border-color: rgba(6, 182, 212, 0.45);">
+            <span style="color: #06B6D4; font-size: 20px;">⚡</span>
+            <div style="text-align: left;">
+              <div style="color: #FFFFFF; font-size: 13px;">0.28s Barcode Vision</div>
+              <div style="color: #94A3B8; font-size: 11px; font-weight: 500;">Camera & Laser Gun Instant Scan</div>
+            </div>
+          </div>
+          <div class="lp-hero-float-badge" style="border-color: rgba(16, 185, 129, 0.45);">
+            <span style="color: #10B981; font-size: 20px;">📶</span>
+            <div style="text-align: left;">
+              <div style="color: #FFFFFF; font-size: 13px;">100% Offline Database</div>
+              <div style="color: #94A3B8; font-size: 11px; font-weight: 500;">Zero Latency Local Storage</div>
+            </div>
+          </div>
+          <div class="lp-hero-float-badge" style="border-color: rgba(99, 102, 241, 0.45);">
+            <span style="color: #818CF8; font-size: 20px;">📲</span>
+            <div style="text-align: left;">
+              <div style="color: #FFFFFF; font-size: 13px;">1-Click WhatsApp Invoices</div>
+              <div style="color: #94A3B8; font-size: 11px; font-weight: 500;">Auto Customer Credit Reminders</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -442,6 +469,62 @@
         </div>
       </section>
 
+      <!-- Interactive Kirana ROI & Savings Calculator -->
+      <section class="lp-section" id="roi" style="padding-top: 10px; padding-bottom: 40px;">
+        <div class="roi-calc-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <div class="lp-section-tag" style="color: #10B981;">💰 Kirana Profit Multiplier</div>
+              <h2 style="font-family: var(--font-heading); font-size: clamp(20px, 3vw, 28px); font-weight: 900; color: #fff;">
+                How Much Time & Money Will MyDukaan24 Save You?
+              </h2>
+            </div>
+            <span class="lp-brand-tag" style="background: rgba(16, 185, 129, 0.2); color: #10B981; border-color: rgba(16, 185, 129, 0.4); font-size: 12px; padding: 4px 12px;">
+              ⚡ Live Interactive Tool
+            </span>
+          </div>
+          <p style="font-size: 14.5px; color: var(--lp-text-secondary); margin-bottom: 22px;">
+            Drag the slider to your store's average daily customer count to calculate instant monthly savings:
+          </p>
+          
+          <div style="background: #0B0E18; padding: 22px; border-radius: var(--lp-radius-md); border: 1.5px solid rgba(255,255,255,0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700;">
+              <span style="font-size: 14.5px; color: #CBD5E1;">Daily Customers Billed:</span>
+              <span id="roi-cust-val" style="font-size: 22px; font-family: var(--font-mono); color: #818CF8; font-weight: 900;">120 Customers / Day</span>
+            </div>
+            <input type="range" min="30" max="500" step="10" value="120" class="roi-slider" id="roi-slider" oninput="updateRoiCalc(this.value)" />
+            <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--lp-text-muted); font-family: var(--font-mono);">
+              <span>30 (Small Kirana)</span>
+              <span>150 (Corner Retailer)</span>
+              <span>500 (Busy Supermarket)</span>
+            </div>
+          </div>
+
+          <div class="roi-results-grid">
+            <div class="roi-stat-card" style="border-top: 3.5px solid #6366F1;">
+              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Billing Time Saved</div>
+              <div id="roi-time-saved" style="font-size: 26px; font-weight: 900; color: #818CF8; font-family: var(--font-mono); margin-top: 6px;">48 Hours</div>
+              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">Every single month</div>
+            </div>
+            <div class="roi-stat-card" style="border-top: 3.5px solid #F43F5E;">
+              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Lost Udhaar Recovered</div>
+              <div id="roi-udh-saved" style="font-size: 26px; font-weight: 900; color: #F43F5E; font-family: var(--font-mono); margin-top: 6px;">₹18,500</div>
+              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">Zero unrecorded credit loss</div>
+            </div>
+            <div class="roi-stat-card" style="border-top: 3.5px solid #10B981;">
+              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Billing Speed</div>
+              <div id="roi-speed-boost" style="font-size: 26px; font-weight: 900; color: #10B981; font-family: var(--font-mono); margin-top: 6px;">4.2x Faster</div>
+              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">Zero evening queues</div>
+            </div>
+            <div class="roi-stat-card" style="border-top: 3.5px solid #06B6D4;">
+              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Monthly Subscription</div>
+              <div style="font-size: 26px; font-weight: 900; color: #06B6D4; font-family: var(--font-mono); margin-top: 6px;">₹0 / Free</div>
+              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">100% Inbuilt Offline DB</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Why MyDukaan24 Section -->
       <section class="lp-section" id="why">
         <div class="lp-section-header">
@@ -451,24 +534,24 @@
         </div>
 
         <div class="lp-bento-grid">
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #F43F5E;">📒</div>
+          <div class="lp-feat-card bento-col-4 card-problem-red">
+            <div class="lp-feat-icon" style="color: #F43F5E; background: rgba(244, 63, 94, 0.14); border-color: rgba(244, 63, 94, 0.3);">📒</div>
             <h3 class="lp-feat-h3">The Problem: Lost Udhaar</h3>
             <p class="lp-feat-desc">
               Shopkeepers lose thousands of rupees every year in forgotten diary records, unreadable scribbles, and disputes over unrecorded customer credit.
             </p>
           </div>
 
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #F59E0B;">⏳</div>
+          <div class="lp-feat-card bento-col-4 card-problem-amber">
+            <div class="lp-feat-icon" style="color: #F59E0B; background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.3);">⏳</div>
             <h3 class="lp-feat-h3">The Problem: Slow Billing</h3>
             <p class="lp-feat-desc">
               Writing paper receipts and doing manual math causes evening customer queues to back up, leading shoppers to walk over to supermarket chains.
             </p>
           </div>
 
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #10B981;">💡</div>
+          <div class="lp-feat-card bento-col-4 card-problem-green">
+            <div class="lp-feat-icon" style="color: #10B981; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.3);">💡</div>
             <h3 class="lp-feat-h3">The MyDukaan24 Solution</h3>
             <p class="lp-feat-desc">
               A high-speed, camera barcode scanner terminal with instant MRP detection, 1-click WhatsApp bills, and digital Udhaar payment reminders.
@@ -1277,6 +1360,26 @@
       });
     });
 
+    function updateRoiCalc(val) {
+      const cust = parseInt(val, 10);
+      const custEl = document.getElementById('roi-cust-val');
+      const timeEl = document.getElementById('roi-time-saved');
+      const udhEl = document.getElementById('roi-udh-saved');
+      const speedEl = document.getElementById('roi-speed-boost');
+
+      if (custEl) custEl.textContent = `${cust} Customers / Day`;
+      
+      const hours = Math.round((cust * 1.5 * 30) / 60);
+      if (timeEl) timeEl.textContent = `${hours} Hours`;
+
+      const udhaar = Math.round(cust * 150 * 30 * 0.035);
+      if (udhEl) udhEl.textContent = `₹${udhaar.toLocaleString('en-IN')}`;
+
+      const speed = (3.5 + (cust / 200)).toFixed(1);
+      if (speedEl) speedEl.textContent = `${speed}x Faster`;
+    }
+    window.updateRoiCalc = updateRoiCalc;
+
     const LandingContact = {
       submitQuery() {
         const name = (document.getElementById('contact-name').value || '').trim();
@@ -1305,9 +1408,9 @@
     // Service Worker Registration for Instant Cache Busting & Offline Support
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=6.0')
+        navigator.serviceWorker.register('./sw.js?v=7.0')
           .then(reg => {
-            console.log('[PWA] Service Worker v6.0 active ✓ Scope:', reg.scope);
+            console.log('[PWA] Service Worker v7.0 active ✓ Scope:', reg.scope);
             reg.update();
           })
           .catch(err => console.log('[PWA] Service worker fallback:', err));

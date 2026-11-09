@@ -1,6 +1,6 @@
 # MyDukkan24 — Enterprise Retail OS & Smart POS
 
-![MyDukkan24 Status](https://img.shields.io/badge/MyDukkan24-v4.2%20Production-2563EB?style=for-the-badge&logo=shopify&logoColor=white)
+![MyDukkan24 Status](https://img.shields.io/badge/MyDukkan24-v7.0%20Production-2563EB?style=for-the-badge&logo=shopify&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-100%25%20Offline%20First%20PWA-10B981?style=for-the-badge&logo=pwa&logoColor=white)
 ![AI Engine](https://img.shields.io/badge/AI%20Copilot-Google%20Gemini%20via%20Netlify-3B82F6?style=for-the-badge&logo=google&logoColor=white)
 ![Deployment](https://img.shields.io/badge/Deploy-Netlify%20Serverless-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)
@@ -128,12 +128,12 @@
 
 ## 🛠️ Tech Stack
 - **Frontend:** Pure HTML5, Vanilla ES6+ Modular JavaScript, Custom Modern CSS.
-- **Design System:** Obsidian Slate (`#06080F`), Glassmorphism, Micro-Borders, Neon Indigo & Emerald Accents.
+- **Design System:** Deep Obsidian Slate (`#070913`), High-Contrast Solid Cards (`#131A2D`), Glassmorphism, Micro-Borders, Neon Indigo & Emerald Accents.
 - **Typography:** Inter (Financials & UI) + JetBrains Mono (SKUs, Currencies, Codes).
 - **Icon Library:** Lightweight Inline SVG Icon Engine (`js/icons.js`) with zero network overhead.
 - **Offline Storage:** High-performance Inbuilt Local Database (`localStorage`) with full JSON backup & CSV capabilities.
 - **Serverless API:** Netlify Functions (`netlify/functions/gemini.js`).
-- **PWA Caching:** Service Worker v6.0 (`sw.js`) with Network-First strategy and instant cache-busting.
+- **PWA Caching:** Service Worker v7.0 (`sw.js`) with pure Network-First strategy and instant cache-busting.
 
 ---
 
@@ -171,7 +171,7 @@ MyDukaan-v4/
 ├── manifest.json             # PWA metadata & shortcut configuration
 ├── netlify.toml              # Netlify build & cache configuration
 ├── README.md                 # Complete system documentation
-└── sw.js                     # Network-First PWA service worker v6.0
+└── sw.js                     # Network-First PWA service worker v7.0
 ```
 
 ---

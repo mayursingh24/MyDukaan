@@ -8,15 +8,15 @@
 
 :root {
   /* Ultra-Premium Obsidian Slate & Modern Fintech SaaS Design */
-  --bg-main: #06080F;
-  --bg-surface: #0B0E18;
-  --bg-card: rgba(16, 22, 38, 0.78);
-  --bg-card-hover: rgba(24, 32, 56, 0.88);
-  --bg-elevated: #151D33;
-  --bg-input: #090C14;
+  --bg-main: #070913;
+  --bg-surface: #0E1322;
+  --bg-card: #131A2D;
+  --bg-card-hover: #1A243D;
+  --bg-elevated: #1E2945;
+  --bg-input: #0B0E18;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-subtle: rgba(255, 255, 255, 0.14);
+  --border-medium: rgba(255, 255, 255, 0.22);
   --border-focus: #6366F1;
 
   --text-primary: #FFFFFF;
