@@ -51,6 +51,51 @@ const DEFAULT_STAFF = [
   { id: "S102", name: "Kavita Singh", role: "Billing Cashier", phone: "9922334455", salary: 17500, joinDate: "2024-01-15", status: "Active" }
 ];
 
+const DEFAULT_SUPPLIERS = [
+  { id: "SUP-101", name: "Metro Wholesale Hub", contactPerson: "Rajesh Agrawal", phone: "9822114455", email: "orders@metrowholesale.in", gstin: "09AAACM1234F1Z1", city: "Lucknow", balanceDue: 0, itemsSupplied: "Grocery, Atta, Rice, Spices" },
+  { id: "SUP-102", name: "Hindustan FMCG Distributors", contactPerson: "Suresh Gupta", phone: "9833221100", email: "sales@hindustanfmcg.com", gstin: "09AAACH1234F1Z2", city: "Kanpur", balanceDue: 4500, itemsSupplied: "Soaps, Detergents, Shampoos" },
+  { id: "SUP-103", name: "Amul Dairy Products Agency", contactPerson: "Mohit Verma", phone: "9844332211", email: "amullucknow@dairycoop.org", gstin: "09AAACA1234F1Z3", city: "Lucknow", balanceDue: 1800, itemsSupplied: "Butter, Milk, Ghee, Paneer" }
+];
+
+const DEFAULT_PURCHASES = [
+  {
+    id: "PUR-201",
+    billNo: "HUL-8891",
+    date: "2026-10-02",
+    supplierId: "SUP-102",
+    supplierName: "Hindustan FMCG Distributors",
+    items: [
+      { id: "P108", name: "Surf Excel Quick Wash 1kg", qty: 24, cost: 125, total: 3000 },
+      { id: "P106", name: "Colgate Total Toothpaste 120g", qty: 20, cost: 75, total: 1500 }
+    ],
+    totalAmount: 4500,
+    paidAmount: 0,
+    dueAmount: 4500,
+    status: "Due",
+    paymentMode: "Credit"
+  },
+  {
+    id: "PUR-202",
+    billNo: "AMUL-4402",
+    date: "2026-10-04",
+    supplierId: "SUP-103",
+    supplierName: "Amul Dairy Products Agency",
+    items: [
+      { id: "P103", name: "Amul Butter 100g", qty: 40, cost: 48, total: 1920 }
+    ],
+    totalAmount: 1920,
+    paidAmount: 1920,
+    dueAmount: 0,
+    status: "Paid",
+    paymentMode: "UPI"
+  }
+];
+
+const DEFAULT_SHOPS = [
+  { id: "SHOP-1", name: "MyDukkan24 Mart (Main Branch)", owner: "Mayur Singh", address: "Hazratganj Market, Lucknow, UP", phone: "+91 98765 43210", gstin: "09AAAAA0000A1Z5", upiId: "mydukaan24@upi" },
+  { id: "SHOP-2", name: "MyDukkan24 Express (Gomti Nagar)", owner: "Mayur Singh", address: "Patrakarpuram, Gomti Nagar, Lucknow", phone: "+91 98765 43211", gstin: "09AAAAA0000A2Z6", upiId: "mydukaan24.express@upi" }
+];
+
 class StorageEngine {
   constructor() {
     this.initDatabase();
@@ -63,7 +108,11 @@ class StorageEngine {
       if (!existing) {
         this.saveData({
           shop: DEFAULT_SHOP,
+          shops: DEFAULT_SHOPS,
+          activeShopId: "SHOP-1",
           products: DEFAULT_PRODUCTS,
+          suppliers: DEFAULT_SUPPLIERS,
+          purchases: DEFAULT_PURCHASES,
           customers: DEFAULT_CUSTOMERS,
           invoices: this.generateInitialInvoices(),
           expenses: DEFAULT_EXPENSES,
@@ -71,6 +120,8 @@ class StorageEngine {
           attendance: {},
           geminiKey: "",
           theme: "dark",
+          accent: "blue",
+          language: "en",
           soundEnabled: true
         });
       }
@@ -147,6 +198,11 @@ class StorageEngine {
           });
           this.saveData(parsed);
         }
+        if (!parsed.suppliers) parsed.suppliers = DEFAULT_SUPPLIERS;
+        if (!parsed.purchases) parsed.purchases = DEFAULT_PURCHASES;
+        if (!parsed.shops) parsed.shops = DEFAULT_SHOPS;
+        if (!parsed.activeShopId) parsed.activeShopId = "SHOP-1";
+        if (!parsed.language) parsed.language = "en";
         return parsed;
       }
     } catch (e) {
@@ -154,7 +210,11 @@ class StorageEngine {
     }
     return {
       shop: DEFAULT_SHOP,
+      shops: DEFAULT_SHOPS,
+      activeShopId: "SHOP-1",
       products: DEFAULT_PRODUCTS,
+      suppliers: DEFAULT_SUPPLIERS,
+      purchases: DEFAULT_PURCHASES,
       customers: DEFAULT_CUSTOMERS,
       invoices: [],
       expenses: DEFAULT_EXPENSES,
@@ -162,6 +222,8 @@ class StorageEngine {
       attendance: {},
       geminiKey: "",
       theme: "dark",
+      accent: "blue",
+      language: "en",
       soundEnabled: true
     };
   }

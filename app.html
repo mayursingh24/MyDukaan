@@ -68,6 +68,10 @@
           <span class="nav-icon" data-icon="package"></span>
           <span>Product Catalog</span>
         </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="purchases" onclick="App.navigate('purchases')">
+          <span class="nav-icon" data-icon="package"></span>
+          <span>Wholesale Purchases</span>
+        </a>
 
         <!-- Section: Accounts & Khata -->
         <div class="nav-section-title">Accounts & Khata</div>
@@ -109,6 +113,11 @@
         <a href="javascript:void(0)" class="nav-link" data-view="settings" onclick="App.navigate('settings')">
           <span class="nav-icon" data-icon="settings"></span>
           <span>Settings</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-view="download" onclick="App.navigate('download')">
+          <span class="nav-icon" data-icon="download" style="color: #10B981;"></span>
+          <span>Download App (APK)</span>
+          <span class="nav-tag nav-tag-green">v4.2</span>
         </a>
         <a href="javascript:void(0)" class="nav-link" data-view="help" onclick="App.navigate('help')">
           <span class="nav-icon" data-icon="help"></span>
@@ -158,6 +167,26 @@
         </div>
 
         <div class="topbar-right">
+          <!-- Language Selector -->
+          <div class="lang-selector-chip" style="display: flex; align-items: center; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 4px 6px;">
+            <span style="font-size: 12px; margin-right: 3px;">🌐</span>
+            <select id="lang-selector-select" style="background: transparent; border: none; color: var(--text-primary); font-size: 11.5px; font-weight: 700; cursor: pointer; outline: none;" onchange="I18n.setLanguage(this.value)">
+              <option value="en">English</option>
+              <option value="hi">हिन्दी</option>
+              <option value="hinglish">Hinglish</option>
+            </select>
+          </div>
+
+          <!-- Multi-Shop Branch Switcher -->
+          <div class="shop-branch-switcher" id="shop-branch-switcher" style="display: flex; align-items: center; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 4px 6px;">
+            <span style="font-size: 12px; margin-right: 3px;">🏪</span>
+            <select id="branch-select" style="background: transparent; border: none; color: var(--text-primary); font-size: 11.5px; font-weight: 700; cursor: pointer; outline: none; max-width: 140px;" onchange="App.switchActiveShop(this.value)">
+              <option value="SHOP-1">Main Branch</option>
+              <option value="SHOP-2">Express Branch</option>
+              <option value="NEW">+ Add Store</option>
+            </select>
+          </div>
+
           <!-- Quick Barcode Scanner Trigger -->
           <button class="btn-topbar-action" onclick="BarcodeScanner.openScannerModal()" title="Scan Barcode (Camera / Gun)">
             <span id="topbar-scan-icon"></span>
@@ -246,16 +275,18 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- Modular Application Engine -->
-  <script src="js/icons.js?v=4.2"></script>
-  <script src="js/storage.js?v=4.2"></script>
-  <script src="js/scanner.js?v=4.2"></script>
-  <script src="js/pos.js?v=4.2"></script>
-  <script src="js/inventory.js?v=4.2"></script>
-  <script src="js/khata.js?v=4.2"></script>
-  <script src="js/analytics.js?v=4.2"></script>
-  <script src="js/staff.js?v=4.2"></script>
-  <script src="js/ai.js?v=4.2"></script>
-  <script src="js/app.js?v=4.2"></script>
+  <script src="js/icons.js?v=5.0"></script>
+  <script src="js/i18n.js?v=5.0"></script>
+  <script src="js/storage.js?v=5.0"></script>
+  <script src="js/scanner.js?v=5.0"></script>
+  <script src="js/pos.js?v=5.0"></script>
+  <script src="js/inventory.js?v=5.0"></script>
+  <script src="js/purchases.js?v=5.0"></script>
+  <script src="js/khata.js?v=5.0"></script>
+  <script src="js/analytics.js?v=5.0"></script>
+  <script src="js/staff.js?v=5.0"></script>
+  <script src="js/ai.js?v=5.0"></script>
+  <script src="js/app.js?v=5.0"></script>
 
   <!-- Service Worker Registration for PWA Offline Support -->
   <script>

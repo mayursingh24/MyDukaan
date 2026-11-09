@@ -16,7 +16,15 @@ class AppController {
     this.initKeyboardShortcuts();
     this.updateNotificationBadge();
     this.updateHeaderStoreName();
+    this.updateBranchSwitcher();
+    this.updateI18nLabels();
     this.navigate(this.currentView);
+
+    // Listen for PWA native installation
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+    });
 
     // Close dropdowns on outside click
     document.addEventListener('click', (e) => {
@@ -143,6 +151,16 @@ class AppController {
 
       case 'settings':
         this.renderSettingsView(container);
+        break;
+
+      case 'purchases':
+      case 'suppliers':
+        if (window.Purchases) Purchases.render(container);
+        break;
+
+      case 'download':
+      case 'app-download':
+        this.renderDownloadAppView(container);
         break;
 
       case 'help':
@@ -1029,6 +1047,36 @@ class AppController {
               </div>
             </form>
           </div>
+
+          <!-- Multiple Branches Card -->
+          <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <div class="card-title">${Icons.store(16)} Multiple Store Branches</div>
+              <button class="btn btn-secondary btn-sm" onclick="App.switchActiveShop('NEW')">
+                + Add Branch
+              </button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              Switch between multiple retail outlets or counter locations seamlessly.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${(db.shops || [shop]).map(s => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid ${s.id === db.activeShopId ? 'var(--primary)' : 'var(--border-subtle)'};">
+                  <div>
+                    <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">${s.name}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${s.address || 'Local Branch'} • ${s.phone || ''}</div>
+                  </div>
+                  ${s.id === db.activeShopId ? `
+                    <span class="badge badge-success">Active Branch</span>
+                  ` : `
+                    <button class="btn btn-secondary btn-sm" onclick="App.switchActiveShop('${s.id}')">
+                      Switch Here
+                    </button>
+                  `}
+                </div>
+              `).join('')}
+            </div>
+          </div>
         </div>
 
         <!-- Column 2: Theme Studio, Audio & Database Backups -->
@@ -1061,6 +1109,19 @@ class AppController {
               <button class="btn btn-secondary btn-sm" onclick="App.toggleTheme(); App.renderSettingsView(document.getElementById('main-view-container'));">
                 ${theme === 'dark' ? Icons.sun(14) : Icons.moon(14)} Switch to ${theme === 'dark' ? 'Light' : 'Dark'}
               </button>
+            </div>
+
+            <!-- Language Switcher Studio -->
+            <div style="margin-top: 10px; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">🌐 Display Language / भाषा</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Dynamic localization across menus, bills & reports</div>
+              </div>
+              <select class="form-select" style="width: auto; font-size: 12px; padding: 4px 10px;" onchange="I18n.setLanguage(this.value); App.renderSettingsView(document.getElementById('main-view-container'));">
+                <option value="en" ${I18n.getLanguage() === 'en' ? 'selected' : ''}>English</option>
+                <option value="hi" ${I18n.getLanguage() === 'hi' ? 'selected' : ''}>हिन्दी (Hindi)</option>
+                <option value="hinglish" ${I18n.getLanguage() === 'hinglish' ? 'selected' : ''}>Hinglish</option>
+              </select>
             </div>
           </div>
 
@@ -1480,6 +1541,210 @@ class AppController {
     const db = DB.getData();
     const nameEl = document.getElementById('topbar-shop-name');
     if (nameEl) nameEl.textContent = (db.shop && db.shop.name) || 'MyDukkan24 Store';
+  }
+
+  // Download Application View
+  renderDownloadAppView(container) {
+    container.innerHTML = `
+      <div class="page-header-row">
+        <div class="page-title-block">
+          <h1>Download MyDukkan24 Application</h1>
+          <p>Install on Android smartphones, tablets, or desktop PCs for high-speed offline retail billing</p>
+        </div>
+      </div>
+
+      <!-- App Highlights Bento -->
+      <div class="responsive-split-grid" style="margin-bottom: 24px;">
+        <!-- Left: Official App Download Card -->
+        <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(16,185,129,0.08) 100%); border-color: rgba(37,99,235,0.3);">
+          <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
+            <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 76px; height: 76px; border-radius: 16px; object-fit: contain; box-shadow: 0 8px 24px rgba(0,0,0,0.3); background: #141B2D; padding: 4px;" alt="MyDukkan24 App Icon" />
+            <div>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0;">MyDukkan24 Retail OS</h2>
+                <span class="badge badge-success">Production Release</span>
+              </div>
+              <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                Official POS Billing, Barcode Scanner & Digital Khata Platform
+              </div>
+              <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); margin-top: 6px;">
+                Version 4.2.0 • Size: 4.8 MB • Android 8.0+ / PWA Universal
+              </div>
+            </div>
+          </div>
+
+          <div style="background: var(--bg-surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 10px;">
+              🚀 Choose Your Preferred Installation Method:
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Option 1: PWA Web APK -->
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">
+                    ⚡ Option 1: 1-Click Native App Install (PWA Web-APK)
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                    Installs directly to your Android/iOS home screen. Auto-updates with zero storage lag.
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="App.triggerPWAInstall()">
+                  ${Icons.download(14)} Install on Device
+                </button>
+              </div>
+
+              <!-- Option 2: Direct APK Download -->
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">
+                    🤖 Option 2: Download Android APK Package (.apk)
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                    Stand-alone Android package for sideloading on POS terminals and barcode devices.
+                  </div>
+                </div>
+                <a href="assets/MyDukkan24-v4.apk" download="MyDukkan24-v4.2.0.apk" class="btn btn-secondary">
+                  ${Icons.package(14)} Download APK (4.8MB)
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 14px; color: var(--text-muted); font-size: 12px; flex-wrap: wrap;">
+            <span>✓ 100% Offline Database</span>
+            <span>✓ Thermal Printer Ready</span>
+            <span>✓ Hardware Barcode Gun Compatible</span>
+            <span>✓ Verified by Mayur Singh</span>
+          </div>
+        </div>
+
+        <!-- Right: Mobile Installation Instructions -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title">${Icons.info(16)} Mobile Installation Steps</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Android Guide -->
+            <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-weight: 700; font-size: 13px; color: #10B981; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🤖 For Android Devices (Chrome, Samsung Internet):</span>
+              </div>
+              <ol style="margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7;">
+                <li>Tap <strong>"Install on Device"</strong> above or tap Chrome's three-dots menu (⋮).</li>
+                <li>Select <strong>"Install App"</strong> or <strong>"Add to Home screen"</strong>.</li>
+                <li>Tap <strong>Install</strong>. The MyDukkan24 app icon will appear on your phone screen.</li>
+                <li>Open the app — it runs full-screen with zero browser address bars and works offline.</li>
+              </ol>
+            </div>
+
+            <!-- iOS Guide -->
+            <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-weight: 700; font-size: 13px; color: #60A5FA; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🍎 For iPhones & iPads (Safari):</span>
+              </div>
+              <ol style="margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7;">
+                <li>Open <strong>Safari</strong> and navigate to <code>mydukaan24.netlify.app</code>.</li>
+                <li>Tap the <strong>Share</strong> button (square icon with upward arrow).</li>
+                <li>Scroll down and select <strong>"Add to Home Screen"</strong>.</li>
+                <li>Tap <strong>"Add"</strong> in top right. Enjoy a fast standalone iOS POS experience.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  triggerPWAInstall() {
+    if (window.deferredPrompt) {
+      window.deferredPrompt.prompt();
+      window.deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          this.toast('success', 'Installation Started', 'MyDukkan24 is being installed on your device!');
+        }
+        window.deferredPrompt = null;
+      });
+    } else {
+      alert('To install MyDukkan24 on this device:\n\n1. In Chrome/Brave: Tap the three dots (⋮) in the top-right corner.\n2. Tap "Install App" or "Add to Home screen".\n\nYour app will be added to your home screen with offline database support!');
+    }
+  }
+
+  // Multi-shop Switcher Logic
+  updateBranchSwitcher() {
+    const db = DB.getData();
+    const shops = db.shops || [db.shop || { id: 'SHOP-1', name: 'Main Branch' }];
+    const activeId = db.activeShopId || 'SHOP-1';
+
+    const select = document.getElementById('branch-select');
+    if (!select) return;
+
+    select.innerHTML = shops.map(s => `
+      <option value="${s.id}" ${s.id === activeId ? 'selected' : ''}>
+        ${s.name.replace('MyDukkan24 ', '')}
+      </option>
+    `).join('') + `<option value="NEW">+ Add New Store</option>`;
+  }
+
+  switchActiveShop(shopId) {
+    const db = DB.getData();
+    if (!db.shops) db.shops = [db.shop];
+
+    if (shopId === 'NEW') {
+      const name = prompt('Enter New Shop / Branch Name (e.g. MyDukkan24 Branch 2):', 'MyDukkan24 Branch 2');
+      if (!name) {
+        this.updateBranchSwitcher();
+        return;
+      }
+      const newShop = {
+        id: `SHOP-${Date.now().toString().slice(-4)}`,
+        name: name.trim(),
+        owner: db.shop.owner || 'Mayur Singh',
+        phone: db.shop.phone || '+91 98765 00000',
+        address: 'Branch Location',
+        gstin: db.shop.gstin || '',
+        upiId: db.shop.upiId || 'mydukaan24@upi'
+      };
+      db.shops.push(newShop);
+      db.activeShopId = newShop.id;
+      db.shop = newShop;
+      DB.saveData(db);
+      this.toast('success', 'New Store Created', `Switched to ${newShop.name}`);
+      this.updateBranchSwitcher();
+      this.updateHeaderStoreName();
+      this.navigate(this.currentView);
+      return;
+    }
+
+    const targetShop = db.shops.find(s => s.id === shopId);
+    if (targetShop) {
+      db.activeShopId = targetShop.id;
+      db.shop = targetShop;
+      DB.saveData(db);
+      this.toast('success', 'Branch Switched', `Active store: ${targetShop.name}`);
+      this.updateHeaderStoreName();
+      this.navigate(this.currentView);
+    }
+  }
+
+  updateI18nLabels() {
+    if (!window.I18n) return;
+    const langSelect = document.getElementById('lang-selector-select');
+    if (langSelect) langSelect.value = I18n.getLanguage();
+
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+      const view = link.dataset.view;
+      if (view) {
+        const textSpan = link.querySelector('span:not(.nav-icon):not(.nav-tag)');
+        if (textSpan) {
+          const trans = I18n.t(`nav_${view}`);
+          if (trans && trans !== `nav_${view}`) {
+            textSpan.textContent = trans;
+          }
+        }
+      }
+    });
   }
 
   // Toast Notification System
