@@ -8,10 +8,10 @@ const STORAGE_KEY = 'mydukaan24_prod_db';
 const DEFAULT_SHOP = {
   name: "MyDukkan24 Mart",
   owner: "Mayur Singh",
-  phone: "+91 98765 43210",
+  phone: "+91 6306437348",
   address: "Hazratganj Market, Lucknow, Uttar Pradesh, India",
   gstin: "09AAAAA0000A1Z5",
-  upiId: "mydukaan24@upi",
+  upiId: "6306437348@upi",
   currency: "₹",
   taxRate: 5 // Default GST 5%
 };
@@ -92,8 +92,8 @@ const DEFAULT_PURCHASES = [
 ];
 
 const DEFAULT_SHOPS = [
-  { id: "SHOP-1", name: "MyDukkan24 Mart (Main Branch)", owner: "Mayur Singh", address: "Hazratganj Market, Lucknow, UP", phone: "+91 98765 43210", gstin: "09AAAAA0000A1Z5", upiId: "mydukaan24@upi" },
-  { id: "SHOP-2", name: "MyDukkan24 Express (Gomti Nagar)", owner: "Mayur Singh", address: "Patrakarpuram, Gomti Nagar, Lucknow", phone: "+91 98765 43211", gstin: "09AAAAA0000A2Z6", upiId: "mydukaan24.express@upi" }
+  { id: "SHOP-1", name: "MyDukkan24 Mart (Main Branch)", owner: "Mayur Singh", address: "Hazratganj Market, Lucknow, UP", phone: "+91 6306437348", gstin: "09AAAAA0000A1Z5", upiId: "6306437348@upi" },
+  { id: "SHOP-2", name: "MyDukkan24 Express (Gomti Nagar)", owner: "Mayur Singh", address: "Patrakarpuram, Gomti Nagar, Lucknow", phone: "+91 6306437348", gstin: "09AAAAA0000A2Z6", upiId: "6306437348@upi" }
 ];
 
 class StorageEngine {
@@ -124,6 +124,16 @@ class StorageEngine {
           language: "en",
           soundEnabled: true
         });
+      } else {
+        const parsed = JSON.parse(existing);
+        let updated = false;
+        if (!parsed.shop || parsed.shop.phone === "+91 98765 43210" || parsed.shop.phone === "9876543210") {
+          if (!parsed.shop) parsed.shop = { ...DEFAULT_SHOP };
+          parsed.shop.phone = "+91 6306437348";
+          parsed.shop.upiId = "6306437348@upi";
+          updated = true;
+        }
+        if (updated) this.saveData(parsed);
       }
     } catch (e) {
       console.error("[Storage] Database init error:", e);

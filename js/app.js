@@ -909,7 +909,7 @@ class AppController {
             </div>
           </div>
           <div class="kpi-val" style="font-size: 16px; font-weight: 800;">${shop.name || 'MyDukkan24 Mart'}</div>
-          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">UPI: ${shop.upiId || 'mydukaan24@upi'}</div>
+          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">UPI: ${shop.upiId || '6306437348@upi'}</div>
         </div>
 
         <div class="kpi-card">
@@ -971,7 +971,7 @@ class AppController {
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label">Phone Number *</label>
-                  <input type="text" id="set-shop-phone" class="form-input" value="${shop.phone || '+91 98765 43210'}" required />
+                  <input type="text" id="set-shop-phone" class="form-input" value="${shop.phone || '+91 6306437348'}" required />
                 </div>
                 <div class="form-group">
                   <label class="form-label">GSTIN Tax ID</label>
@@ -981,7 +981,7 @@ class AppController {
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label">UPI ID for Dynamic Payments *</label>
-                  <input type="text" id="set-shop-upi" class="form-input" value="${shop.upiId || 'mydukaan24@upi'}" required placeholder="yourname@upi" />
+                  <input type="text" id="set-shop-upi" class="form-input" value="${shop.upiId || '6306437348@upi'}" required placeholder="yourname@upi" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Default GST Tax Rate (%)</label>
@@ -1000,10 +1000,10 @@ class AppController {
 
               <!-- Live Store UPI QR Preview -->
               <div style="background: var(--bg-card); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(shop.upiId || 'mydukaan24@upi')}&pn=${encodeURIComponent(shop.name || 'MyDukkan24')}" alt="Store UPI QR" style="width: 72px; height: 72px; border-radius: 8px; background: #fff; padding: 4px; display: block;" />
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(shop.upiId || '6306437348@upi')}&pn=${encodeURIComponent(shop.name || 'MyDukkan24')}" alt="Store UPI QR" style="width: 72px; height: 72px; border-radius: 8px; background: #fff; padding: 4px; display: block;" />
                 <div style="flex: 1;">
                   <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Active Dynamic UPI QR</div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">VPA: <code style="color: var(--primary);">${shop.upiId || 'mydukaan24@upi'}</code></div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">VPA: <code style="color: var(--primary);">${shop.upiId || '6306437348@upi'}</code></div>
                   <div style="font-size: 11px; color: var(--success); font-weight: 600; margin-top: 3px;">Accepts PhonePe, GPay, Paytm, BHIM</div>
                 </div>
               </div>
@@ -1243,12 +1243,14 @@ class AppController {
   // Save Shop Settings Form
   saveShopSettings() {
     const db = DB.getData();
+    if (!db.shop) db.shop = {};
     db.shop = {
+      ...db.shop,
       name: document.getElementById('set-shop-name').value.trim() || 'MyDukkan24 Mart',
       owner: document.getElementById('set-shop-owner').value.trim(),
       phone: document.getElementById('set-shop-phone').value.trim(),
       gstin: document.getElementById('set-shop-gstin').value.trim(),
-      upiId: document.getElementById('set-shop-upi').value.trim() || 'mydukaan24@upi',
+      upiId: document.getElementById('set-shop-upi').value.trim() || '6306437348@upi',
       taxRate: parseFloat(document.getElementById('set-shop-tax').value) || 0,
       address: document.getElementById('set-shop-address').value.trim(),
       currency: "₹"
@@ -1704,7 +1706,7 @@ class AppController {
         phone: db.shop.phone || '+91 98765 00000',
         address: 'Branch Location',
         gstin: db.shop.gstin || '',
-        upiId: db.shop.upiId || 'mydukaan24@upi'
+        upiId: db.shop.upiId || '6306437348@upi'
       };
       db.shops.push(newShop);
       db.activeShopId = newShop.id;
