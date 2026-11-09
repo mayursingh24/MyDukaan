@@ -72,26 +72,26 @@ class BarcodeScannerEngine {
                   <span>Barcode & QR Scanner</span>
                   <span class="badge badge-primary">Auto-Vision</span>
                 </div>
-                <div style="font-size: 11px; color: var(--text-muted);">Point camera at product barcode or scan with gun</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Point camera at barcode, paste digits, or upload photo</div>
               </div>
             </div>
             <button class="topbar-icon-btn" onclick="BarcodeScanner.closeScannerModal()">✕</button>
           </div>
 
           <div class="scanner-viewport-wrap">
-            <video id="scanner-video-preview" autoplay playsinline muted></video>
-            <div class="scanner-target-reticle">
+            <div id="html5-qr-reader" style="width: 100%; height: 100%; min-height: 240px;"></div>
+            <div class="scanner-target-reticle" style="pointer-events: none;">
               <div class="scanner-laser"></div>
             </div>
-            <div id="scanner-status-pill" style="position: absolute; bottom: 12px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 100px; font-family: var(--font-mono);">
-              Aim camera at barcode...
+            <div id="scanner-status-pill" style="position: absolute; bottom: 12px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; padding: 5px 14px; border-radius: 100px; font-family: var(--font-mono); pointer-events: none; border: 1px solid rgba(255,255,255,0.15);">
+              Starting scanner vision engine...
             </div>
           </div>
 
-          <!-- Manual / Quick Barcode Search Bar -->
+          <!-- Manual / Quick Barcode Search Bar with Live Auto-Trigger -->
           <div style="padding: 10px 16px; background: var(--bg-input); border-bottom: 1px solid var(--border-subtle); display: flex; gap: 8px;">
-            <input type="text" id="manual-barcode-input" class="form-input" style="padding: 6px 10px; font-size: 12.5px; font-family: var(--font-mono);" placeholder="Enter barcode (e.g. 8901058852336)" onkeydown="if(event.key==='Enter') BarcodeScanner.handleManualSubmit()" />
-            <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="BarcodeScanner.handleManualSubmit()">
+            <input type="text" id="manual-barcode-input" class="form-input" style="padding: 7px 10px; font-size: 13px; font-family: var(--font-mono);" placeholder="Enter barcode (e.g. 8901719908262)" oninput="BarcodeScanner.handleInputLive(this.value)" onkeydown="if(event.key==='Enter') BarcodeScanner.handleManualSubmit()" autofocus />
+            <button class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 7px 14px;" onclick="BarcodeScanner.handleManualSubmit()">
               ${Icons.search(13)} Lookup
             </button>
           </div>
@@ -99,10 +99,19 @@ class BarcodeScannerEngine {
           <!-- Detection Result Card Area -->
           <div id="scanned-detection-area" style="display: none;" class="scanned-detection-card"></div>
 
+          <!-- Multi-action Control Bar -->
           <div style="padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.switchCamera()">Flip Camera</button>
-              <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.simulateSampleScan()">Demo Barcode</button>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+              <label class="btn btn-secondary btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin: 0;">
+                <input type="file" accept="image/*" style="display: none;" onchange="if(this.files && this.files[0]) BarcodeScanner.scanImageFile(this.files[0])" />
+                <span>📷 Upload Photo</span>
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.simulateSampleScan()" title="Simulate Parle-G 8901719908262">
+                🍪 Demo Parle-G
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.switchCamera()">
+                🔄 Flip Cam
+              </button>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.closeScannerModal()">Close</button>
           </div>
@@ -117,25 +126,47 @@ class BarcodeScannerEngine {
     this.startCamera();
   }
 
+  // Live auto-trigger when merchant types or pastes barcode
+  handleInputLive(val) {
+    const clean = String(val || '').trim();
+    if (/^\d{8,14}$/.test(clean)) {
+      clearTimeout(this._liveInputTimer);
+      this._liveInputTimer = setTimeout(() => {
+        this.onBarcodeDetected(clean, 'live_input');
+      }, 250);
+    }
+  }
+
+  // Scan directly from uploaded barcode image/photo
+  async scanImageFile(file) {
+    if (!file) return;
+    const statusPill = document.getElementById('scanner-status-pill');
+    if (statusPill) statusPill.textContent = 'Analyzing image for 1D barcode...';
+
+    try {
+      if (!this.html5QrCode) {
+        this.html5QrCode = new Html5Qrcode("html5-qr-reader", { verbose: false });
+      }
+      const decodedResult = await this.html5QrCode.scanFileV2(file, true);
+      if (decodedResult && decodedResult.decodedText) {
+        this.onBarcodeDetected(decodedResult.decodedText, 'image_file');
+      } else {
+        App.toast('warning', 'Barcode Not Detected', 'Could not detect barcode in that image. Try typing the barcode numbers.');
+      }
+    } catch (err) {
+      console.warn('[BarcodeScanner] scanFile error:', err);
+      App.toast('warning', 'Detection Issue', 'No clear barcode recognized in photo. You can type the numbers manually.');
+    }
+  }
+
   async startCamera(facingMode = 'environment') {
     this.currentFacingMode = facingMode;
 
-    // 1. Try universal Html5Qrcode with all 1D barcode formats and auto camera resolution
+    const statusPill = document.getElementById('scanner-status-pill');
+
+    // 1. Preferred High-Performance ZXing Engine via Html5Qrcode
     if (window.Html5Qrcode) {
       try {
-        const viewportWrap = document.querySelector('.scanner-viewport-wrap');
-        if (viewportWrap) {
-          viewportWrap.innerHTML = `
-            <div id="html5-qr-reader" style="width: 100%; height: 100%; min-height: 230px;"></div>
-            <div class="scanner-target-reticle" style="pointer-events: none;">
-              <div class="scanner-laser"></div>
-            </div>
-            <div id="scanner-status-pill" style="position: absolute; bottom: 12px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 100px; font-family: var(--font-mono); pointer-events: none;">
-              Align barcode inside frame...
-            </div>
-          `;
-        }
-
         if (this.html5QrCode) {
           try { await this.html5QrCode.stop(); } catch(e){}
         }
@@ -157,11 +188,11 @@ class BarcodeScannerEngine {
           formatsToSupport: formats,
           verbose: false,
           experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
+            useBarCodeDetectorIfSupported: false // Keep FALSE so ZXing 1D barcode decoder runs on all browsers!
           }
         });
 
-        // Smart camera resolution: Works on both desktop webcams and phone rear cameras without OverconstrainedError
+        // Smart camera resolution
         let cameraToUse = { facingMode: { ideal: facingMode } };
         try {
           const cameras = await Html5Qrcode.getCameras();
@@ -174,33 +205,56 @@ class BarcodeScannerEngine {
           }
         } catch (camErr) {}
 
-        await this.html5QrCode.start(
-          cameraToUse,
-          {
-            fps: 20,
-            qrbox: (w, h) => ({
-              width: Math.min(Math.round(w * 0.9), 350),
-              height: Math.min(Math.round(h * 0.7), 210)
-            })
-          },
-          (decodedText) => {
-            const now = Date.now();
-            if (decodedText && (decodedText !== this.lastScannedCode || now - this.lastScanTime > 2000)) {
-              this.lastScannedCode = decodedText;
-              this.lastScanTime = now;
-              this.onBarcodeDetected(decodedText, 'camera');
-            }
-          },
-          () => {}
-        );
+        const scanConfig = {
+          fps: 24,
+          qrbox: (viewfinderWidth, viewfinderHeight) => ({
+            width: Math.min(Math.round(viewfinderWidth * 0.95), 460),
+            height: Math.min(Math.round(viewfinderHeight * 0.8), 260)
+          }),
+          aspectRatio: 1.777778
+        };
+
+        const onScanSuccess = (decodedText) => {
+          const now = Date.now();
+          if (decodedText && (decodedText !== this.lastScannedCode || now - this.lastScanTime > 1800)) {
+            this.lastScannedCode = decodedText;
+            this.lastScanTime = now;
+            this.onBarcodeDetected(decodedText, 'camera');
+          }
+        };
+
+        try {
+          await this.html5QrCode.start(cameraToUse, scanConfig, onScanSuccess, () => {});
+        } catch (primaryStartErr) {
+          // Fallback: try starting with generic constraint { facingMode: facingMode }
+          await this.html5QrCode.start({ facingMode: facingMode }, scanConfig, onScanSuccess, () => {});
+        }
+
         this.isScanning = true;
+        if (statusPill) {
+          statusPill.textContent = '🟢 Auto-Vision Active • Hold barcode steady';
+          statusPill.style.color = '#34D399';
+        }
         return;
       } catch (e) {
-        console.warn('[Scanner] Html5Qrcode error, falling back to native getUserMedia:', e);
+        console.warn('[Scanner] Html5Qrcode camera error:', e);
       }
     }
 
-    // 2. Native getUserMedia fallback
+    // 2. Native WebRTC fallback
+    const viewportWrap = document.querySelector('.scanner-viewport-wrap');
+    if (viewportWrap) {
+      viewportWrap.innerHTML = `
+        <video id="scanner-video-preview" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <div class="scanner-target-reticle" style="pointer-events: none;">
+          <div class="scanner-laser"></div>
+        </div>
+        <div id="scanner-status-pill" style="position: absolute; bottom: 12px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; padding: 5px 14px; border-radius: 100px; font-family: var(--font-mono);">
+          Aim camera at barcode...
+        </div>
+      `;
+    }
+
     const video = document.getElementById('scanner-video-preview');
     if (!video) return;
 
@@ -222,10 +276,10 @@ class BarcodeScannerEngine {
       this.startScanningLoop(video);
     } catch (err) {
       console.warn('[Scanner] Camera access unavailable:', err);
-      const statusPill = document.getElementById('scanner-status-pill');
-      if (statusPill) {
-        statusPill.textContent = 'Camera unavailable. Use manual lookup or Demo Barcode button.';
-        statusPill.style.color = '#EF4444';
+      const pill = document.getElementById('scanner-status-pill');
+      if (pill) {
+        pill.textContent = 'Camera unavailable. Use manual lookup or Upload Photo button.';
+        pill.style.color = '#EF4444';
       }
     }
   }
@@ -782,12 +836,10 @@ class BarcodeScannerEngine {
     this.onBarcodeDetected(code, 'manual');
   }
 
-  simulateSampleScan() {
-    const sampleBarcodes = ["8901719908262", "8901058852336", "8901725131235", "8901262010053", "8901030015520"];
-    const randomCode = sampleBarcodes[Math.floor(Math.random() * sampleBarcodes.length)];
+  simulateSampleScan(targetCode = "8901719908262") {
     const input = document.getElementById('manual-barcode-input');
-    if (input) input.value = randomCode;
-    this.onBarcodeDetected(randomCode, 'demo');
+    if (input) input.value = targetCode;
+    this.onBarcodeDetected(targetCode, 'demo');
   }
 
   switchCamera() {

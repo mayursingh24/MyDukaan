@@ -431,21 +431,27 @@ class InventoryEngine {
     // 4. Check Netlify / Gemini Serverless Endpoint
     if (!matched) {
       try {
-        const res = await fetch('/api/gemini', {
+        let ep = '/api/gemini';
+        if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          ep = 'https://mydukaan24.netlify.app/api/gemini';
+        }
+        const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+        const res = await fetch(ep, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'lookupBarcode', barcode })
+          body: JSON.stringify({ action: 'lookupBarcode', barcode, apiKey: customApiKey })
         });
         if (res.ok) {
           const data = await res.json();
-          if (data && data.found && data.name) {
+          const prodObj = data.product || data;
+          if (data && data.found && prodObj.name) {
             matched = {
-              name: data.name,
-              brand: data.brand || '',
-              cat: data.cat || data.category || 'Grocery',
-              mrp: Number(data.mrp) || 30,
-              price: Number(data.price) || 28,
-              cost: Number(data.cost) || 24
+              name: prodObj.name,
+              brand: prodObj.brand || '',
+              cat: prodObj.cat || prodObj.category || 'Grocery',
+              mrp: Number(prodObj.mrp) || 30,
+              price: Number(prodObj.price) || 28,
+              cost: Number(prodObj.cost) || 24
             };
           }
         }

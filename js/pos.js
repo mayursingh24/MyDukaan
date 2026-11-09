@@ -123,6 +123,31 @@ class POSEngine {
     this.renderCatalog();
   }
 
+  // Handle Enter key or Barcode Gun in POS search box
+  handleSearchKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const query = (event.target.value || '').trim();
+      if (!query) return;
+
+      const db = DB.getData();
+      const exactMatch = db.products.find(p => p.barcode === query || p.id.toLowerCase() === query.toLowerCase() || p.name.toLowerCase() === query.toLowerCase());
+
+      if (exactMatch) {
+        this.addItemToCart(exactMatch);
+        event.target.value = '';
+        this.setSearchQuery('');
+        App.toast('success', `Added: ${exactMatch.name}`, `₹${exactMatch.price} added to current bill`);
+      } else if (/^\d{6,14}$/.test(query)) {
+        // Barcode entered that is not yet in store! Open scanner resolution to auto-add!
+        if (window.BarcodeScanner) {
+          BarcodeScanner.openScannerModal();
+          BarcodeScanner.onBarcodeDetected(query, 'pos_manual');
+        }
+      }
+    }
+  }
+
   // Calculate bill finances
   calculateTotals() {
     const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);

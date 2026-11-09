@@ -77,6 +77,7 @@ Customer Udhaar Ledger:
               </div>
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
+              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()" title="Configure Gemini API Key">🔑 Set Key</button>
               <button class="btn btn-secondary btn-sm" onclick="DukaanAI.clearHistory()" title="Clear Chat History">Clear</button>
               <button class="topbar-icon-btn" onclick="DukaanAI.closeModal()">✕</button>
             </div>
@@ -153,35 +154,45 @@ Customer Udhaar Ledger:
     }
   }
 
-  // Send Prompt to Netlify Serverless Backend
-  async submitPrompt(retryText = null) {
+  // Quick prompt to save user's custom Gemini API key locally
+  promptSetApiKey() {
+    const existing = localStorage.getItem('mydukaan_gemini_api_key') || '';
+    const newKey = prompt("Paste your Google Gemini API Key from aistudio.google.com:", existing);
+    if (newKey !== null) {
+      const trimmed = newKey.trim();
+      if (trimmed) {
+        localStorage.setItem('mydukaan_gemini_api_key', trimmed);
+        App.toast('success', 'Gemini API Key Saved', 'Now using your custom key for Copilot AI.');
+        this.appendMessage('ai', `🔑 **Custom Gemini Key configured successfully!**\nYour queries will now pass this key directly to the serverless engine.`);
+      } else {
+        localStorage.removeItem('mydukaan_gemini_api_key');
+        App.toast('info', 'API Key Cleared', 'Reset to Netlify environment default.');
+      }
+    }
+  }
+
+  // Submit Prompt to Netlify Serverless Backend (/api/gemini)
+  async submitPrompt(customPrompt = null) {
     if (this.isRequestInProgress) return;
 
-    const input = document.getElementById('ai-chat-textarea');
-    const promptText = (retryText || (input ? input.value : '')).trim();
-
+    const textarea = document.getElementById('ai-chat-textarea');
+    const promptText = (customPrompt || (textarea ? textarea.value : '')).trim();
     if (!promptText) return;
 
-    if (input) {
-      input.value = '';
-      input.style.height = 'auto';
+    if (textarea) {
+      textarea.value = '';
+      textarea.style.height = 'auto';
     }
 
-    this.lastFailedPrompt = promptText;
+    this.appendMessage('user', promptText);
     this.isRequestInProgress = true;
     this.updateSendButtonState(true);
 
     const thread = document.getElementById('ai-chat-thread');
-    if (!thread) return;
-
-    // Append User Message
-    this.appendMessage('user', promptText);
-
-    // Loader Indicator
     const loaderId = `loader-${Date.now()}`;
     const loaderHtml = `
       <div id="${loaderId}" class="ai-msg-row ai">
-        <div class="ai-msg-avatar">${Icons.sparkles(16)}</div>
+        <div class="ai-msg-avatar" style="animation: pulse 1.5s infinite;">${Icons.sparkles(16)}</div>
         <div class="ai-msg-bubble" style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 12.5px; color: var(--text-muted);">Consulting AI Engine via Netlify serverless...</span>
         </div>
@@ -199,6 +210,8 @@ Customer Udhaar Ledger:
         endpoint = 'https://mydukaan24.netlify.app/api/gemini';
       }
 
+      const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+
       let response = null;
       let result = null;
 
@@ -208,7 +221,8 @@ Customer Udhaar Ledger:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: promptText,
-            storeContext: storeContext
+            storeContext: storeContext,
+            apiKey: customApiKey
           })
         });
         result = await response.json().catch(() => ({}));
@@ -224,14 +238,13 @@ Customer Udhaar Ledger:
         this.appendMessage('ai', result.text);
         this.lastFailedPrompt = null;
       } else {
-        // Fallback to Inbuilt Offline Retail Rule-Engine so the merchant is NEVER stranded!
-        const offlineReply = this.generateOfflineRetailAdvice(promptText);
+        // Fallback to Inbuilt Offline Retail Rule-Engine with full context
+        const offlineReply = this.generateOfflineRetailAdvice(promptText, result, response);
         this.appendMessage('ai', offlineReply);
         
-        // Show subtle status notice if key is pending
-        const errorMsg = (result && result.error) || (response ? `Status ${response.status}` : 'Offline Mode');
-        if (errorMsg.includes('GEMINI_API_KEY') || (response && response.status === 401)) {
-          this.renderNoticeBanner('Netlify Environment Notice: GEMINI_API_KEY is pending in Netlify Site Configuration. Inbuilt Retail Rule-Engine is currently answering your queries with live store metrics.');
+        // Show subtle status notice if auth key needs attention
+        if (response && response.status === 401) {
+          this.renderNoticeBanner(`Notice: Gemini API reported 401 UNAUTHENTICATED. You can click "🔑 Set Key" in the header to enter a standard key from aistudio.google.com.`);
         }
         this.lastFailedPrompt = null;
       }
@@ -247,20 +260,76 @@ Customer Udhaar Ledger:
   }
 
   // Inbuilt 100% Offline Retail Rule-Engine (Zero-fail guarantee!)
-  generateOfflineRetailAdvice(prompt) {
+  generateOfflineRetailAdvice(prompt, result = null, response = null) {
     const db = DB.getData();
     const products = db.products || [];
     const customers = db.customers || [];
     const invoices = db.invoices || [];
     const expenses = db.expenses || [];
-    const pLow = prompt.toLowerCase();
+    const pLow = prompt.toLowerCase().trim();
 
-    // 0. Friendly Greetings & Conversational Queries
-    if (pLow === 'hii' || pLow === 'hi' || pLow === 'hello' || pLow === 'hey' || pLow.includes('namaste') || pLow.includes('kaise ho') || pLow.includes('kya hal')) {
-      return `🙏 **Namaste! Welcome to MyDukkan24 AI.**\n\nMain aapka personal Kirana & Retail Business Advisor hoon! Main aapke store ke live data (stock, sales, udhaar) ko monitor karta hoon.\n\nAap mujhse pooch sakte hain:\n• *"Aaj ki total sale aur munafa kitna hai?"*\n• *"Kaunsa stock khatam ho raha hai?"*\n• *"Kis customer ka udhaar sabse zyada baaki hai?"*\n• *"WhatsApp payment reminder banao"*\n\nBataiye Mayur ji, aaj aapke store ke liye main kya check karoon?`;
+    // 0. API Connection / Health Status Queries
+    if (
+      pLow.includes('connect') ||
+      pLow.includes('api') ||
+      pLow.includes('online') ||
+      pLow.includes('model') ||
+      pLow.includes('server') ||
+      pLow.includes('work kr') ||
+      pLow.includes('chal rha') ||
+      pLow.includes('active')
+    ) {
+      const isOnlineEndpoint = response ? 'Online (Netlify Serverless Responded)' : 'Reachable';
+      const keyStatus = (response && response.status === 401)
+        ? '⚠️ 401 UNAUTHENTICATED (API key not valid / ACCESS_TOKEN_TYPE_UNSUPPORTED)'
+        : 'Running on Local Intelligence Engine';
+
+      return `⚡ **MyDukaan24 Copilot Status Report:**\n\n` +
+        `• **Serverless Gateway:** 🟢 ${isOnlineEndpoint}\n` +
+        `• **Store Live Data:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s,i)=>s+(i.paid||0),0).toLocaleString('en-IN')} Sales)\n` +
+        `• **Google Gemini 2.0 Flash:** ${keyStatus}\n` +
+        `• **Active Fallback Mode:** 🛡️ **Inbuilt Offline Retail Engine** (Grounded in your real store inventory and ledger)\n\n` +
+        `💡 **To switch to full Google Gemini Cloud AI:**\n` +
+        `1. Open [Google AI Studio](https://aistudio.google.com/).\n` +
+        `2. Click **'Create API key in new project'** to generate a standard unrestricted Gemini key.\n` +
+        `3. Click the **'🔑 Set Key'** button in this header to paste it directly!`;
     }
 
-    // 1. Stock / Reorder Query
+    // 1. Friendly Greetings & Conversational Queries
+    if (
+      pLow === 'hii' || pLow === 'hi' || pLow === 'hello' || pLow === 'hey' || pLow === 'yo' ||
+      pLow.includes('namaste') || pLow.includes('kaise ho') || pLow.includes('kya hal') ||
+      pLow.includes('bhai') || pLow.includes('who are you') || pLow.includes('kaun ho')
+    ) {
+      return `🙏 **Namaste! Main aapka MyDukaan24 AI Retail Advisor hoon.**\n\n` +
+        `Aapke store ka poora live data mere pass available hai:\n` +
+        `• Catalog me **${products.length} items** hain.\n` +
+        `• **${invoices.length} billing transactions** aur **${customers.length} customer accounts** tracked hain.\n\n` +
+        `Aap mujhse pooch sakte hain:\n` +
+        `• *"Kaunsa stock khatam ho raha hai?"*\n` +
+        `• *"Kiska udhaar sabse zyada baaki hai?"*\n` +
+        `• *"Parle-G ka kitna stock aur price hai?"*\n` +
+        `• *"Aaj ki total sale aur munafa kitna hai?"*\n\n` +
+        `Bataiye Mayur ji, aaj aapke store ke liye main kya check karoon?`;
+    }
+
+    // 2. Specific Product Lookup Queries (e.g. "Parle G", "Maggi", "Oil", "Atta")
+    const matchedProduct = products.find(p => pLow.includes(p.name.toLowerCase()) || (p.barcode && pLow.includes(p.barcode)) || pLow.includes(p.cat.toLowerCase()));
+    if (matchedProduct && (pLow.includes('stock') || pLow.includes('price') || pLow.includes('rate') || pLow.includes('kitna') || pLow.includes('hai'))) {
+      const profit = Math.max(0, matchedProduct.price - matchedProduct.cost);
+      const margin = matchedProduct.price > 0 ? Math.round((profit / matchedProduct.price) * 100) : 0;
+      const isLow = matchedProduct.stock <= matchedProduct.minStock;
+
+      return `📦 **Product Live Status — ${matchedProduct.name}:**\n\n` +
+        `• **Current Stock:** **${matchedProduct.stock} ${matchedProduct.unit}** ${isLow ? '⚠️ *(Low Stock Alert!)*' : '✅ *(Adequate)*'}\n` +
+        `• **Selling Price:** **₹${matchedProduct.price}** (MRP: ₹${matchedProduct.mrp})\n` +
+        `• **Wholesale Cost:** ₹${matchedProduct.cost}\n` +
+        `• **Margin per Unit:** **₹${profit} (${margin}%)**\n` +
+        `• **Barcode / EAN:** \`${matchedProduct.barcode || 'N/A'}\`\n\n` +
+        `💡 *To add to bill, go to Quick Billing POS or search "${matchedProduct.name}".*`;
+    }
+
+    // 3. Stock / Reorder Query
     if (pLow.includes('stock') || pLow.includes('reorder') || pLow.includes('khatam') || pLow.includes('maal')) {
       const low = products.filter(p => p.stock <= p.minStock);
       if (!low.length) {
@@ -271,7 +340,7 @@ Customer Udhaar Ledger:
         `\n\n💡 *Actionable Tip: Call your wholesale distributors to restock these before evening peak customer hours.*`;
     }
 
-    // 2. Udhaar / Debtors / Customers
+    // 4. Udhaar / Debtors / Customers
     if (pLow.includes('udhaar') || pLow.includes('debt') || pLow.includes('due') || pLow.includes('owe') || pLow.includes('baki')) {
       const debtors = customers.filter(c => (c.balanceDue || 0) > 0).sort((a, b) => b.balanceDue - a.balanceDue);
       const totalDue = debtors.reduce((s, c) => s + c.balanceDue, 0);
@@ -283,7 +352,7 @@ Customer Udhaar Ledger:
         `\n\n💡 *Actionable Tip: Go to Customers & Khata to send 1-click WhatsApp payment reminders with dynamic UPI links.*`;
     }
 
-    // 3. Store Health / Summary / Sales / Revenue
+    // 5. Store Health / Summary / Sales / Revenue
     if (pLow.includes('summary') || pLow.includes('health') || pLow.includes('revenue') || pLow.includes('sale') || pLow.includes('aaj') || pLow.includes('earning')) {
       const today = new Date().toISOString().split('T')[0];
       const todayInvoices = invoices.filter(i => (i.date || '').startsWith(today));
@@ -302,11 +371,11 @@ Customer Udhaar Ledger:
         `📈 **Financial Health Verdict:** Store operations are stable. Focus on recovering pending customer credit to accelerate working capital turnover.`;
     }
 
-    // 4. WhatsApp Reminder Draft
+    // 6. WhatsApp Reminder Draft
     if (pLow.includes('whatsapp') || pLow.includes('reminder') || pLow.includes('draft') || pLow.includes('message')) {
       const topDebtor = customers.find(c => (c.balanceDue || 0) > 0) || { name: "Ramesh Sharma", balanceDue: 1850 };
       const shopName = db.shop ? (db.shop.name || 'MyDukkan24 Mart') : 'MyDukkan24 Mart';
-      const upi = db.shop ? (db.shop.upiId || 'mydukaan24@upi') : 'mydukaan24@upi';
+      const upi = db.shop ? (db.shop.upiId || '6306437348@upi') : '6306437348@upi';
 
       return `📱 **Ready-to-Send WhatsApp Payment Reminder:**\n\n` +
         `\`\`\`\n` +
@@ -319,8 +388,8 @@ Customer Udhaar Ledger:
         `👉 *Click Customer & Khata to send this directly via WhatsApp with 1-click.*`;
     }
 
-    // 5. Margin / Profit Growth
-    if (pLow.includes('margin') || pLow.includes('profit') || pLow.includes('grow') || pLow.includes('increase')) {
+    // 7. Margin / Profit Growth
+    if (pLow.includes('margin') || pLow.includes('profit') || pLow.includes('grow') || pLow.includes('increase') || pLow.includes('munafa')) {
       return `💡 **3 Practical Ways to Boost Kirana Net Margins This Month:**\n\n` +
         `1. **Impulse Counter Placement:** Place high-margin items (chocolates, mints, spices) right near the billing desk. FMCG packaged goods here yield 22-28% margins.\n` +
         `2. **Fast FMCG Bundling:** Offer combo savings on high-demand staples (e.g. Atta 5kg + Sunflower Oil 1L) to increase average basket size per walking customer.\n` +

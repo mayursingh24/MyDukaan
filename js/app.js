@@ -444,7 +444,7 @@ class AppController {
           <div class="pos-search-row">
             <div class="pos-search-input-wrap">
               <span class="pos-search-icon">${Icons.search(16)}</span>
-              <input type="text" id="pos-search-input" class="form-input pos-search-input" placeholder="Search product name, category, or scan barcode..." oninput="POS.setSearchQuery(this.value)" autofocus />
+              <input type="text" id="pos-search-input" class="form-input pos-search-input" placeholder="Search product name, category, or scan barcode..." oninput="POS.setSearchQuery(this.value)" onkeydown="POS.handleSearchKeydown(event)" autofocus />
             </div>
             <button class="btn btn-secondary" onclick="BarcodeScanner.openScannerModal()" title="Open Camera Scanner">
               ${Icons.camera(16)} Scan

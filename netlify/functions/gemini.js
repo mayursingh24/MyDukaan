@@ -45,21 +45,21 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Resolve API key strictly from Netlify Environment Variables
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Resolve API key: either client-supplied (from app settings) or Netlify Environment Variable
+    const apiKey = (clientApiKey && String(clientApiKey).trim()) || process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return {
         statusCode: 401,
         headers,
         body: JSON.stringify({
-          error: 'GEMINI_API_KEY is not configured in Netlify Environment Variables. Please set GEMINI_API_KEY in your Netlify site settings.'
+          error: 'GEMINI_API_KEY is not configured in Netlify Environment Variables or app settings. Please add your key at aistudio.google.com.'
         })
       };
     }
 
     // Candidate models in preference order (gemini-2.0-flash and gemini-1.5-flash are universally available for all AI Studio keys)
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
     let lastError = null;
     let successfulResult = null;
 
@@ -177,10 +177,14 @@ If no commercial product can be identified with reasonable certainty for barcode
       }
 
       if (!successfulResult) {
+        const isAuthError = lastError && (lastError.includes('API key') || lastError.includes('UNAUTHENTICATED') || lastError.includes('unauthorized') || lastError.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED'));
         return {
-          statusCode: 500,
+          statusCode: isAuthError ? 401 : 500,
           headers,
-          body: JSON.stringify({ error: lastError || 'Failed to lookup barcode via Gemini.' })
+          body: JSON.stringify({
+            error: lastError || 'Failed to lookup barcode via Gemini.',
+            authError: Boolean(isAuthError)
+          })
         };
       }
 
@@ -314,10 +318,15 @@ ${storeContext || 'No store data provided.'}`;
     }
 
     if (!successfulResult) {
+      const isAuthError = lastError && (lastError.includes('API key') || lastError.includes('UNAUTHENTICATED') || lastError.includes('unauthorized') || lastError.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED'));
       return {
-        statusCode: 500,
+        statusCode: isAuthError ? 401 : 500,
         headers,
-        body: JSON.stringify({ error: lastError || 'Failed to get response from Gemini API.' })
+        body: JSON.stringify({
+          error: lastError || 'Failed to get response from Gemini API.',
+          authError: Boolean(isAuthError),
+          hint: isAuthError ? 'Please generate a standard API key in Google AI Studio (aistudio.google.com) by clicking "Create API key in new project".' : undefined
+        })
       };
     }
 
