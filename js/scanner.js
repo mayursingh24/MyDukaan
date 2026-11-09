@@ -120,18 +120,18 @@ class BarcodeScannerEngine {
   async startCamera(facingMode = 'environment') {
     this.currentFacingMode = facingMode;
 
-    // 1. Try universal Html5Qrcode if loaded
+    // 1. Try universal Html5Qrcode with all 1D barcode formats and auto camera resolution
     if (window.Html5Qrcode) {
       try {
         const viewportWrap = document.querySelector('.scanner-viewport-wrap');
         if (viewportWrap) {
           viewportWrap.innerHTML = `
-            <div id="html5-qr-reader" style="width: 100%; height: 100%;"></div>
+            <div id="html5-qr-reader" style="width: 100%; height: 100%; min-height: 230px;"></div>
             <div class="scanner-target-reticle" style="pointer-events: none;">
               <div class="scanner-laser"></div>
             </div>
             <div id="scanner-status-pill" style="position: absolute; bottom: 12px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 100px; font-family: var(--font-mono); pointer-events: none;">
-              Aim camera at barcode...
+              Align barcode inside frame...
             </div>
           `;
         }
@@ -140,13 +140,52 @@ class BarcodeScannerEngine {
           try { await this.html5QrCode.stop(); } catch(e){}
         }
 
-        this.html5QrCode = new Html5Qrcode("html5-qr-reader");
+        let formats = undefined;
+        if (window.Html5QrcodeSupportedFormats) {
+          formats = [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE
+          ];
+        }
+
+        this.html5QrCode = new Html5Qrcode("html5-qr-reader", {
+          formatsToSupport: formats,
+          verbose: false,
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          }
+        });
+
+        // Smart camera resolution: Works on both desktop webcams and phone rear cameras without OverconstrainedError
+        let cameraToUse = { facingMode: { ideal: facingMode } };
+        try {
+          const cameras = await Html5Qrcode.getCameras();
+          if (cameras && cameras.length > 0) {
+            const backCam = cameras.find(c => {
+              const label = (c.label || '').toLowerCase();
+              return label.includes('back') || label.includes('rear') || label.includes('environment');
+            });
+            cameraToUse = (facingMode === 'environment' && backCam) ? backCam.id : cameras[0].id;
+          }
+        } catch (camErr) {}
+
         await this.html5QrCode.start(
-          { facingMode: facingMode },
-          { fps: 15, qrbox: { width: 240, height: 140 } },
+          cameraToUse,
+          {
+            fps: 20,
+            qrbox: (w, h) => ({
+              width: Math.min(Math.round(w * 0.9), 350),
+              height: Math.min(Math.round(h * 0.7), 210)
+            })
+          },
           (decodedText) => {
             const now = Date.now();
-            if (decodedText && (decodedText !== this.lastScannedCode || now - this.lastScanTime > 2500)) {
+            if (decodedText && (decodedText !== this.lastScannedCode || now - this.lastScanTime > 2000)) {
               this.lastScannedCode = decodedText;
               this.lastScanTime = now;
               this.onBarcodeDetected(decodedText, 'camera');
@@ -157,7 +196,7 @@ class BarcodeScannerEngine {
         this.isScanning = true;
         return;
       } catch (e) {
-        console.warn('[Scanner] Html5Qrcode fallback to native:', e);
+        console.warn('[Scanner] Html5Qrcode error, falling back to native getUserMedia:', e);
       }
     }
 
@@ -296,6 +335,7 @@ class BarcodeScannerEngine {
       "8901058861208": { name: "Nestlé Everyday Dairy Whitener 200g", brand: "Nestlé", cat: "Dairy", mrp: 120, price: 110, cost: 95, unit: "pouch", emoji: "🥛" },
       "8901719101053": { name: "Parle-G Gold Biscuits 100g", brand: "Parle", cat: "Snacks", mrp: 15, price: 15, cost: 12, unit: "pack", emoji: "🍪" },
       "8901719101015": { name: "Parle-G Glucose Biscuits 250g", brand: "Parle", cat: "Snacks", mrp: 25, price: 25, cost: 21, unit: "pack", emoji: "🍪" },
+      "8901719908262": { name: "Parle-G Original Gluco Biscuits 382.5g", brand: "Parle", cat: "Snacks", mrp: 35, price: 35, cost: 28, unit: "pack", emoji: "🍪" },
       "8901719104030": { name: "Parle Monaco Salted Crackers 75g", brand: "Parle", cat: "Snacks", mrp: 10, price: 10, cost: 8, unit: "pack", emoji: "🍪" },
       "8901719103026": { name: "Parle Krackjack Sweet & Salty 60g", brand: "Parle", cat: "Snacks", mrp: 10, price: 10, cost: 8, unit: "pack", emoji: "🍪" },
       "8901719112028": { name: "Parle Hide & Seek Choco Chip 120g", brand: "Parle", cat: "Snacks", mrp: 35, price: 35, cost: 29, unit: "pack", emoji: "🍪" },
@@ -743,7 +783,7 @@ class BarcodeScannerEngine {
   }
 
   simulateSampleScan() {
-    const sampleBarcodes = ["8901058852336", "8901725131235", "8901262010053", "8901030015520"];
+    const sampleBarcodes = ["8901719908262", "8901058852336", "8901725131235", "8901262010053", "8901030015520"];
     const randomCode = sampleBarcodes[Math.floor(Math.random() * sampleBarcodes.length)];
     const input = document.getElementById('manual-barcode-input');
     if (input) input.value = randomCode;
