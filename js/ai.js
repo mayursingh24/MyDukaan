@@ -255,6 +255,11 @@ Customer Udhaar Ledger:
     const expenses = db.expenses || [];
     const pLow = prompt.toLowerCase();
 
+    // 0. Friendly Greetings & Conversational Queries
+    if (pLow === 'hii' || pLow === 'hi' || pLow === 'hello' || pLow === 'hey' || pLow.includes('namaste') || pLow.includes('kaise ho') || pLow.includes('kya hal')) {
+      return `🙏 **Namaste! Welcome to MyDukkan24 AI.**\n\nMain aapka personal Kirana & Retail Business Advisor hoon! Main aapke store ke live data (stock, sales, udhaar) ko monitor karta hoon.\n\nAap mujhse pooch sakte hain:\n• *"Aaj ki total sale aur munafa kitna hai?"*\n• *"Kaunsa stock khatam ho raha hai?"*\n• *"Kis customer ka udhaar sabse zyada baaki hai?"*\n• *"WhatsApp payment reminder banao"*\n\nBataiye Mayur ji, aaj aapke store ke liye main kya check karoon?`;
+    }
+
     // 1. Stock / Reorder Query
     if (pLow.includes('stock') || pLow.includes('reorder') || pLow.includes('khatam') || pLow.includes('maal')) {
       const low = products.filter(p => p.stock <= p.minStock);

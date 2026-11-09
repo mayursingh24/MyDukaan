@@ -58,8 +58,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Candidate models in preference order (gemini-2.5-flash first for high stability & capacity, plus fallbacks)
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-3.8-flash'];
+    // Candidate models in preference order (gemini-2.0-flash and gemini-1.5-flash are universally available for all AI Studio keys)
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
     let lastError = null;
     let successfulResult = null;
 
@@ -129,7 +129,8 @@ If no commercial product can be identified with reasonable certainty for barcode
               'Content-Type': 'application/json',
               'x-goog-api-key': apiKey
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(6000)
           });
 
           // If tools cause an error (e.g. 400 bad request or unsupported tool), retry without tools
@@ -141,7 +142,8 @@ If no commercial product can be identified with reasonable certainty for barcode
                 'Content-Type': 'application/json',
                 'x-goog-api-key': apiKey
               },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
+              signal: AbortSignal.timeout(6000)
             });
           }
 
@@ -277,7 +279,8 @@ ${storeContext || 'No store data provided.'}`;
             'Content-Type': 'application/json',
             'x-goog-api-key': apiKey
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(6000)
         });
 
         const data = await response.json();
