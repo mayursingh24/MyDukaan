@@ -1780,6 +1780,8 @@ class AppController {
     if (!window.I18n) return;
     const langSelect = document.getElementById('lang-selector-select');
     if (langSelect) langSelect.value = I18n.getLanguage();
+    const sidebarLangSelect = document.getElementById('sidebar-lang-select');
+    if (sidebarLangSelect) sidebarLangSelect.value = I18n.getLanguage();
 
     document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
       const view = link.dataset.view;

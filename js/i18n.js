@@ -337,6 +337,8 @@ class I18nManager {
     // Update active label in UI
     const langSelect = document.getElementById('lang-selector-select');
     if (langSelect) langSelect.value = lang;
+    const sidebarLangSelect = document.getElementById('sidebar-lang-select');
+    if (sidebarLangSelect) sidebarLangSelect.value = lang;
 
     // Toast confirmation
     const langNames = { en: 'English', hi: 'हिन्दी (Hindi)', hinglish: 'Hinglish' };

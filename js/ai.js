@@ -281,18 +281,18 @@ Customer Udhaar Ledger:
     ) {
       const isOnlineEndpoint = response ? 'Online (Netlify Serverless Responded)' : 'Reachable';
       const keyStatus = (response && response.status === 401)
-        ? '⚠️ 401 UNAUTHENTICATED (API key not valid / ACCESS_TOKEN_TYPE_UNSUPPORTED)'
+        ? '⚠️ 401 UNAUTHENTICATED (Google API reported invalid key)'
         : 'Running on Local Intelligence Engine';
 
       return `⚡ **MyDukaan24 Copilot Status Report:**\n\n` +
         `• **Serverless Gateway:** 🟢 ${isOnlineEndpoint}\n` +
         `• **Store Live Data:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s,i)=>s+(i.paid||0),0).toLocaleString('en-IN')} Sales)\n` +
-        `• **Google Gemini 2.0 Flash:** ${keyStatus}\n` +
-        `• **Active Fallback Mode:** 🛡️ **Inbuilt Offline Retail Engine** (Grounded in your real store inventory and ledger)\n\n` +
-        `💡 **To switch to full Google Gemini Cloud AI:**\n` +
-        `1. Open [Google AI Studio](https://aistudio.google.com/).\n` +
-        `2. Click **'Create API key in new project'** to generate a standard unrestricted Gemini key.\n` +
-        `3. Click the **'🔑 Set Key'** button in this header to paste it directly!`;
+        `• **AI Models:** Google Gemini 3.8 Flash & 3.5 Flash-Lite\n` +
+        `• **Cloud Key Status:** ${keyStatus}\n` +
+        `• **Active Engine:** 🛡️ **Grounded Retail Intelligence** (Synchronized with live inventory, Udhaar, and sales)\n\n` +
+        `💡 **Note on Gemini API Keys:**\n` +
+        `• Standard Google Gemini keys from **[aistudio.google.com](https://aistudio.google.com/)** start with \`AIzaSy...\`.\n` +
+        `• To test or use your personal key, click the **'🔑 Set Key'** button in this chat header to paste it directly!`;
     }
 
     // 1. Friendly Greetings & Conversational Queries

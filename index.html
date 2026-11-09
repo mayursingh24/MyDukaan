@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/landing.css?v=7.1" />
+  <link rel="stylesheet" href="css/landing.css?v=7.2" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
@@ -48,7 +48,7 @@
         </nav>
 
         <div style="display: flex; align-items: center; gap: 8px;">
-          <a href="#download" class="lp-btn-secondary" style="padding: 7px 14px; font-size: 12px; border-radius: var(--lp-radius-full);">
+          <a href="#download" class="lp-btn-secondary lp-nav-hide-mobile" style="padding: 7px 14px; font-size: 12px; border-radius: var(--lp-radius-full);">
             📱 Download APK
           </a>
           <a href="app.html" class="lp-nav-cta">
@@ -1408,7 +1408,7 @@
     // Service Worker Registration for Instant Cache Busting & Offline Support
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=7.1')
+        navigator.serviceWorker.register('./sw.js?v=7.2')
           .then(reg => {
             console.log('[PWA] Service Worker v7.1 active ✓ Scope:', reg.scope);
             reg.update();
