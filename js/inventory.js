@@ -181,6 +181,10 @@ class InventoryEngine {
     DB.saveData(db);
     App.toast('success', 'Stock Updated', `Added ${qty} ${prod.unit} to ${prod.name}`);
     this.render();
+    if (App.currentView === 'dashboard') {
+      const container = document.getElementById('main-view-container');
+      if (container) App.renderDashboardView(container);
+    }
     if (window.POS) POS.renderCatalog();
     App.updateNotificationBadge();
   }
@@ -368,6 +372,10 @@ class InventoryEngine {
 
     this.closeModal();
     this.render();
+    if (App.currentView === 'dashboard') {
+      const container = document.getElementById('main-view-container');
+      if (container) App.renderDashboardView(container);
+    }
     if (window.POS) POS.renderCatalog();
     App.updateNotificationBadge();
   }

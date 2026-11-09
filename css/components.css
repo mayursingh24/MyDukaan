@@ -805,6 +805,23 @@
     max-height: 100vh;
     border-radius: 0;
   }
+
+  .pos-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .pos-prod-card {
+    padding: 10px 8px;
+  }
+
+  .pos-prod-name {
+    font-size: 12px;
+  }
+
+  .pos-prod-price {
+    font-size: 13.5px;
+  }
 }
 
 /* Print Rules for 80mm Receipts */

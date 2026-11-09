@@ -322,7 +322,7 @@ class BarcodeScannerEngine {
         <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
           <div style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 700; margin-bottom: 4px;">Online Match Found</div>
           <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${cleanName}</div>
-          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <div class="scanner-form-grid" style="margin-bottom: 10px;">
             <input type="text" id="google-edit-name" class="form-input" style="font-size: 12px;" value="${cleanName}" />
             <input type="number" id="google-edit-price" class="form-input" style="font-size: 12px;" value="${cleanPrice}" />
             <input type="number" id="google-edit-mrp" class="form-input" style="font-size: 12px;" value="${cleanMrp}" />
@@ -341,7 +341,7 @@ class BarcodeScannerEngine {
           <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px;">
             Enter product name and price to immediately register and bill:
           </p>
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px;">
+          <div class="scanner-form-grid" style="margin-bottom: 8px;">
             <input type="text" id="quick-add-name" class="form-input" placeholder="Product Name" />
             <input type="number" id="quick-add-price" class="form-input" placeholder="Price (₹)" />
           </div>

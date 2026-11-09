@@ -167,7 +167,7 @@ class AnalyticsEngine {
       </div>
 
       <!-- Performance Chart & P&L Statement -->
-      <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 20px; margin-bottom: 24px;">
+      <div class="responsive-analytics-grid" style="margin-bottom: 24px;">
         <!-- Left: SVG Revenue Curve -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header">
@@ -225,7 +225,7 @@ class AnalyticsEngine {
       </div>
 
       <!-- Top Sellers vs Slow Moving Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+      <div class="responsive-equal-grid" style="margin-bottom: 24px;">
         <!-- Top Selling Products -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header">

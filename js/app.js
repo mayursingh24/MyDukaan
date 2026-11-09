@@ -92,8 +92,7 @@ class AppController {
     }
 
     // Close mobile drawer if open
-    const sidebar = document.getElementById('app-sidebar');
-    if (sidebar) sidebar.classList.remove('open');
+    this.closeMobileSidebar();
 
     const container = document.getElementById('main-view-container');
     if (!container) return;
@@ -275,7 +274,7 @@ class AppController {
       </div>
 
       <!-- Main Operational Split -->
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;">
+      <div class="responsive-split-grid" style="margin-bottom: 24px;">
         <!-- Left: Recent Transactions Ledger -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header">
@@ -371,7 +370,7 @@ class AppController {
             <div class="card-header">
               <div class="card-title">${Icons.settings(15)} Quick Operations</div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="quick-actions-grid">
               <button class="btn btn-secondary" onclick="Inventory.openProductModal()">
                 ${Icons.plus(14)} New Product
               </button>
@@ -862,13 +861,23 @@ class AppController {
     const db = DB.getData();
     const shop = db.shop || {};
     const theme = db.theme || 'dark';
+    const accent = db.accent || 'blue';
     const isSound = db.soundEnabled !== false;
+    const dbBytes = (JSON.stringify(db).length / 1024).toFixed(1);
+
+    const accents = [
+      { id: 'blue', name: 'Electric Blue', color: '#2563EB' },
+      { id: 'emerald', name: 'Emerald Green', color: '#10B981' },
+      { id: 'purple', name: 'Royal Violet', color: '#8B5CF6' },
+      { id: 'amber', name: 'Sunset Amber', color: '#F59E0B' },
+      { id: 'rose', name: 'Crimson Rose', color: '#F43F5E' }
+    ];
 
     container.innerHTML = `
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>Store Settings & Configurations</h1>
-          <p>Control business profile, thermal receipt formatting, audio sound effects, Netlify AI, and backups</p>
+          <p>Manage your business identity, thermal receipt formats, dynamic accents, and offline database</p>
         </div>
       </div>
 
@@ -881,60 +890,56 @@ class AppController {
               ${Icons.store(16)}
             </div>
           </div>
-          <div class="kpi-val" style="font-size: 17px; font-weight: 800;">${shop.name || 'MyDukkan24 Mart'}</div>
-          <div class="kpi-trend" style="color: var(--text-muted);">UPI: ${shop.upiId || 'mydukaan24@upi'}</div>
+          <div class="kpi-val" style="font-size: 16px; font-weight: 800;">${shop.name || 'MyDukkan24 Mart'}</div>
+          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">UPI: ${shop.upiId || 'mydukaan24@upi'}</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Interface Theme</span>
+            <span class="kpi-title">UI Theme</span>
             <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
               ${theme === 'dark' ? Icons.moon(16) : Icons.sun(16)}
             </div>
           </div>
-          <div class="kpi-val" style="font-size: 17px; font-weight: 800; text-transform: capitalize;">${theme} Theme</div>
+          <div class="kpi-val" style="font-size: 16px; font-weight: 800; text-transform: capitalize;">${theme} Mode</div>
           <div class="kpi-trend">
             <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px; margin-top: 2px;" onclick="App.toggleTheme(); App.renderSettingsView(document.getElementById('main-view-container'));">
-              Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode
+              Switch to ${theme === 'dark' ? 'Light' : 'Dark'}
             </button>
           </div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Audio Feedback</span>
-            <div class="kpi-icon-badge" style="background: ${isSound ? 'var(--success-light)' : 'var(--danger-light)'}; color: ${isSound ? 'var(--success)' : 'var(--danger)'};">
-              ${isSound ? Icons.volume(16) : Icons.volumeX(16)}
+            <span class="kpi-title">Active Accent</span>
+            <div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--primary);"></span>
             </div>
           </div>
-          <div class="kpi-val" style="font-size: 17px; font-weight: 800; color: ${isSound ? 'var(--success)' : 'var(--danger)'};">${isSound ? 'Sound ON' : 'Muted'}</div>
-          <div class="kpi-trend">
-            <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px; margin-top: 2px;" onclick="App.toggleSound()">
-              Toggle ${isSound ? 'Mute' : 'Enable'}
-            </button>
-          </div>
+          <div class="kpi-val" style="font-size: 16px; font-weight: 800; text-transform: capitalize;">${accent}</div>
+          <div class="kpi-trend" style="color: var(--primary); font-weight: 600; font-size: 11px;">Dynamic Palette</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">AI Engine Status</span>
-            <div class="kpi-icon-badge" style="background: rgba(99, 102, 241, 0.15); color: #818CF8;">
-              ${Icons.sparkles(16)}
+            <span class="kpi-title">Local Storage DB</span>
+            <div class="kpi-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">
+              ${Icons.database(16)}
             </div>
           </div>
-          <div class="kpi-val" style="font-size: 17px; font-weight: 800; color: #818CF8;">Gemini 2.5 / 3.8</div>
-          <div class="kpi-trend" style="color: var(--success); font-weight: 600;">Netlify Serverless Ready</div>
+          <div class="kpi-val" style="font-size: 16px; font-weight: 800; color: #10B981;">${dbBytes} KB</div>
+          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">${db.products.length} SKUs • ${db.invoices.length} Bills</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="responsive-equal-grid">
         <!-- Column 1: Store Profile & Receipt Settings -->
         <div style="display: flex; flex-direction: column; gap: 20px;">
           <!-- Store Profile Card -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
               <div class="card-title">${Icons.store(16)} Shop Business Profile</div>
-              <span class="badge badge-primary">Primary Details</span>
+              <span class="badge badge-primary">Live Identity</span>
             </div>
             <form onsubmit="event.preventDefault(); App.saveShopSettings();">
               <div class="form-group">
@@ -942,7 +947,7 @@ class AppController {
                 <input type="text" id="set-shop-name" class="form-input" value="${shop.name || 'MyDukkan24 Mart'}" required />
               </div>
               <div class="form-group">
-                <label class="form-label">Owner Name</label>
+                <label class="form-label">Owner / Cashier Name</label>
                 <input type="text" id="set-shop-owner" class="form-input" value="${shop.owner || 'Mayur Singh'}" />
               </div>
               <div class="form-row-2">
@@ -951,19 +956,19 @@ class AppController {
                   <input type="text" id="set-shop-phone" class="form-input" value="${shop.phone || '+91 98765 43210'}" required />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">GSTIN Tax Number</label>
-                  <input type="text" id="set-shop-gstin" class="form-input" value="${shop.gstin || '09AAAAA0000A1Z5'}" placeholder="e.g. 09AAAAA0000A1Z5" />
+                  <label class="form-label">GSTIN Tax ID</label>
+                  <input type="text" id="set-shop-gstin" class="form-input" value="${shop.gstin || '09AAAAA0000A1Z5'}" placeholder="09AAAAA0000A1Z5" />
                 </div>
               </div>
               <div class="form-row-2">
                 <div class="form-group">
-                  <label class="form-label">UPI ID for Dynamic QR *</label>
+                  <label class="form-label">UPI ID for Dynamic Payments *</label>
                   <input type="text" id="set-shop-upi" class="form-input" value="${shop.upiId || 'mydukaan24@upi'}" required placeholder="yourname@upi" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Default GST Tax Rate (%)</label>
                   <select id="set-shop-tax" class="form-select">
-                    <option value="0" ${shop.taxRate === 0 ? 'selected' : ''}>0% (Tax Exempted)</option>
+                    <option value="0" ${shop.taxRate === 0 ? 'selected' : ''}>0% (Exempted)</option>
                     <option value="5" ${shop.taxRate === 5 || !shop.taxRate ? 'selected' : ''}>5% Standard GST</option>
                     <option value="12" ${shop.taxRate === 12 ? 'selected' : ''}>12% FMCG / Processed</option>
                     <option value="18" ${shop.taxRate === 18 ? 'selected' : ''}>18% Goods / Services</option>
@@ -974,6 +979,17 @@ class AppController {
                 <label class="form-label">Store Address</label>
                 <textarea id="set-shop-address" class="form-textarea" rows="2">${shop.address || 'Hazratganj Market, Lucknow, Uttar Pradesh, India'}</textarea>
               </div>
+
+              <!-- Live Store UPI QR Preview -->
+              <div style="background: var(--bg-card); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(shop.upiId || 'mydukaan24@upi')}&pn=${encodeURIComponent(shop.name || 'MyDukkan24')}" alt="Store UPI QR" style="width: 72px; height: 72px; border-radius: 8px; background: #fff; padding: 4px; display: block;" />
+                <div style="flex: 1;">
+                  <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Active Dynamic UPI QR</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">VPA: <code style="color: var(--primary);">${shop.upiId || 'mydukaan24@upi'}</code></div>
+                  <div style="font-size: 11px; color: var(--success); font-weight: 600; margin-top: 3px;">Accepts PhonePe, GPay, Paytm, BHIM</div>
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
                 ${Icons.check(14)} Save Store Profile
               </button>
@@ -994,7 +1010,7 @@ class AppController {
                 <input type="text" id="set-rcpt-header" class="form-input" value="${shop.rcptHeader || 'HAZRATGANJ, LUCKNOW • TAX INVOICE'}" placeholder="e.g. HAZRATGANJ MARKET • TAX INVOICE" />
               </div>
               <div class="form-group">
-                <label class="form-label">Receipt Footer Thank You Message</label>
+                <label class="form-label">Receipt Footer Thank You Note</label>
                 <input type="text" id="set-rcpt-footer" class="form-input" value="${shop.rcptFooter || 'THANK YOU FOR SHOPPING! VISIT AGAIN'}" placeholder="e.g. THANK YOU FOR SHOPPING!" />
               </div>
               <div class="form-row-2">
@@ -1015,16 +1031,47 @@ class AppController {
           </div>
         </div>
 
-        <!-- Column 2: System, Sound, AI & Database Backups -->
+        <!-- Column 2: Theme Studio, Audio & Database Backups -->
         <div style="display: flex; flex-direction: column; gap: 20px;">
-          <!-- Sound Effects & Audio Engine -->
+          <!-- Dynamic Accent Theme Palette Studio -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
-              <div class="card-title">${Icons.volume(16)} Sound Effects & Audio Synthesizer</div>
+              <div class="card-title">${Icons.sparkles(16)} Dynamic Accent Color Studio</div>
+              <span class="badge badge-primary">${accent.toUpperCase()}</span>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+              Personalize your shop terminal with vibrant accent themes. Updates all buttons, badges, tabs, and focus rings across the platform.
+            </p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
+              ${accents.map(acc => `
+                <button class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-color: ${accent === acc.id ? 'var(--primary)' : 'var(--border-subtle)'}; background: ${accent === acc.id ? 'var(--primary-light)' : 'var(--bg-card)'};" onclick="App.setAccentTheme('${acc.id}')">
+                  <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${acc.color}; box-shadow: 0 0 6px ${acc.color};"></span>
+                  <span style="font-weight: ${accent === acc.id ? '700' : '500'}; color: ${accent === acc.id ? 'var(--text-primary)' : 'var(--text-secondary)'}; font-size: 12px;">${acc.name}</span>
+                  ${accent === acc.id ? `<span style="color: var(--primary); font-size: 11px;">✓</span>` : ''}
+                </button>
+              `).join('')}
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div>
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Base Display Mode</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Current: ${theme === 'dark' ? 'Pro Dark SaaS' : 'Clean Light Minimal'}</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="App.toggleTheme(); App.renderSettingsView(document.getElementById('main-view-container'));">
+                ${theme === 'dark' ? Icons.sun(14) : Icons.moon(14)} Switch to ${theme === 'dark' ? 'Light' : 'Dark'}
+              </button>
+            </div>
+          </div>
+
+          <!-- Sound Effects & POS Hardware Audio -->
+          <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <div class="card-title">${Icons.volume(16)} POS Audio Synthesizer</div>
               <span class="badge ${isSound ? 'badge-success' : 'badge-danger'}">${isSound ? 'Active' : 'Muted'}</span>
             </div>
-            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
-              Hardware barcode supermarket scanner beeps and cash payment registration chimes.
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
+              Hardware barcode scanner frequency beeps and cash settlement chimes via Web Audio API.
             </p>
             <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
               <button class="btn btn-secondary btn-sm" onclick="App.toggleSound()">
@@ -1039,46 +1086,16 @@ class AppController {
             </div>
           </div>
 
-          <!-- Netlify AI Serverless Status -->
-          <div class="card" style="margin-bottom: 0;">
-            <div class="card-header">
-              <div class="card-title">
-                ${Icons.sparkles(16)} Google Gemini AI Copilot
-              </div>
-              <span class="badge badge-success">Netlify Serverless</span>
-            </div>
-            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
-              MyDukkan24 AI Copilot connects directly to Netlify Functions (<code>/api/gemini</code>) without exposing API keys in frontend code.
-            </p>
-            <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin: 12px 0;">
-              <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Netlify Environment Variable Setup:</div>
-              <div style="font-size: 12.5px; color: var(--text-primary); margin-top: 4px; font-weight: 600;">
-                Variable Name: <code style="color: #60A5FA; background: rgba(37,99,235,0.15); padding: 2px 6px; border-radius: 4px;">GEMINI_API_KEY</code>
-              </div>
-              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">
-                Netlify Dashboard → Site configuration → Environment variables → Add <code>GEMINI_API_KEY</code> → Trigger Re-deploy.
-              </div>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button class="btn btn-primary btn-sm" onclick="App.testNetlifyBackend()">
-                ${Icons.refresh(14)} Test Backend Connection
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.openChatModal()">
-                ${Icons.sparkles(14)} Open Copilot Window
-              </button>
-            </div>
-          </div>
-
           <!-- Complete Database Backups & Portability -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
               <div class="card-title">${Icons.download(16)} Data Backups & Migration</div>
               <span class="badge badge-primary">Offline First</span>
             </div>
-            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
-              Export full store data (products, invoices, customers, khata balances, expenses) into an encrypted portable file.
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
+              Export full store database (products, bills, customers, khata balances, expenses) into an encrypted portable file.
             </p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+            <div class="quick-actions-grid" style="margin-top: 14px;">
               <button class="btn btn-secondary btn-sm" onclick="App.exportFullBackup()">
                 ${Icons.download(14)} Export Backup (.json)
               </button>
@@ -1094,7 +1111,7 @@ class AppController {
               </button>
             </div>
 
-            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <span style="font-size: 11.5px; color: var(--text-muted);">Reset entire local DB to fresh demo data:</span>
               <button class="btn btn-danger btn-sm" onclick="App.resetToFactoryDefaults()">
                 Reset Demo Data
@@ -1414,7 +1431,18 @@ class AppController {
   // Mobile Drawer Toggle
   toggleMobileSidebar() {
     const sidebar = document.getElementById('app-sidebar');
-    if (sidebar) sidebar.classList.toggle('open');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) {
+      const isOpen = sidebar.classList.toggle('open');
+      if (backdrop) backdrop.classList.toggle('active', isOpen);
+    }
+  }
+
+  closeMobileSidebar() {
+    const sidebar = document.getElementById('app-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
   }
 
   // Theme Toggle (Dark <-> Light)
@@ -1431,7 +1459,21 @@ class AppController {
   applyTheme() {
     const db = DB.getData();
     const theme = db.theme || 'dark';
+    const accent = db.accent || 'blue';
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-accent', accent);
+  }
+
+  setAccentTheme(accent) {
+    const db = DB.getData();
+    db.accent = accent;
+    DB.saveData(db);
+    document.documentElement.setAttribute('data-accent', accent);
+    this.toast('success', 'Theme Updated', `Accent color updated to ${accent.toUpperCase()}`);
+    if (this.currentView === 'settings') {
+      const container = document.getElementById('main-view-container');
+      if (container) this.renderSettingsView(container);
+    }
   }
 
   updateHeaderStoreName() {

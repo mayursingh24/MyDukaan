@@ -1071,3 +1071,48 @@ a {
     padding: 0 16px;
   }
 }
+
+@media (max-width: 600px) {
+  .lp-navbar {
+    padding: 8px 14px;
+  }
+
+  .lp-top-announcement {
+    font-size: 11px;
+    padding: 6px 10px;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .lp-sim-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .lp-sim-product-card {
+    padding: 10px 8px;
+  }
+
+  .lp-sim-prod-name {
+    font-size: 11.5px;
+  }
+
+  .lp-sim-prod-meta {
+    font-size: 9.5px;
+  }
+
+  .lp-hero {
+    padding: 36px 14px 24px;
+  }
+
+  .lp-hero-h1 {
+    font-size: 30px;
+    letter-spacing: -0.8px;
+  }
+
+  .lp-hero-p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+}
