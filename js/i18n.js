@@ -323,12 +323,12 @@ class I18nManager {
     return fallback || key;
   }
 
-  setLanguage(lang) {
+  setLanguage(lang, options = {}) {
     if (!I18N_DICTIONARIES[lang]) lang = 'en';
     this.currentLang = lang;
     localStorage.setItem('mydukaan24_lang', lang);
 
-    if (window.DB) {
+    if (window.DB && !options.fromCloud) {
       const db = window.DB.getData();
       db.language = lang;
       window.DB.saveData(db);
@@ -339,6 +339,11 @@ class I18nManager {
     if (langSelect) langSelect.value = lang;
     const sidebarLangSelect = document.getElementById('sidebar-lang-select');
     if (sidebarLangSelect) sidebarLangSelect.value = lang;
+
+    if (options.fromCloud) {
+      if (window.App) window.App.updateI18nLabels();
+      return;
+    }
 
     // Toast confirmation
     const langNames = { en: 'English', hi: 'हिन्दी (Hindi)', hinglish: 'Hinglish' };

@@ -7,7 +7,17 @@ class AppController {
   constructor() {
     this.currentView = 'dashboard';
     this.isNotificationOpen = false;
+    this._showFirebaseConfigEditor = false;
     this.init();
+  }
+
+  escapeHtml(str) {
+    return String(str === null || str === undefined ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   init() {
@@ -102,11 +112,14 @@ class AppController {
     // Close mobile drawer if open
     this.closeMobileSidebar();
 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.renderViewOnly(viewName);
+  }
+
+  renderViewOnly(viewName) {
     const container = document.getElementById('main-view-container');
     if (!container) return;
     container.classList.toggle('is-pos-view', viewName === 'pos');
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     switch (viewName) {
       case 'dashboard':
@@ -115,7 +128,12 @@ class AppController {
 
       case 'pos':
         this.renderPOSView(container);
-        if (window.POS) POS.init();
+        if (window.POS) {
+          POS.init();
+          document.querySelectorAll('.cat-chip').forEach(chip => {
+            chip.classList.toggle('active', chip.dataset.cat === POS.activeCategory);
+          });
+        }
         break;
 
       case 'products':
@@ -173,6 +191,24 @@ class AppController {
     }
 
     this.updateNotificationBadge();
+  }
+
+  refreshActiveViewFromCloud() {
+    if (document.querySelector('.modal-backdrop, .scanner-modal-backdrop')) return;
+    const container = document.getElementById('main-view-container');
+    if (!container) return;
+    const activeEl = document.activeElement;
+    if (activeEl && container.contains(activeEl) && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName)) {
+      return;
+    }
+    const scrollY = window.scrollY;
+    const prevSearch = document.getElementById('pos-search-input')?.value || '';
+    this.renderViewOnly(this.currentView);
+    if (this.currentView === 'pos' && prevSearch) {
+      const input = document.getElementById('pos-search-input');
+      if (input) input.value = prevSearch;
+    }
+    if (scrollY > 0) window.scrollTo(0, scrollY);
   }
 
   // 1. ADVANCED EXECUTIVE DASHBOARD
@@ -875,7 +911,7 @@ class AppController {
     `;
   }
 
-  // 9. SYSTEM SETTINGS VIEW (Zero manual API keys - Strict Netlify Environment Configuration)
+  // 9. SYSTEM SETTINGS VIEW (Zero manual Gemini keys in cloud - Dual Offline + Firebase Sync)
   renderSettingsView(container) {
     const db = DB.getData();
     const shop = db.shop || {};
@@ -883,6 +919,19 @@ class AppController {
     const accent = db.accent || 'blue';
     const isSound = db.soundEnabled !== false;
     const dbBytes = (JSON.stringify(db).length / 1024).toFixed(1);
+    const cloudStatus = window.CloudSync
+      ? CloudSync.getStatusSummary()
+      : {
+          configured: false,
+          signedIn: false,
+          online: navigator.onLine !== false,
+          pending: 0,
+          badgeClass: 'badge-muted',
+          label: 'Local Only'
+        };
+    const cloudKpiLabel = cloudStatus.signedIn
+      ? (cloudStatus.pending > 0 ? `${cloudStatus.pending} queued for cloud` : 'Cloud Synced ✓')
+      : (cloudStatus.configured ? 'Sign In to Sync' : 'Offline Ready');
 
     const accents = [
       { id: 'blue', name: 'Electric Blue', color: '#2563EB' },
@@ -896,7 +945,7 @@ class AppController {
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>Store Settings & Configurations</h1>
-          <p>Manage your business identity, thermal receipt formats, dynamic accents, and offline database</p>
+          <p>Manage business identity, Firebase Cloud + Offline dual storage, receipts & themes</p>
         </div>
       </div>
 
@@ -909,8 +958,8 @@ class AppController {
               ${Icons.store(16)}
             </div>
           </div>
-          <div class="kpi-val" style="font-size: 16px; font-weight: 800; word-break: break-word;">${shop.name || 'MyDukkan24 Mart'}</div>
-          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px; overflow-wrap: anywhere;">UPI: ${shop.upiId || '6306437348@upi'}</div>
+          <div class="kpi-val" style="font-size: 16px; font-weight: 800; word-break: break-word;">${this.escapeHtml(shop.name || 'MyDukkan24 Mart')}</div>
+          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px; overflow-wrap: anywhere;">UPI: ${this.escapeHtml(shop.upiId || '6306437348@upi')}</div>
         </div>
 
         <div class="kpi-card">
@@ -939,15 +988,26 @@ class AppController {
           <div class="kpi-trend" style="color: var(--primary); font-weight: 600; font-size: 11px;">Dynamic Palette</div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi-card" style="cursor: pointer;" onclick="document.getElementById('firebase-cloud-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });" title="Jump to Firebase Cloud Sync">
           <div class="kpi-top">
-            <span class="kpi-title">Local Storage DB</span>
+            <span class="kpi-title">Offline + Cloud DB</span>
             <div class="kpi-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">
               ${Icons.database(16)}
             </div>
           </div>
           <div class="kpi-val" style="font-size: 16px; font-weight: 800; color: #10B981;">${dbBytes} KB</div>
-          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">${db.products.length} SKUs • ${db.invoices.length} Bills</div>
+          <div id="settings-cloud-kpi-trend" class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">${db.products.length} SKUs • ${cloudKpiLabel}</div>
+        </div>
+      </div>
+
+      <!-- Dual Offline + Online Firebase Cloud Sync Card -->
+      <div class="card" id="firebase-cloud-card" style="margin-bottom: 20px;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 8px;">
+          <div class="card-title">${Icons.cloud(17)} Firebase Cloud Sync (Online + Offline Storage)</div>
+          <span id="firebase-cloud-card-badge" class="badge ${cloudStatus.badgeClass}">${this.escapeHtml(cloudStatus.label)}</span>
+        </div>
+        <div id="firebase-cloud-card-body">
+          ${this.renderFirebaseCloudBody()}
         </div>
       </div>
 
@@ -1185,6 +1245,251 @@ class AppController {
     `;
   }
 
+  renderFirebaseCloudBody() {
+    const cloud = window.CloudSync;
+    if (!cloud) {
+      return `<div style="font-size: 12.5px; color: var(--text-muted);">Cloud Sync module unavailable — running on offline local storage.</div>`;
+    }
+
+    const cfg = cloud.getSavedConfig();
+    const status = cloud.getStatusSummary();
+    const pending = cloud.getPendingCount();
+    const host = this.escapeHtml(window.location.hostname || 'mydukaan24.netlify.app');
+    const escErr = cloud.lastError ? this.escapeHtml(cloud.lastError) : '';
+
+    // 1. Config Setup / Editor View
+    if (!cfg || this._showFirebaseConfigEditor) {
+      const prefill = cfg ? this.escapeHtml(JSON.stringify(cfg, null, 2)) : '';
+      return `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; align-items: start;">
+          <div style="min-width: 0;">
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 10px;">
+              Store every product, bill, Khata balance, supplier & expense <strong>both offline on this device</strong> (0ms LocalStorage + IndexedDB) and <strong>online in your private Firebase Firestore</strong> across multiple devices.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; color: var(--text-muted); background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 10px;">
+              <div>✓ <strong>Offline First:</strong> Works with zero internet; queues all bills & auto-syncs online.</div>
+              <div>✓ <strong>Google + Email Login:</strong> Private per-owner cloud isolation under <code>/users/{uid}/</code>.</div>
+              <div>✓ <strong>Privacy Safe:</strong> Gemini API keys stay local on device & are never uploaded.</div>
+            </div>
+            <details style="font-size: 11.5px; color: var(--text-secondary); background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <summary style="cursor: pointer; font-weight: 700; color: var(--text-primary);">📋 Firebase Console Setup Steps (Spark Free Plan)</summary>
+              <ol style="margin: 8px 0 0; padding-left: 18px; line-height: 1.65;">
+                <li>Open <strong>Firebase Console</strong> ➔ <strong>Authentication</strong> ➔ enable <strong>Google</strong> &amp; <strong>Email/Password</strong>.</li>
+                <li>In <strong>Authentication ➔ Settings ➔ Authorized domains</strong>, add <code style="overflow-wrap: anywhere;">${host}</code>.</li>
+                <li>Create <strong>Firestore Database (Standard Edition)</strong> and paste rules from repo <code>firestore.rules</code>.</li>
+                <li>Copy your Web App <code>firebaseConfig</code> from <strong>Project Settings</strong> &amp; paste on the right.</li>
+              </ol>
+            </details>
+          </div>
+
+          <div style="min-width: 0;">
+            ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px; overflow-wrap: anywhere;">${escErr}</div>` : ''}
+            <label class="form-label">Paste Firebase Web Config (JSON or JS Snippet) *</label>
+            <textarea id="fb-config-input" class="form-textarea" rows="6" style="font-family: var(--font-mono); font-size: 11.5px; line-height: 1.45; margin-bottom: 10px;" placeholder='const firebaseConfig = {\n  apiKey: "YOUR_API_KEY",\n  authDomain: "your-shop.firebaseapp.com",\n  projectId: "your-shop-id",\n  appId: "1:123456789:web:abcdef"\n};'>${prefill}</textarea>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" id="fb-save-cfg-btn" class="btn btn-primary btn-sm" style="flex: 1 1 160px; justify-content: center;" onclick="App.saveFirebaseConfig()">
+                ${Icons.check(14)} Save & Connect Firebase
+              </button>
+              ${cfg ? `
+                <button type="button" class="btn btn-secondary btn-sm" onclick="App.toggleFirebaseConfigEdit(false)">
+                  Cancel
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. Configured, waiting for User Sign-In
+    if (!status.signedIn) {
+      const activeTab = cloud.authTab === 'signup' ? 'signup' : 'signin';
+      return `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; align-items: start;">
+          <div style="min-width: 0;">
+            <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 12px;">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Linked Firebase Project</div>
+              <div style="font-size: 14px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); margin-top: 2px; overflow-wrap: anywhere;">${this.escapeHtml(cfg.projectId)}</div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">IndexedDB Persistence: <strong>${this.escapeHtml(cloud.persistenceMode || 'ready')}</strong></div>
+            </div>
+
+            ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px; overflow-wrap: anywhere;">${escErr}</div>` : ''}
+            ${!status.online ? `<div style="background: var(--warning-light); border: 1px solid var(--warning-border); color: var(--warning); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px;">System is currently offline. Local billing keeps working; connect to the internet once to sign in &amp; sync.</div>` : ''}
+
+            <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 10px;" onclick="CloudSync.signInWithGoogle()">
+              <span style="font-weight: 900; font-size: 14px;">G</span> Continue with Google
+            </button>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.toggleFirebaseConfigEdit(true)">
+                ${Icons.edit(13)} Edit Config
+              </button>
+              <button type="button" class="btn btn-danger btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.disconnectFirebase()">
+                Disconnect
+              </button>
+            </div>
+          </div>
+
+          <div style="min-width: 0; background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+              <button type="button" class="btn btn-sm ${activeTab === 'signin' ? 'btn-primary' : 'btn-secondary'}" style="flex: 1; justify-content: center;" onclick="App.setFirebaseAuthTab('signin')">Sign In</button>
+              <button type="button" class="btn btn-sm ${activeTab === 'signup' ? 'btn-primary' : 'btn-secondary'}" style="flex: 1; justify-content: center;" onclick="App.setFirebaseAuthTab('signup')">Create Account</button>
+            </div>
+            <form onsubmit="event.preventDefault(); App.submitFirebaseAuth();">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label">Store Owner Email *</label>
+                <input type="email" id="fb-auth-email" class="form-input" required placeholder="owner@mydukkan24.com" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label">Password (min 6 chars) *</label>
+                <input type="password" id="fb-auth-password" class="form-input" required minlength="6" placeholder="••••••" />
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <button type="submit" class="btn btn-success btn-sm" style="flex: 1 1 150px; justify-content: center;">
+                  ${Icons.lock(13)} ${activeTab === 'signup' ? 'Create Account & Sync' : 'Sign In & Sync Store'}
+                </button>
+                ${activeTab === 'signin' ? `
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="App.sendFirebaseReset()">
+                    Forgot Password?
+                  </button>
+                ` : ''}
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Connected & Signed In (Dual Online + Offline Sync Active)
+    const syncMeta = window.DB ? DB.getSyncMeta() : {};
+    const syncedTs = cloud.lastSyncedAt || syncMeta.lastSyncedAt || 0;
+    const syncedStr = syncedTs
+      ? new Date(syncedTs).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : 'Initial sync in progress';
+    const uidShort = this.escapeHtml((cloud.user && cloud.user.uid ? cloud.user.uid : '').slice(0, 10));
+    const userEmail = this.escapeHtml((cloud.user && (cloud.user.email || cloud.user.displayName)) || 'Connected Owner');
+
+    return `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div style="min-width: 0; flex: 1 1 200px;">
+            <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere;">${userEmail}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; overflow-wrap: anywhere;">
+              Project: ${this.escapeHtml(cfg.projectId)} • UID: ${uidShort}...
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="CloudSync.flushPending(true)">
+              ${Icons.refresh(13)} Sync Now
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="CloudSync.forceUploadAll()">
+              ${Icons.upload(13)} Push Full Backup
+            </button>
+          </div>
+        </div>
+
+        ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); overflow-wrap: anywhere;"><strong>Sync Notice:</strong> ${escErr}</div>` : ''}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); gap: 10px;">
+          <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
+            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Device Offline Cache</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #10B981; margin-top: 3px;">LocalStorage + IndexedDB</div>
+          </div>
+          <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
+            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Offline Sync Queue</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: ${pending > 0 ? 'var(--warning)' : 'var(--text-primary)'}; margin-top: 3px;">${pending} Pending Change(s)</div>
+          </div>
+          <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
+            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Last Cloud Sync</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-top: 3px;">${this.escapeHtml(syncedStr)}</div>
+          </div>
+          <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
+            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Security Isolation</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #60A5FA; margin-top: 3px;">Owner Only (Keys Excluded)</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-top: 4px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="App.toggleFirebaseConfigEdit(true)">
+            ${Icons.edit(13)} Change Config
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="CloudSync.signOutUser()">
+            ${Icons.logOut(13)} Sign Out
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="App.disconnectFirebase()">
+            Disconnect Project
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async saveFirebaseConfig() {
+    if (!window.CloudSync) return;
+    const input = document.getElementById('fb-config-input');
+    const raw = input ? input.value : '';
+    const btn = document.getElementById('fb-save-cfg-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Connecting...';
+    }
+    const res = await CloudSync.saveConfig(raw);
+    if (!res.ok) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `${Icons.check(14)} Save & Connect Firebase`;
+      }
+      this.toast('danger', 'Invalid Firebase Config', res.error);
+      return;
+    }
+    this._showFirebaseConfigEditor = false;
+    this.toast('success', 'Firebase Configured', `Linked project: ${res.config.projectId}`);
+    CloudSync.notifyUI();
+  }
+
+  toggleFirebaseConfigEdit(show) {
+    this._showFirebaseConfigEditor = Boolean(show);
+    if (window.CloudSync) CloudSync.notifyUI();
+  }
+
+  disconnectFirebase() {
+    if (confirm('Disconnect this Firebase project from this device? Your local offline store data will NOT be deleted.')) {
+      this._showFirebaseConfigEditor = false;
+      if (window.CloudSync) CloudSync.clearConfig();
+      this.toast('info', 'Firebase Disconnected', 'Switched back to local-only mode.');
+    }
+  }
+
+  setFirebaseAuthTab(tab) {
+    if (!window.CloudSync) return;
+    CloudSync.authTab = tab === 'signup' ? 'signup' : 'signin';
+    const mount = document.getElementById('firebase-cloud-card-body');
+    if (mount && this.currentView === 'settings') {
+      mount.innerHTML = this.renderFirebaseCloudBody();
+    }
+  }
+
+  async submitFirebaseAuth() {
+    if (!window.CloudSync) return;
+    const email = (document.getElementById('fb-auth-email')?.value || '').trim();
+    const password = document.getElementById('fb-auth-password')?.value || '';
+    if (!email || password.length < 6) {
+      this.toast('warning', 'Check Details', 'Enter a valid email and password (minimum 6 characters).');
+      return;
+    }
+    if (CloudSync.authTab === 'signup') {
+      await CloudSync.signUpEmail(email, password);
+    } else {
+      await CloudSync.signInEmail(email, password);
+    }
+  }
+
+  async sendFirebaseReset() {
+    if (!window.CloudSync) return;
+    const email = (document.getElementById('fb-auth-email')?.value || '').trim();
+    await CloudSync.resetPassword(email);
+  }
+
   // Save Thermal Receipt Settings
   saveReceiptSettings() {
     const db = DB.getData();
@@ -1264,16 +1569,20 @@ class AppController {
   initNetworkMonitor() {
     const syncUI = () => {
       const online = navigator.onLine !== false;
-      const statusEl = document.getElementById('system-online-status');
-      const dotEl = document.getElementById('system-status-dot');
-      if (statusEl) {
-        statusEl.textContent = online ? 'Online • Live API' : 'Offline • Local Mode';
-      }
-      if (dotEl) {
-        dotEl.style.backgroundColor = online ? 'var(--success)' : 'var(--warning)';
-        dotEl.style.boxShadow = online
-          ? '0 0 8px rgba(16, 185, 129, 0.7)'
-          : '0 0 8px rgba(245, 158, 11, 0.7)';
+      if (window.CloudSync && typeof CloudSync.notifyUI === 'function') {
+        CloudSync.notifyUI();
+      } else {
+        const statusEl = document.getElementById('system-online-status');
+        const dotEl = document.getElementById('system-status-dot');
+        if (statusEl) {
+          statusEl.textContent = online ? 'Online • Live API' : 'Offline • Local Mode';
+        }
+        if (dotEl) {
+          dotEl.style.backgroundColor = online ? 'var(--success)' : 'var(--warning)';
+          dotEl.style.boxShadow = online
+            ? '0 0 8px rgba(16, 185, 129, 0.7)'
+            : '0 0 8px rgba(245, 158, 11, 0.7)';
+        }
       }
       if (window.DukaanAI && typeof DukaanAI.updateConnectionBadge === 'function') {
         DukaanAI.updateConnectionBadge();
@@ -1283,17 +1592,19 @@ class AppController {
     syncUI();
     window.addEventListener('online', () => {
       syncUI();
-      this.toast('success', 'Online Mode Restored', 'Internet connected — AI & Barcode lookups will use Live APIs.');
+      const cloudNote = window.CloudSync && CloudSync.user ? ', Barcode & Cloud Sync' : ' & Barcode lookups';
+      this.toast('success', 'Online Mode Restored', `Internet connected — Live AI${cloudNote} active.`);
     });
     window.addEventListener('offline', () => {
       syncUI();
-      this.toast('warning', 'Offline Mode Active', 'No internet — switched automatically to inbuilt Local DB & Advisor.');
+      const cloudNote = window.CloudSync && CloudSync.user ? ' & Offline Sync Queue' : '';
+      this.toast('warning', 'Offline Mode Active', `No internet — running on Local DB & Advisor${cloudNote}.`);
     });
   }
 
-  // Test Netlify Backend Probe
+  // Test Serverless AI Backend Probe (Vercel / Netlify)
   async testNetlifyBackend() {
-    this.toast('info', 'Connecting...', 'Testing Netlify serverless endpoint...');
+    this.toast('info', 'Connecting...', 'Testing serverless /api/gemini endpoint...');
     try {
       const res = await fetch('/api/gemini', {
         method: 'POST',
@@ -1302,12 +1613,12 @@ class AppController {
       });
       const data = await res.json();
       if (res.ok && data.text) {
-        this.toast('success', 'Online!', 'Netlify AI Backend is connected and active.');
+        this.toast('success', 'Online!', 'Serverless AI Backend is connected and active.');
       } else {
         this.toast('warning', 'Notice', data.error || 'Server responded with status ' + res.status);
       }
     } catch (e) {
-      this.toast('warning', 'Check Environment', 'Netlify function reachable in production or local netlify dev.');
+      this.toast('warning', 'Check Environment', 'Serverless /api/gemini reachable on Vercel/Netlify production or local vercel dev.');
     }
   }
 
@@ -1503,8 +1814,14 @@ class AppController {
   }
 
   resetToFactoryDefaults() {
-    if (confirm('Reset entire application data to default Kirana demo dataset? All current custom items will be replaced.')) {
+    const isSignedInCloud = Boolean(window.CloudSync && CloudSync.user);
+    const msg = isSignedInCloud
+      ? `Reset local offline database on this device?\n\nNote: You are signed in to Firebase (${CloudSync.user.email || 'Cloud Account'}). Cloud data stays safe in Firebase and will re-sync unless you Sign Out or Disconnect Firebase first.`
+      : 'Reset entire application data to default Kirana demo dataset? All current custom items will be replaced.';
+    if (confirm(msg)) {
       localStorage.removeItem('mydukaan24_prod_db');
+      localStorage.removeItem('mydukaan24_sync_meta');
+      localStorage.removeItem('mydukaan24_p113_seeded');
       location.reload();
     }
   }
@@ -1681,7 +1998,7 @@ class AppController {
                 <span>🍎 For iPhones & iPads (Safari):</span>
               </div>
               <ol style="margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7;">
-                <li>Open <strong>Safari</strong> and navigate to <code style="overflow-wrap: anywhere;">mydukaan24.netlify.app</code>.</li>
+                <li>Open <strong>Safari</strong> and navigate to <code style="overflow-wrap: anywhere;">${this.escapeHtml(window.location.host || 'mydukaan24.vercel.app')}</code>.</li>
                 <li>Tap the <strong>Share</strong> button (square icon with upward arrow).</li>
                 <li>Scroll down and select <strong>"Add to Home Screen"</strong>.</li>
                 <li>Tap <strong>"Add"</strong> in top right. Enjoy a fast standalone iOS POS experience.</li>

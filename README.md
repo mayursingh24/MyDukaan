@@ -1,10 +1,11 @@
 # MyDukkan24 — Enterprise Retail OS & Smart POS
 
-![MyDukkan24 Status](https://img.shields.io/badge/MyDukkan24-v7.3%20Production-2563EB?style=for-the-badge&logo=shopify&logoColor=white)
+![MyDukkan24 Status](https://img.shields.io/badge/MyDukkan24-v8.0%20Production-2563EB?style=for-the-badge&logo=shopify&logoColor=white)
+![Storage](https://img.shields.io/badge/Dual%20Storage-Offline%20%2B%20Firebase%20Firestore-F59E0B?style=for-the-badge&logo=firebase&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Strict%20Online%20%2B%20Offline%20PWA-10B981?style=for-the-badge&logo=pwa&logoColor=white)
 ![AI Engine](https://img.shields.io/badge/AI%20Copilot-Gemini%203.8%20Interactions%20API-3B82F6?style=for-the-badge&logo=google&logoColor=white)
 ![Mobile Scaling](https://img.shields.io/badge/Mobile%20Ready-100%25%20Zero%20Overflow-8B5CF6?style=for-the-badge&logo=android&logoColor=white)
-![Deployment](https://img.shields.io/badge/Deploy-Netlify%20Serverless-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)
+![Deployment](https://img.shields.io/badge/Deploy-Vercel%20%2B%20Netlify%20Serverless-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
 > **"Empower Your Retail Shop with Enterprise Speed and Precision."**  
 > An ultra-modern, high-speed retail operating system & point-of-sale platform built specifically for Indian Kirana stores, departmental outlets, supermarkets, and local businesses.
@@ -30,9 +31,53 @@
 
 ---
 
-## 📱 A-to-Z Mobile Scaling & Responsiveness (v7.3 Update)
+## 🔥 Firebase Cloud + Offline Dual Storage (v8.0)
 
-In version 7.3, every view, modal, grid, and control across `index.html` and `app.html` was engineered for zero horizontal overflow from **320px** compact phones up to tablets and desktop monitors:
+MyDukkan24 supports **hybrid Offline + Online dual persistence**, so every bill, product SKU, customer Khata ledger entry, supplier invoice, expense, and staff record saves locally in **0ms** and synchronizes automatically with your private **Cloud Firestore Standard Edition** database when online.
+
+### How Dual Storage Works
+| Layer | Technology | Behavior |
+| :--- | :--- | :--- |
+| **Offline-First Local Engine** | `localStorage` (`mydukaan24_prod_db`) + Sync Delta Queue (`mydukaan24_sync_meta`) | POS checkout, Inventory updates, and Udhaar entries write in **0ms** with zero internet dependency. Boots seamlessly even if cloud SDK CDN is not cached yet. |
+| **Browser Persistence Cache** | Firestore `persistentLocalCache` (`persistentMultipleTabManager`) | Caches cloud documents cleanly in IndexedDB across multiple open tabs/windows on the same device. |
+| **Real-Time Cloud Sync** | Firebase Auth + Firestore `onSnapshot` (`/users/{uid}/...`) | Automatically reconciles local edits and streams multi-device updates in real time across mobile & desktop terminals. |
+| **Zero-Leak Isolation** | `firestore.rules` (UID tenant boundary) | Enforces `request.auth.uid == uid`, immutable document IDs, schema bounds, and **strictly excludes `geminiKey`** so API keys stay local on device. |
+
+### Firebase Auth Modes
+- **Google Sign-In:** One-tap OAuth login (automatically falls back to redirect auth if popups are blocked).
+- **Email & Password:** Sign In, Create Account, Password Reset email, and Sign Out.
+
+### Step-by-Step Firebase Console Setup (Spark Free Plan)
+1. Open the [Firebase Console](https://console.firebase.google.com/), create or select a project, and add a **Web App (`</>`)**.
+2. Go to **Build ➔ Authentication ➔ Sign-in method** and enable **Google** and **Email/Password**.
+3. Go to **Authentication ➔ Settings ➔ Authorized domains** and add your Vercel domain (e.g., **`mydukaan24.vercel.app`**) and **`mydukaan24.netlify.app`** *(plus `localhost` if testing locally)*.
+4. Go to **Build ➔ Firestore Database ➔ Create database** and select **Standard Edition** (using the `(default)` database).
+5. Publish your security rules:
+   - Paste the contents of [`firestore.rules`](firestore.rules) into the Firebase Console **Firestore ➔ Rules** tab and click **Publish**, **or**
+   - Deploy from CLI: `npx -y firebase-tools@latest deploy --only firestore`
+6. Open **Project Settings ➔ General ➔ Your apps**, copy your `firebaseConfig` JSON/JS snippet, open **`app.html` ➔ Settings ➔ Firebase Cloud Sync**, paste it, click **Save & Connect Firebase**, and sign in.
+
+---
+
+## ▲ How to Deploy on Vercel (Zero Floating Badge)
+
+Deploying on **Vercel** removes the third-party `"Powered by Netlify"` floating badge automatically and runs [`api/gemini.js`](api/gemini.js) + [`vercel.json`](vercel.json) natively:
+
+1. Push this repository to **GitHub**.
+2. Open [vercel.com/new](https://vercel.com/new), import **`mayursingh24/MyDukaan`**, leave **Framework Preset: Other** and **Output Directory** blank (static root), and click **Deploy**.
+3. In your Vercel project go to **Settings ➔ Environment Variables** and add:
+   - **Key:** `GEMINI_API_KEY` *(your key from [Google AI Studio](https://aistudio.google.com/api-keys) — `AQ...` or `AIzaSy...`)*
+   - **Environments:** Production, Preview, Development
+4. Open **Deployments** ➔ click **Redeploy** so the live serverless function picks up `GEMINI_API_KEY`.
+5. Copy your live Vercel URL (e.g. `https://mydukaan24.vercel.app`), add that domain in **Firebase Console ➔ Authentication ➔ Settings ➔ Authorized domains**, then paste your `firebaseConfig` inside **Settings ➔ Firebase Cloud Sync** on the live Vercel site.
+
+*(Alternatively via CLI: run `npx -y vercel --prod` from the project folder and set `GEMINI_API_KEY` via `vercel env add GEMINI_API_KEY`.)*
+
+---
+
+## 📱 A-to-Z Mobile Scaling & Responsiveness
+
+Every view, modal, grid, and control across `index.html` and `app.html` is engineered for zero horizontal overflow from **320px** compact phones up to tablets and desktop monitors:
 
 1. **Zero Grid & Flex Blowout (`320px`–`900px`):**
    - Applied `overflow-x: clip`, explicit `min-width: 0` across CSS Grid/Flex children, and responsive `minmax(min(100%, ...), 1fr)` track sizing across KPI cards, POS product grids, simulator shelves, comparison cards, and ROI stats.
@@ -129,7 +174,7 @@ If a Netlify preview or deployment floating badge overlaps bottom navigation con
 
 ---
 
-## 🔑 How to Setup Gemini API Key on Netlify (Step-by-Step)
+## 🔑 How to Setup Gemini API Key on Vercel / Netlify (Step-by-Step)
 
 > [!IMPORTANT]
 > **Supported Key Formats:** MyDukkan24 supports **both** current Google AI Studio key formats starting with **`AQ...`** and **`AIzaSy...`** created at [`aistudio.google.com/api-keys`](https://aistudio.google.com/api-keys). Never commit keys into source files or share screenshots containing active keys (if exposed, revoke and create a new key immediately).
@@ -139,20 +184,16 @@ If a Netlify preview or deployment floating badge overlaps bottom navigation con
 2. Sign in with your Google account and click **Create API key**.
 3. Copy the newly generated key (`AQ...` or `AIzaSy...`).
 
-### Step 2: Add to Netlify Environment Variables
-1. Log in to [Netlify Dashboard](https://app.netlify.com) and select **`mydukaan24`**.
-2. Go to **Project configuration** ➔ **Environment variables**.
-3. Click **Add a variable** ➔ **Add a single variable**:
-   - **Key:** `GEMINI_API_KEY` *(exact uppercase)*
-   - **Scopes:** All scopes
-   - **Values:** Same value for all deploy contexts
-   - **Value:** Paste your Gemini API key
-4. Click **Create variable**.
-*(Alternatively, for quick testing inside the app, click **`🔑 Key`** in Dukkan Copilot to store a browser-local key.)*
+### Step 2: Add Environment Variable
+- **On Vercel:**
+  1. Open your project in [Vercel Dashboard](https://vercel.com/dashboard) ➔ **Settings** ➔ **Environment Variables**.
+  2. Add Key **`GEMINI_API_KEY`**, paste your key as **Value**, select **Production / Preview / Development**, and click **Save**.
+  3. Open **Deployments** ➔ **Redeploy** so the serverless `/api/gemini` endpoint receives the updated variable.
+- **On Netlify:**
+  1. Open **`mydukaan24`** in [Netlify Dashboard](https://app.netlify.com) ➔ **Project configuration** ➔ **Environment variables**.
+  2. Add Key **`GEMINI_API_KEY`**, paste your key for all scopes, click **Create variable**, then click **Deploys** ➔ **Trigger deploy** ➔ **Deploy project without cache**.
 
-### Step 3: Trigger a Fresh Deploy
-1. Open **Deploys** in Netlify ➔ click **Trigger deploy** ➔ select **Deploy project without cache**.
-2. Once deployed, both Dukkan Copilot AI and Online Barcode Google Search Grounding go live immediately.
+*(Alternatively, for quick browser-only testing inside the app, click **`🔑 Key`** in Dukkan Copilot to store a local key on that device.)*
 
 ---
 
@@ -160,28 +201,32 @@ If a Netlify preview or deployment floating badge overlaps bottom navigation con
 - **Frontend:** Pure HTML5, Vanilla ES6+ Modular JavaScript, Custom Responsive CSS.
 - **Design System:** Deep Obsidian Slate (`#070913`), High-Contrast Solid Cards (`#131A2D`), Light/Dark Mode CSS Variables, Inter + JetBrains Mono.
 - **Icon Engine:** Zero-overhead Inline SVG Icon Library (`js/icons.js`).
-- **Offline Storage:** Inbuilt `localStorage` Database (`js/storage.js`) with JSON Backup & CSV Import/Export.
-- **Serverless API:** Netlify Functions (`netlify/functions/gemini.js`) targeting the Gemini Interactions API (`v1beta/interactions`).
-- **PWA Caching:** Service Worker `v7.3` (`sw.js`) with strict Network-First same-origin caching (bypassing `/api/*` and cross-origin API calls).
+- **Offline Storage:** Inbuilt `localStorage` Database (`js/storage.js`) with item/meta diff queue, JSON Backup & CSV Import/Export.
+- **Cloud Sync & Auth:** Dynamic Firebase SDK (`11.6.0` ESM) with Google Sign-In + Email/Password Auth and **Cloud Firestore Standard Edition** (`persistentLocalCache` multi-tab IndexedDB + `/users/{uid}/` real-time sync).
+- **Serverless API:** Vercel Functions (`api/gemini.js`) & Netlify Functions (`netlify/functions/gemini.js`) targeting the Gemini Interactions API (`v1beta/interactions`).
+- **PWA Caching:** Service Worker `v8.0` (`sw.js`) with strict Network-First same-origin caching (bypassing `/api/*` and cross-origin SDK/API calls).
 
 ---
 
 ## 📁 Repository Structure
 ```
 MyDukaan-v4/
+├── api/
+│   └── gemini.js             # Vercel Serverless Gemini Interactions API + Search Grounding
 ├── assets/
 │   ├── LOGO.jpeg             # Official MyDukkan24 logo
 │   ├── logo.svg              # Vector logo fallback
 │   └── MyDukkan24-v4.apk     # Android APK download package
 ├── css/
-│   ├── landing.css           # Responsive SaaS landing page styles (v7.3)
-│   ├── style.css             # Core app theme variables, modals, z-index & mobile layout (v7.3)
-│   └── components.css        # POS terminal, khata cards, scanner & responsive components (v7.3)
+│   ├── landing.css           # Responsive SaaS landing page styles (v8.0)
+│   ├── style.css             # Core app theme variables, modals, z-index & mobile layout (v8.0)
+│   └── components.css        # POS terminal, khata cards, scanner & responsive components (v8.0)
 ├── js/
 │   ├── html5-qrcode.min.js   # Bundled local barcode vision engine
 │   ├── icons.js              # Centralized SVG icon library
 │   ├── i18n.js               # Multi-language translation engine (EN, HI, Hinglish)
-│   ├── storage.js            # Inbuilt local database & Web Audio synthesizer
+│   ├── storage.js            # Inbuilt local database, sync queue & Web Audio synthesizer
+│   ├── firebase-sync.js      # Hybrid Offline-First + Firestore real-time cloud sync (v8.0)
 │   ├── scanner.js            # Strict Online/Offline barcode scanner & FMCG resolver
 │   ├── pos.js                # High-speed POS billing & checkout engine
 │   ├── inventory.js          # Product catalog & stock safety control
@@ -193,15 +238,19 @@ MyDukaan-v4/
 │   └── app.js                # Master application router, network monitor & views
 ├── netlify/
 │   └── functions/
-│       └── gemini.js         # Serverless Gemini Interactions API proxy + Search Grounding
+│       └── gemini.js         # Netlify Serverless Gemini Interactions API proxy
 ├── .env.example              # Environment variables template
 ├── _redirects                # Netlify SPA routing rules
-├── app.html                  # Main retail business OS terminal (v7.3)
-├── index.html                # Responsive landing page & interactive POS simulator (v7.3)
+├── app.html                  # Main retail business OS terminal (v8.0)
+├── firebase.json             # Firebase Firestore rules & indexes project config
+├── firestore.indexes.json    # Firestore composite index configuration
+├── firestore.rules           # Strict per-user (/users/{uid}/) Firestore security rules
+├── index.html                # Responsive landing page & interactive POS simulator (v8.0)
 ├── manifest.json             # PWA metadata & shortcut configuration
 ├── netlify.toml              # Netlify build & cache configuration
-├── README.md                 # Complete system documentation (v7.3)
-└── sw.js                     # Network-First PWA service worker v7.3
+├── README.md                 # Complete system documentation (v8.0)
+├── sw.js                     # Network-First PWA service worker v8.0
+└── vercel.json               # Vercel rewrites & cache configuration
 ```
 
 ---
@@ -210,4 +259,4 @@ MyDukaan-v4/
 - **Author:** Mayur Singh (Lucknow, India)
 - **Official Contact:** +91 6306437348
 - **Copyright:** © 2026 Mayur Singh. All rights reserved.
-- **Deployed on:** Netlify ([https://mydukaan24.netlify.app/](https://mydukaan24.netlify.app/))
+- **Supported Hosting:** Vercel & Netlify ([https://mydukaan24.netlify.app/](https://mydukaan24.netlify.app/))

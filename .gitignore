@@ -3,9 +3,11 @@
 .env.local
 .env.*.local
 
-# Node modules
+# Node modules & platform tooling
 node_modules/
 .netlify/
+.vercel/
+.firebase/
 
 # OS files
 .DS_Store

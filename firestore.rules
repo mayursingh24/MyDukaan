@@ -1,0 +1,467 @@
+rules_version = '2';
+
+// ============================================================================
+// MyDukaan24 Retail POS & Kirana OS — Cloud Firestore Security Rules
+// Edition: Cloud Firestore Standard Edition
+//
+// Assumed Data Model
+// ============================================================================
+//
+// All tenant data is strictly isolated per authenticated Firebase Auth user
+// under /users/{uid}/... . No cross-user reads or writes are permitted, and
+// Gemini API keys (geminiKey) must NEVER be persisted in Firestore.
+//
+// 1. Document: /users/{uid}/meta/store
+//    Document ID: literal 'store'
+//    Fields:
+//      - shop: map (required, <= 20 keys, no geminiKey; requires name: string 1..200;
+//              optional id, owner, phone, address, gstin, upiId, currency, taxRate 0..100,
+//              rcptHeader, rcptFooter, rcptWidth)
+//      - updatedAt: number >= 0 (required)
+//      - shops: list <= 50 items (optional)
+//      - activeShopId: string <= 100 (optional)
+//      - attendance: map <= 200 entries (optional)
+//      - theme: 'dark' | 'light' (optional)
+//      - accent: string <= 40 (optional)
+//      - language: 'en' | 'hi' | 'hinglish' (optional)
+//      - soundEnabled: bool (optional)
+//      - updatedByDevice: string <= 120 (optional)
+//      - ownerEmail: string <= 200 (optional)
+//
+// 2. Collection: /users/{uid}/products/{productId}
+//    Document ID: {productId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == productId, 1..100 (required, immutable)
+//      - name: string 1..220 (required)
+//      - price: number >= 0 (required)
+//      - stock: number >= 0 (required)
+//      - cat: string <= 80 (optional)
+//      - barcode: string <= 80 (optional)
+//      - mrp: number >= 0 (optional)
+//      - cost: number >= 0 (optional)
+//      - unit: string <= 40 (optional)
+//      - minStock: number >= 0 (optional)
+//      - emoji: string <= 20 (optional)
+//      - shopId: string <= 100 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// 3. Collection: /users/{uid}/customers/{customerId}
+//    Document ID: {customerId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == customerId, 1..100 (required, immutable)
+//      - name: string 1..180 (required)
+//      - phone: string <= 40 (optional)
+//      - email: string <= 200 (optional)
+//      - balanceDue: number >= 0 (optional)
+//      - totalSpent: number >= 0 (optional)
+//      - points: number >= 0 (optional)
+//      - tier: string <= 40 (optional)
+//      - notes: string <= 1000 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// 4. Collection: /users/{uid}/invoices/{invoiceId}
+//    Document ID: {invoiceId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == invoiceId, 1..100 (required, immutable)
+//      - date: string 1..40 (required)
+//      - items: list <= 500 items (required)
+//      - total: number >= 0 (required)
+//      - time: string <= 40 (optional)
+//      - customerId: string <= 100 or null (optional)
+//      - customerName: string <= 180 (optional)
+//      - customerPhone: string <= 40 (optional)
+//      - subtotal: number >= 0 (optional)
+//      - tax: number >= 0 (optional)
+//      - discount: number >= 0 (optional)
+//      - paid: number >= 0 (optional)
+//      - due: number >= 0 (optional)
+//      - paymentMode: string <= 40 (optional)
+//      - status: string <= 40 (optional)
+//      - shopId: string <= 100 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// 5. Collection: /users/{uid}/suppliers/{supplierId}
+//    Document ID: {supplierId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == supplierId, 1..100 (required, immutable)
+//      - name: string 1..180 (required)
+//      - contactPerson: string <= 180 (optional)
+//      - phone: string <= 40 (optional)
+//      - email: string <= 200 (optional)
+//      - gstin: string <= 40 (optional)
+//      - city: string <= 100 (optional)
+//      - balanceDue: number >= 0 (optional)
+//      - itemsSupplied: string <= 500 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// 6. Collection: /users/{uid}/purchases/{purchaseId}
+//    Document ID: {purchaseId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == purchaseId, 1..100 (required, immutable)
+//      - date: string 1..40 (required)
+//      - items: list <= 500 items (required)
+//      - totalAmount: number >= 0 (required)
+//      - billNo: string <= 100 (optional)
+//      - supplierId: string <= 100 (optional)
+//      - supplierName: string <= 180 (optional)
+//      - paidAmount: number >= 0 (optional)
+//      - dueAmount: number >= 0 (optional)
+//      - status: string <= 40 (optional)
+//      - paymentMode: string <= 40 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// 7. Collection: /users/{uid}/expenses/{expenseId}
+//    Document ID: {expenseId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == expenseId, 1..100 (required, immutable)
+//      - desc: string 1..300 (required)
+//      - amount: number >= 0 (required)
+//      - cat: string <= 80 (optional)
+//      - date: string <= 40 (optional)
+//      - status: string <= 40 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// 8. Collection: /users/{uid}/staff/{staffId}
+//    Document ID: {staffId} (1..100 chars, must equal data.id)
+//    Fields:
+//      - id: string == staffId, 1..100 (required, immutable)
+//      - name: string 1..180 (required)
+//      - role: string <= 100 (optional)
+//      - phone: string <= 40 (optional)
+//      - salary: number >= 0 (optional)
+//      - joinDate: string <= 40 (optional)
+//      - status: string <= 40 (optional)
+//      - updatedAt: number >= 0 (optional)
+//
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================================
+    // Helper Functions
+    // ========================================================================
+
+    // Verify caller has a valid Firebase Auth identity
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Strict tenant isolation: caller UID must match path {uid}
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Verify all required keys exist on resulting document payload
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    // Reject unknown/extraneous fields to prevent schema pollution & geminiKey storage
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    // Validate non-empty string with upper bound
+    function isNonEmptyString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    // Validate optional string field (when present, may be empty string up to maxLen)
+    function isOptionalString(data, field, maxLen) {
+      return !(field in data) ||
+        (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    // Validate non-negative number (int or float)
+    function isNonNegNumber(val) {
+      return val is number && val >= 0;
+    }
+
+    // Validate optional non-negative number field
+    function isOptionalNonNegNumber(data, field) {
+      return !(field in data) ||
+        (data[field] is number && data[field] >= 0);
+    }
+
+    // Bind document 'id' field to the Firestore document path ID (enforces immutability)
+    function isValidDocId(data, field, docId) {
+      return isNonEmptyString(data[field], 100) && data[field] == docId;
+    }
+
+    // ========================================================================
+    // Domain Validators (Applied on BOTH create and update)
+    // ========================================================================
+
+    // Validate nested shop profile map inside meta/store
+    function isValidShopMap(shop) {
+      return shop is map &&
+        shop.size() <= 20 &&
+        !('geminiKey' in shop) &&
+        shop.keys().hasOnly([
+          'id', 'name', 'owner', 'phone', 'address', 'gstin',
+          'upiId', 'currency', 'taxRate', 'rcptHeader', 'rcptFooter', 'rcptWidth'
+        ]) &&
+        'name' in shop &&
+        isNonEmptyString(shop.name, 200) &&
+        isOptionalString(shop, 'id', 100) &&
+        isOptionalString(shop, 'owner', 180) &&
+        isOptionalString(shop, 'phone', 40) &&
+        isOptionalString(shop, 'address', 500) &&
+        isOptionalString(shop, 'gstin', 40) &&
+        isOptionalString(shop, 'upiId', 150) &&
+        isOptionalString(shop, 'currency', 10) &&
+        isOptionalNonNegNumber(shop, 'taxRate') &&
+        (!('taxRate' in shop) || shop.taxRate <= 100) &&
+        isOptionalString(shop, 'rcptHeader', 300) &&
+        isOptionalString(shop, 'rcptFooter', 300) &&
+        isOptionalString(shop, 'rcptWidth', 20);
+    }
+
+    // 1. Validate /users/{uid}/meta/store
+    function isValidMetaStore(data) {
+      return hasRequiredFields(data, ['shop', 'updatedAt']) &&
+        hasOnlyAllowedFields(data, [
+          'shop', 'shops', 'activeShopId', 'attendance', 'theme',
+          'accent', 'language', 'soundEnabled', 'updatedAt',
+          'updatedByDevice', 'ownerEmail'
+        ]) &&
+        isValidShopMap(data.shop) &&
+        isNonNegNumber(data.updatedAt) &&
+        (!('shops' in data) || (data.shops is list && data.shops.size() <= 50)) &&
+        isOptionalString(data, 'activeShopId', 100) &&
+        (!('attendance' in data) || (data.attendance is map && data.attendance.size() <= 200)) &&
+        (!('theme' in data) || data.theme in ['dark', 'light']) &&
+        isOptionalString(data, 'accent', 40) &&
+        (!('language' in data) || data.language in ['en', 'hi', 'hinglish']) &&
+        (!('soundEnabled' in data) || data.soundEnabled is bool) &&
+        isOptionalString(data, 'updatedByDevice', 120) &&
+        isOptionalString(data, 'ownerEmail', 200);
+    }
+
+    // 2. Validate /users/{uid}/products/{productId}
+    function isValidProduct(data, productId) {
+      return hasRequiredFields(data, ['id', 'name', 'price', 'stock']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'name', 'cat', 'barcode', 'mrp', 'price', 'cost',
+          'stock', 'unit', 'minStock', 'emoji', 'shopId', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', productId) &&
+        isNonEmptyString(data.name, 220) &&
+        isNonNegNumber(data.price) &&
+        isNonNegNumber(data.stock) &&
+        isOptionalString(data, 'cat', 80) &&
+        isOptionalString(data, 'barcode', 80) &&
+        isOptionalNonNegNumber(data, 'mrp') &&
+        isOptionalNonNegNumber(data, 'cost') &&
+        isOptionalString(data, 'unit', 40) &&
+        isOptionalNonNegNumber(data, 'minStock') &&
+        isOptionalString(data, 'emoji', 20) &&
+        isOptionalString(data, 'shopId', 100) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // 3. Validate /users/{uid}/customers/{customerId}
+    function isValidCustomer(data, customerId) {
+      return hasRequiredFields(data, ['id', 'name']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'name', 'phone', 'email', 'balanceDue',
+          'totalSpent', 'points', 'tier', 'notes', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', customerId) &&
+        isNonEmptyString(data.name, 180) &&
+        isOptionalString(data, 'phone', 40) &&
+        isOptionalString(data, 'email', 200) &&
+        isOptionalNonNegNumber(data, 'balanceDue') &&
+        isOptionalNonNegNumber(data, 'totalSpent') &&
+        isOptionalNonNegNumber(data, 'points') &&
+        isOptionalString(data, 'tier', 40) &&
+        isOptionalString(data, 'notes', 1000) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // 4. Validate /users/{uid}/invoices/{invoiceId}
+    function isValidInvoice(data, invoiceId) {
+      return hasRequiredFields(data, ['id', 'date', 'items', 'total']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'date', 'time', 'customerId', 'customerName', 'customerPhone',
+          'items', 'subtotal', 'tax', 'discount', 'total', 'paid', 'due',
+          'paymentMode', 'status', 'shopId', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', invoiceId) &&
+        isNonEmptyString(data.date, 40) &&
+        data.items is list &&
+        data.items.size() <= 500 &&
+        isNonNegNumber(data.total) &&
+        isOptionalString(data, 'time', 40) &&
+        (!('customerId' in data) || data.customerId == null ||
+          (data.customerId is string && data.customerId.size() <= 100)) &&
+        isOptionalString(data, 'customerName', 180) &&
+        isOptionalString(data, 'customerPhone', 40) &&
+        isOptionalNonNegNumber(data, 'subtotal') &&
+        isOptionalNonNegNumber(data, 'tax') &&
+        isOptionalNonNegNumber(data, 'discount') &&
+        isOptionalNonNegNumber(data, 'paid') &&
+        isOptionalNonNegNumber(data, 'due') &&
+        isOptionalString(data, 'paymentMode', 40) &&
+        isOptionalString(data, 'status', 40) &&
+        isOptionalString(data, 'shopId', 100) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // 5. Validate /users/{uid}/suppliers/{supplierId}
+    function isValidSupplier(data, supplierId) {
+      return hasRequiredFields(data, ['id', 'name']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'name', 'contactPerson', 'phone', 'email',
+          'gstin', 'city', 'balanceDue', 'itemsSupplied', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', supplierId) &&
+        isNonEmptyString(data.name, 180) &&
+        isOptionalString(data, 'contactPerson', 180) &&
+        isOptionalString(data, 'phone', 40) &&
+        isOptionalString(data, 'email', 200) &&
+        isOptionalString(data, 'gstin', 40) &&
+        isOptionalString(data, 'city', 100) &&
+        isOptionalNonNegNumber(data, 'balanceDue') &&
+        isOptionalString(data, 'itemsSupplied', 500) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // 6. Validate /users/{uid}/purchases/{purchaseId}
+    function isValidPurchase(data, purchaseId) {
+      return hasRequiredFields(data, ['id', 'date', 'items', 'totalAmount']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'billNo', 'date', 'supplierId', 'supplierName',
+          'items', 'totalAmount', 'paidAmount', 'dueAmount',
+          'status', 'paymentMode', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', purchaseId) &&
+        isNonEmptyString(data.date, 40) &&
+        data.items is list &&
+        data.items.size() <= 500 &&
+        isNonNegNumber(data.totalAmount) &&
+        isOptionalString(data, 'billNo', 100) &&
+        isOptionalString(data, 'supplierId', 100) &&
+        isOptionalString(data, 'supplierName', 180) &&
+        isOptionalNonNegNumber(data, 'paidAmount') &&
+        isOptionalNonNegNumber(data, 'dueAmount') &&
+        isOptionalString(data, 'status', 40) &&
+        isOptionalString(data, 'paymentMode', 40) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // 7. Validate /users/{uid}/expenses/{expenseId}
+    function isValidExpense(data, expenseId) {
+      return hasRequiredFields(data, ['id', 'desc', 'amount']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'desc', 'cat', 'amount', 'date', 'status', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', expenseId) &&
+        isNonEmptyString(data.desc, 300) &&
+        isNonNegNumber(data.amount) &&
+        isOptionalString(data, 'cat', 80) &&
+        isOptionalString(data, 'date', 40) &&
+        isOptionalString(data, 'status', 40) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // 8. Validate /users/{uid}/staff/{staffId}
+    function isValidStaff(data, staffId) {
+      return hasRequiredFields(data, ['id', 'name']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'name', 'role', 'phone', 'salary',
+          'joinDate', 'status', 'updatedAt'
+        ]) &&
+        isValidDocId(data, 'id', staffId) &&
+        isNonEmptyString(data.name, 180) &&
+        isOptionalString(data, 'role', 100) &&
+        isOptionalString(data, 'phone', 40) &&
+        isOptionalNonNegNumber(data, 'salary') &&
+        isOptionalString(data, 'joinDate', 40) &&
+        isOptionalString(data, 'status', 40) &&
+        isOptionalNonNegNumber(data, 'updatedAt');
+    }
+
+    // ========================================================================
+    // Per-Owner Tenant Subtree (/users/{uid}/...)
+    // ========================================================================
+
+    match /users/{uid} {
+      // Disallow direct reads/writes on /users/{uid} root doc; only validated subpaths below are permitted
+      allow read, write: if false;
+
+      // 1. Store settings & metadata (single doc: meta/store)
+      match /meta/store {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidMetaStore(request.resource.data);
+        allow update: if isOwner(uid) && isValidMetaStore(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+
+      // 2. Inventory & product catalog
+      match /products/{productId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidProduct(request.resource.data, productId);
+        allow update: if isOwner(uid) && isValidProduct(request.resource.data, productId);
+        allow delete: if isOwner(uid);
+      }
+
+      // 3. Customers & Udhaar Khata ledger
+      match /customers/{customerId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidCustomer(request.resource.data, customerId);
+        allow update: if isOwner(uid) && isValidCustomer(request.resource.data, customerId);
+        allow delete: if isOwner(uid);
+      }
+
+      // 4. POS billing invoices
+      match /invoices/{invoiceId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidInvoice(request.resource.data, invoiceId);
+        allow update: if isOwner(uid) && isValidInvoice(request.resource.data, invoiceId);
+        allow delete: if isOwner(uid);
+      }
+
+      // 5. Wholesale suppliers directory
+      match /suppliers/{supplierId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidSupplier(request.resource.data, supplierId);
+        allow update: if isOwner(uid) && isValidSupplier(request.resource.data, supplierId);
+        allow delete: if isOwner(uid);
+      }
+
+      // 6. Wholesale inward purchases
+      match /purchases/{purchaseId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidPurchase(request.resource.data, purchaseId);
+        allow update: if isOwner(uid) && isValidPurchase(request.resource.data, purchaseId);
+        allow delete: if isOwner(uid);
+      }
+
+      // 7. Store operational expenses
+      match /expenses/{expenseId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidExpense(request.resource.data, expenseId);
+        allow update: if isOwner(uid) && isValidExpense(request.resource.data, expenseId);
+        allow delete: if isOwner(uid);
+      }
+
+      // 8. Store employees / staff directory
+      match /staff/{staffId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidStaff(request.resource.data, staffId);
+        allow update: if isOwner(uid) && isValidStaff(request.resource.data, staffId);
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ========================================================================
+    // Default Deny All Other Paths
+    // ========================================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

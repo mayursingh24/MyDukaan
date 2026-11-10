@@ -4,6 +4,9 @@
  */
 
 const STORAGE_KEY = 'mydukaan24_prod_db';
+const SYNC_META_KEY = 'mydukaan24_sync_meta';
+const SYNC_CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
+const META_FIELDS = ['shop', 'shops', 'activeShopId', 'attendance', 'theme', 'accent', 'language', 'soundEnabled'];
 
 const DEFAULT_SHOP = {
   name: "MyDukkan24 Mart",
@@ -102,6 +105,39 @@ class StorageEngine {
     this.initAudio();
   }
 
+  getDefaultSyncMeta() {
+    return {
+      hasUserMutated: false,
+      lastLocalWriteAt: 0,
+      lastSyncedAt: 0,
+      metaDirty: false,
+      pendingUpserts: {},
+      pendingDeletes: {}
+    };
+  }
+
+  getSyncMeta() {
+    try {
+      const raw = localStorage.getItem(SYNC_META_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          ...this.getDefaultSyncMeta(),
+          ...parsed,
+          pendingUpserts: parsed.pendingUpserts || {},
+          pendingDeletes: parsed.pendingDeletes || {}
+        };
+      }
+    } catch (e) {}
+    return this.getDefaultSyncMeta();
+  }
+
+  saveSyncMeta(meta) {
+    try {
+      localStorage.setItem(SYNC_META_KEY, JSON.stringify(meta));
+    } catch (e) {}
+  }
+
   initDatabase() {
     try {
       const existing = localStorage.getItem(STORAGE_KEY);
@@ -123,6 +159,10 @@ class StorageEngine {
           accent: "blue",
           language: "en",
           soundEnabled: true
+        }, { silentInit: true });
+        this.saveSyncMeta({
+          ...this.getDefaultSyncMeta(),
+          hasUserMutated: false
         });
       } else {
         const parsed = JSON.parse(existing);
@@ -133,7 +173,14 @@ class StorageEngine {
           parsed.shop.upiId = "6306437348@upi";
           updated = true;
         }
-        if (updated) this.saveData(parsed);
+        if (updated) this.saveData(parsed, { silentInit: true });
+        if (!localStorage.getItem(SYNC_META_KEY)) {
+          // Preserve existing data when upgrading from pre-v8.0 builds
+          this.saveSyncMeta({
+            ...this.getDefaultSyncMeta(),
+            hasUserMutated: true
+          });
+        }
       }
     } catch (e) {
       console.error("[Storage] Database init error:", e);
@@ -191,22 +238,24 @@ class StorageEngine {
       const str = localStorage.getItem(STORAGE_KEY);
       if (str) {
         const parsed = JSON.parse(str);
-        // Auto-seed barcode 8904258116198 if not already in user's saved catalog
-        if (parsed && parsed.products && !parsed.products.some(p => p.barcode === "8904258116198")) {
-          parsed.products.push({
-            id: "P113",
-            name: "Indian Retail FMCG Pack",
-            cat: "Grocery",
-            barcode: "8904258116198",
-            mrp: 30,
-            price: 25,
-            cost: 20,
-            stock: 45,
-            unit: "pack",
-            minStock: 10,
-            emoji: "🍿"
-          });
-          this.saveData(parsed);
+        if (parsed && parsed.products && !localStorage.getItem('mydukaan24_p113_seeded')) {
+          localStorage.setItem('mydukaan24_p113_seeded', '1');
+          if (!parsed.products.some(p => p.barcode === "8904258116198")) {
+            parsed.products.push({
+              id: "P113",
+              name: "Indian Retail FMCG Pack",
+              cat: "Grocery",
+              barcode: "8904258116198",
+              mrp: 30,
+              price: 25,
+              cost: 20,
+              stock: 45,
+              unit: "pack",
+              minStock: 10,
+              emoji: "🍿"
+            });
+            this.saveData(parsed, { silentInit: true });
+          }
         }
         if (!parsed.suppliers) parsed.suppliers = DEFAULT_SUPPLIERS;
         if (!parsed.purchases) parsed.purchases = DEFAULT_PURCHASES;
@@ -238,9 +287,71 @@ class StorageEngine {
     };
   }
 
-  saveData(data) {
+  saveData(data, options = {}) {
     try {
+      const now = Date.now();
+      let prev = null;
+      if (!options.fromCloud && !options.silentInit) {
+        try {
+          const prevStr = localStorage.getItem(STORAGE_KEY);
+          if (prevStr) prev = JSON.parse(prevStr);
+        } catch (e) {}
+
+        const meta = this.getSyncMeta();
+        meta.hasUserMutated = true;
+        meta.lastLocalWriteAt = now;
+
+        // Track item-level changes & deletions across synced collections
+        SYNC_CATEGORIES.forEach((cat) => {
+          const prevList = Array.isArray(prev && prev[cat]) ? prev[cat] : [];
+          const nextList = Array.isArray(data && data[cat]) ? data[cat] : [];
+          const prevMap = new Map(prevList.map(item => [String(item.id), JSON.stringify(item)]));
+          const nextIds = new Set();
+
+          const upsertSet = new Set(meta.pendingUpserts[cat] || []);
+          const deleteSet = new Set(meta.pendingDeletes[cat] || []);
+
+          nextList.forEach((item) => {
+            if (!item || !item.id) return;
+            const idStr = String(item.id);
+            nextIds.add(idStr);
+            const prevJson = prevMap.get(idStr);
+            const curJson = JSON.stringify(item);
+            if (prevJson !== curJson) {
+              item.updatedAt = now;
+              upsertSet.add(idStr);
+              deleteSet.delete(idStr);
+            }
+          });
+
+          prevList.forEach((oldItem) => {
+            if (oldItem && oldItem.id && !nextIds.has(String(oldItem.id))) {
+              const idStr = String(oldItem.id);
+              deleteSet.add(idStr);
+              upsertSet.delete(idStr);
+            }
+          });
+
+          meta.pendingUpserts[cat] = Array.from(upsertSet);
+          meta.pendingDeletes[cat] = Array.from(deleteSet);
+        });
+
+        // Track store meta changes
+        if (prev) {
+          const metaChanged = META_FIELDS.some((k) => JSON.stringify(prev[k]) !== JSON.stringify(data[k]));
+          if (metaChanged) meta.metaDirty = true;
+        } else {
+          meta.metaDirty = true;
+        }
+
+        this.saveSyncMeta(meta);
+      }
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+      if (!options.fromCloud && !options.silentInit && window.CloudSync && typeof window.CloudSync.onLocalChange === 'function') {
+        window.CloudSync.onLocalChange();
+      }
       return true;
     } catch (e) {
       console.error("[Storage] Storage quota or write failure:", e);
@@ -251,6 +362,7 @@ class StorageEngine {
   updateItem(category, item) {
     const db = this.getData();
     if (!db[category]) db[category] = [];
+    item.updatedAt = Date.now();
     const idx = db[category].findIndex(i => i.id === item.id);
     if (idx >= 0) {
       db[category][idx] = item;

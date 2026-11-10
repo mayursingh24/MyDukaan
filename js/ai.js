@@ -4,7 +4,7 @@
  * - ONLINE (navigator.onLine === true): Exclusively calls live Gemini Interactions API via /api/gemini.
  *   Never silently mixes or falls back to local mock replies when online.
  * - OFFLINE (navigator.onLine === false): Automatically switches to Inbuilt Local Retail Rule-Engine.
- * Supports modern AI Studio keys (both `AQ.` and `AIza`) configured in Netlify or Set Key.
+ * Supports modern AI Studio keys (both `AQ.` and `AIza`) configured in Vercel / Netlify or Set Key.
  */
 
 class DukaanAIEngine {
@@ -208,7 +208,7 @@ Customer Udhaar Ledger:
   promptSetApiKey() {
     const existing = localStorage.getItem('mydukaan_gemini_api_key') || '';
     const newKey = prompt(
-      'Paste your active Google Gemini API Key from aistudio.google.com/api-keys (supports AQ. and AIza keys; leave blank to use Netlify environment key):',
+      'Paste your active Google Gemini API Key from aistudio.google.com/api-keys (supports AQ. and AIza keys; leave blank to use Vercel / Netlify environment key):',
       existing
     );
     if (newKey !== null) {
@@ -223,7 +223,7 @@ Customer Udhaar Ledger:
         );
       } else {
         localStorage.removeItem('mydukaan_gemini_api_key');
-        App.toast('info', 'API Key Cleared', 'Reverted to Netlify server environment key.');
+        App.toast('info', 'API Key Cleared', 'Reverted to Vercel / Netlify server environment key.');
       }
     }
   }
@@ -371,7 +371,7 @@ Customer Udhaar Ledger:
         `• **Network Status:** ${onlineNow ? '🟢 Online (API Mode Preferred)' : '🟠 Offline Mode'}\n` +
         `• **Store Local DB:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s, i) => s + (i.paid || 0), 0).toLocaleString('en-IN')} Sales)\n` +
         `• **Live Gemini Models:** \`gemini-3.8-flash\` / \`gemini-3.6-flash\` (Interactions API)\n\n` +
-        `💡 **API Key Note:** Modern AI Studio keys (\`AQ....\` and \`AIza...\`) are both supported via Netlify Environment Variables or **🔑 Key**.`;
+        `💡 **API Key Note:** Modern AI Studio keys (\`AQ....\` and \`AIza...\`) are both supported via Vercel / Netlify Environment Variables or **🔑 Key**.`;
     }
 
     if (
@@ -544,7 +544,7 @@ Customer Udhaar Ledger:
           ` : ''}
           ${isAuthFail ? `
             <div style="margin-top: 6px; font-size: 11px; color: var(--warning); line-height: 1.45;">
-              Note: Online mode does not fake replies with local data when API auth fails. Configure an active Gemini key in Netlify or click <strong>🔑 Set Key</strong>.
+              Note: Online mode does not fake replies with local data when API auth fails. Configure an active Gemini key in Vercel / Netlify or click <strong>🔑 Set Key</strong>.
             </div>
           ` : ''}
           <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
