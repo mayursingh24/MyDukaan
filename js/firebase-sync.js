@@ -1,5 +1,5 @@
 /**
- * MyDukaan24 — Hybrid Offline-First + Firebase Cloud Sync Engine (v8.0)
+ * MyDukaan24 — Hybrid Offline-First + Firebase Cloud Sync Engine (v8.1)
  * Architecture:
  *  - Instant 0ms LocalStorage writes (works 100% offline, never blocks POS)
  *  - Persistent Firestore IndexedDB Cache + Offline Mutation Queue (Standard Edition)
@@ -13,6 +13,11 @@
   const DEVICE_ID_KEY = 'mydukaan24_device_id';
   const SDK_VERSION = '11.6.0';
   const CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
+
+  // Optional built-in Firebase Web App config.
+  // Replace `null` with your Firebase Console Web App config object so every device auto-connects:
+  // Example: { apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." }
+  const DEFAULT_FIREBASE_CONFIG = null;
 
   function getDeviceId() {
     let id = localStorage.getItem(DEVICE_ID_KEY);
@@ -69,20 +74,56 @@
       this._debounceTimer = null;
       this._flushPromise = null;
       this._authListenerAttached = false;
+      this._authUnsubscribe = null;
       this._initStarted = false;
       this.deviceId = getDeviceId();
+    }
+
+    getDefaultConfig() {
+      const raw = (typeof window !== 'undefined' && window.MYDUKAAN_FIREBASE_CONFIG) || DEFAULT_FIREBASE_CONFIG;
+      if (raw && typeof raw === 'object') {
+        return this.pickValidConfigFields(raw);
+      }
+      return null;
+    }
+
+    hasLocalOverrideConfig() {
+      try {
+        const raw = localStorage.getItem(FIREBASE_CFG_KEY);
+        if (!raw) return false;
+        const cfg = JSON.parse(raw);
+        return Boolean(cfg && cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    isUsingDefaultConfig() {
+      return !this.hasLocalOverrideConfig() && Boolean(this.getDefaultConfig());
     }
 
     getSavedConfig() {
       try {
         const raw = localStorage.getItem(FIREBASE_CFG_KEY);
-        if (!raw) return null;
-        const cfg = JSON.parse(raw);
-        if (cfg && cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId) {
-          return cfg;
+        if (raw) {
+          const cfg = JSON.parse(raw);
+          if (cfg && cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId) {
+            return cfg;
+          }
         }
       } catch (e) {}
-      return null;
+      return this.getDefaultConfig();
+    }
+
+    showNotice(type, title, message) {
+      if (typeof window !== 'undefined' && window.App && typeof window.App.toast === 'function') {
+        window.App.toast(type, title, message);
+      }
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('mydukaan:cloud-notice', {
+          detail: { type, title, message }
+        }));
+      }
     }
 
     parseConfigInput(rawText) {
@@ -131,6 +172,10 @@
       }
       localStorage.setItem(FIREBASE_CFG_KEY, JSON.stringify(cfg));
       this.stopListeners();
+      if (this._authUnsubscribe) {
+        try { this._authUnsubscribe(); } catch (e) {}
+        this._authUnsubscribe = null;
+      }
       this.sdk = null;
       this.app = null;
       this.auth = null;
@@ -143,10 +188,14 @@
       return { ok: true, config: cfg };
     }
 
-    clearConfig() {
+    async clearConfig() {
       this.stopListeners();
+      if (this._authUnsubscribe) {
+        try { this._authUnsubscribe(); } catch (e) {}
+        this._authUnsubscribe = null;
+      }
       if (this.auth && this.sdk && this.sdk.signOut) {
-        try { this.sdk.signOut(this.auth); } catch (e) {}
+        try { await this.sdk.signOut(this.auth); } catch (e) {}
       }
       localStorage.removeItem(FIREBASE_CFG_KEY);
       this.app = null;
@@ -155,9 +204,14 @@
       this.user = null;
       this._authListenerAttached = false;
       this._initStarted = false;
-      this.syncState = 'unconfigured';
       this.lastError = '';
-      this.notifyUI();
+      if (this.getDefaultConfig()) {
+        this.syncState = 'signed-out';
+        await this.init();
+      } else {
+        this.syncState = 'unconfigured';
+        this.notifyUI();
+      }
     }
 
     isOnline() {
@@ -241,8 +295,11 @@
 
         if (!this._authListenerAttached) {
           this._authListenerAttached = true;
-          sdk.onAuthStateChanged(this.auth, async (user) => {
+          this._authUnsubscribe = sdk.onAuthStateChanged(this.auth, async (user) => {
             this.user = user || null;
+            if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+              window.dispatchEvent(new CustomEvent('mydukaan:auth-changed', { detail: { user: this.user } }));
+            }
             if (this.user) {
               await this.onUserSignedIn(this.user);
             } else {
@@ -255,7 +312,13 @@
 
         // Complete pending OAuth redirect login if any
         if (sdk.getRedirectResult) {
-          sdk.getRedirectResult(this.auth).catch(() => {});
+          sdk.getRedirectResult(this.auth)
+            .then((res) => {
+              if (res && res.user) {
+                this.showNotice('success', 'Signed In', 'Google account linked for live cloud sync.');
+              }
+            })
+            .catch(() => {});
         }
 
         return true;
@@ -271,25 +334,28 @@
     async signInWithGoogle() {
       const ok = await this.init();
       if (!ok || !this.auth || !this.sdk) {
-        App.toast('warning', 'Firebase Setup Needed', this.lastError || 'Save a valid Firebase config first.');
-        return;
+        const msg = this.lastError || 'Connect Firebase Web Config first to enable Google Sign-In.';
+        this.showNotice('warning', 'Firebase Setup Needed', msg);
+        return { ok: false, error: msg, needsConfig: !this.getSavedConfig() };
       }
       if (!this.isOnline()) {
-        App.toast('warning', 'System Offline', 'Connect to the internet to sign in with Google.');
-        return;
+        const msg = 'Connect to the internet to sign in with Google.';
+        this.showNotice('warning', 'System Offline', msg);
+        return { ok: false, error: msg };
       }
       try {
         const provider = new this.sdk.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        await this.sdk.signInWithPopup(this.auth, provider);
-        App.toast('success', 'Signed In', 'Google account linked for live cloud sync.');
+        const cred = await this.sdk.signInWithPopup(this.auth, provider);
+        this.showNotice('success', 'Signed In', 'Google account linked for live cloud sync.');
+        return { ok: true, user: cred && cred.user };
       } catch (err) {
         const code = err.code || '';
         if (code === 'auth/popup-blocked') {
           try {
             const provider = new this.sdk.GoogleAuthProvider();
             await this.sdk.signInWithRedirect(this.auth, provider);
-            return;
+            return { ok: true, redirect: true };
           } catch (redirErr) {
             err = redirErr;
           }
@@ -302,58 +368,83 @@
           msg = 'Sign-in popup closed before completing.';
         }
         this.lastError = msg;
-        App.toast('danger', 'Sign-In Error', msg);
+        this.showNotice('danger', 'Sign-In Error', msg);
         this.notifyUI();
+        return { ok: false, error: msg };
       }
     }
 
     async signInEmail(email, password) {
       const ok = await this.init();
-      if (!ok || !this.auth || !this.sdk) return;
+      if (!ok || !this.auth || !this.sdk) {
+        const msg = this.lastError || 'Connect Firebase Web Config first to enable Email Sign-In.';
+        this.showNotice('warning', 'Firebase Setup Needed', msg);
+        return { ok: false, error: msg, needsConfig: !this.getSavedConfig() };
+      }
       if (!this.isOnline()) {
-        App.toast('warning', 'System Offline', 'Internet is required to sign in.');
-        return;
+        const msg = 'Internet is required to sign in.';
+        this.showNotice('warning', 'System Offline', msg);
+        return { ok: false, error: msg };
       }
       try {
-        await this.sdk.signInWithEmailAndPassword(this.auth, email.trim(), password);
-        App.toast('success', 'Signed In', 'Store connected to Firebase Cloud.');
+        const cred = await this.sdk.signInWithEmailAndPassword(this.auth, email.trim(), password);
+        this.lastError = '';
+        this.showNotice('success', 'Signed In', 'Store connected to Firebase Cloud.');
+        return { ok: true, user: cred && cred.user };
       } catch (err) {
         this.lastError = this.humanizeAuthError(err);
-        App.toast('danger', 'Login Failed', this.lastError);
+        this.showNotice('danger', 'Login Failed', this.lastError);
         this.notifyUI();
+        return { ok: false, error: this.lastError };
       }
     }
 
     async signUpEmail(email, password) {
       const ok = await this.init();
-      if (!ok || !this.auth || !this.sdk) return;
+      if (!ok || !this.auth || !this.sdk) {
+        const msg = this.lastError || 'Connect Firebase Web Config first to create a store account.';
+        this.showNotice('warning', 'Firebase Setup Needed', msg);
+        return { ok: false, error: msg, needsConfig: !this.getSavedConfig() };
+      }
       if (!this.isOnline()) {
-        App.toast('warning', 'System Offline', 'Internet is required to create an account.');
-        return;
+        const msg = 'Internet is required to create an account.';
+        this.showNotice('warning', 'System Offline', msg);
+        return { ok: false, error: msg };
       }
       try {
-        await this.sdk.createUserWithEmailAndPassword(this.auth, email.trim(), password);
-        App.toast('success', 'Account Created', 'Your store will now sync online & offline.');
+        const cred = await this.sdk.createUserWithEmailAndPassword(this.auth, email.trim(), password);
+        this.lastError = '';
+        this.showNotice('success', 'Account Created', 'Your store will now sync online & offline.');
+        return { ok: true, user: cred && cred.user };
       } catch (err) {
         this.lastError = this.humanizeAuthError(err);
-        App.toast('danger', 'Signup Failed', this.lastError);
+        this.showNotice('danger', 'Signup Failed', this.lastError);
         this.notifyUI();
+        return { ok: false, error: this.lastError };
       }
     }
 
     async resetPassword(email) {
       const ok = await this.init();
-      if (!ok || !this.auth || !this.sdk) return;
+      if (!ok || !this.auth || !this.sdk) {
+        const msg = this.lastError || 'Connect Firebase Web Config first.';
+        this.showNotice('warning', 'Firebase Setup Needed', msg);
+        return { ok: false, error: msg, needsConfig: !this.getSavedConfig() };
+      }
       const cleanEmail = (email || '').trim();
       if (!cleanEmail) {
-        App.toast('warning', 'Enter Email', 'Enter your account email first.');
-        return;
+        const msg = 'Enter your account email first.';
+        this.showNotice('warning', 'Enter Email', msg);
+        return { ok: false, error: msg };
       }
       try {
         await this.sdk.sendPasswordResetEmail(this.auth, cleanEmail);
-        App.toast('success', 'Reset Link Sent', `Password reset instructions sent to ${cleanEmail}`);
+        this.showNotice('success', 'Reset Link Sent', `Password reset instructions sent to ${cleanEmail}`);
+        return { ok: true };
       } catch (err) {
-        App.toast('danger', 'Reset Failed', this.humanizeAuthError(err));
+        const msg = this.humanizeAuthError(err);
+        this.showNotice('danger', 'Reset Failed', msg);
+        return { ok: false, error: msg };
       }
     }
 
@@ -363,9 +454,12 @@
         await this.sdk.signOut(this.auth);
       }
       this.user = null;
-      this.syncState = 'signed-out';
+      this.syncState = this.getSavedConfig() ? 'signed-out' : 'unconfigured';
       this.notifyUI();
-      App.toast('info', 'Signed Out', 'Local offline database remains safely stored on this device.');
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('mydukaan:auth-changed', { detail: { user: null } }));
+      }
+      this.showNotice('info', 'Signed Out', 'Local offline database remains safely stored on this device.');
     }
 
     humanizeAuthError(err) {
@@ -386,6 +480,13 @@
     }
 
     async onUserSignedIn(user) {
+      if (typeof window === 'undefined' || !window.DB) {
+        this.syncState = this.isOnline() ? 'synced' : 'offline-queued';
+        this.lastError = '';
+        this.notifyUI();
+        return;
+      }
+
       this.syncState = 'syncing';
       this.lastError = '';
       this.notifyUI();
@@ -600,7 +701,7 @@
         });
         DB.saveSyncMeta(fullMeta);
         await this.flushPending();
-        App.toast('success', 'Cloud Initialized', 'Your store data has been backed up to Firebase.');
+        this.showNotice('success', 'Cloud Initialized', 'Your store data has been backed up to Firebase.');
         return;
       }
 
@@ -857,14 +958,14 @@
 
     async flushPending(isManual = false) {
       if (!this.user || !this.db || !this.sdk) {
-        if (isManual) App.toast('warning', 'Not Signed In', 'Sign in to Firebase first to sync with cloud.');
+        if (isManual) this.showNotice('warning', 'Not Signed In', 'Sign in to Firebase first to sync with cloud.');
         return false;
       }
 
       if (!this.isOnline()) {
         this.syncState = 'offline-queued';
         this.notifyUI();
-        if (isManual) App.toast('warning', 'Offline Mode', 'Changes saved locally and will auto-sync when online.');
+        if (isManual) this.showNotice('warning', 'Offline Mode', 'Changes saved locally and will auto-sync when online.');
         return false;
       }
 
@@ -932,7 +1033,7 @@
         DB.saveSyncMeta(syncMeta);
         this.syncState = 'synced';
         this.notifyUI();
-        if (isManual) App.toast('success', 'Already Synced', 'All local & cloud records match.');
+        if (isManual) this.showNotice('success', 'Already Synced', 'All local & cloud records match.');
         return true;
       }
 
@@ -970,7 +1071,7 @@
         this.notifyUI();
 
         if (isManual) {
-          App.toast('success', 'Cloud Synced ✓', `${ops.length} store change(s) pushed to Firebase.`);
+          this.showNotice('success', 'Cloud Synced ✓', `${ops.length} store change(s) pushed to Firebase.`);
         }
         return true;
       } catch (err) {
@@ -979,7 +1080,7 @@
         this.syncState = this.isOnline() ? 'error' : 'offline-queued';
         this.notifyUI();
         if (isManual) {
-          App.toast('warning', 'Sync Queued Locally', this.lastError);
+          this.showNotice('warning', 'Sync Queued Locally', this.lastError);
         }
         return false;
       }
@@ -987,7 +1088,7 @@
 
     async forceUploadAll() {
       if (!this.user) {
-        App.toast('warning', 'Not Signed In', 'Sign in first before pushing full store backup.');
+        this.showNotice('warning', 'Not Signed In', 'Sign in first before pushing full store backup.');
         return;
       }
       const localDb = DB.getData();
@@ -1129,6 +1230,14 @@
           this._lastUiSignedIn = Boolean(this.user);
           mount.innerHTML = App.renderFirebaseCloudBody();
         }
+      }
+
+      if (typeof window !== 'undefined' && typeof window.App === 'object' && window.App && typeof window.App.updateAuthChip === 'function') {
+        window.App.updateAuthChip(s);
+      }
+
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('mydukaan:cloud-status', { detail: s }));
       }
     }
   }

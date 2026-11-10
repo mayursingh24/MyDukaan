@@ -1254,12 +1254,13 @@ class AppController {
     const cfg = cloud.getSavedConfig();
     const status = cloud.getStatusSummary();
     const pending = cloud.getPendingCount();
-    const host = this.escapeHtml(window.location.hostname || 'mydukaan24.netlify.app');
+    const host = this.escapeHtml(window.location.hostname || 'mydukaan-eta.vercel.app');
     const escErr = cloud.lastError ? this.escapeHtml(cloud.lastError) : '';
+    const hasLocalOverride = typeof cloud.hasLocalOverrideConfig === 'function' ? cloud.hasLocalOverrideConfig() : Boolean(cfg);
 
     // 1. Config Setup / Editor View
     if (!cfg || this._showFirebaseConfigEditor) {
-      const prefill = cfg ? this.escapeHtml(JSON.stringify(cfg, null, 2)) : '';
+      const prefill = cfg && hasLocalOverride ? this.escapeHtml(JSON.stringify(cfg, null, 2)) : '';
       return `
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; align-items: start;">
           <div style="min-width: 0;">
@@ -1324,9 +1325,11 @@ class AppController {
               <button type="button" class="btn btn-secondary btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.toggleFirebaseConfigEdit(true)">
                 ${Icons.edit(13)} Edit Config
               </button>
-              <button type="button" class="btn btn-danger btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.disconnectFirebase()">
-                Disconnect
-              </button>
+              ${hasLocalOverride ? `
+                <button type="button" class="btn btn-danger btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.disconnectFirebase()">
+                  Disconnect
+                </button>
+              ` : ''}
             </div>
           </div>
 
@@ -1416,9 +1419,11 @@ class AppController {
           <button type="button" class="btn btn-secondary btn-sm" onclick="CloudSync.signOutUser()">
             ${Icons.logOut(13)} Sign Out
           </button>
-          <button type="button" class="btn btn-danger btn-sm" onclick="App.disconnectFirebase()">
-            Disconnect Project
-          </button>
+          ${hasLocalOverride ? `
+            <button type="button" class="btn btn-danger btn-sm" onclick="App.disconnectFirebase()">
+              Disconnect Project
+            </button>
+          ` : ''}
         </div>
       </div>
     `;
@@ -1452,11 +1457,40 @@ class AppController {
     if (window.CloudSync) CloudSync.notifyUI();
   }
 
-  disconnectFirebase() {
-    if (confirm('Disconnect this Firebase project from this device? Your local offline store data will NOT be deleted.')) {
+  async disconnectFirebase() {
+    if (confirm('Disconnect this browser\'s Firebase override? Your local offline store data will NOT be deleted.')) {
       this._showFirebaseConfigEditor = false;
-      if (window.CloudSync) CloudSync.clearConfig();
-      this.toast('info', 'Firebase Disconnected', 'Switched back to local-only mode.');
+      if (window.CloudSync) await CloudSync.clearConfig();
+      const usingDefault = window.CloudSync && typeof CloudSync.isUsingDefaultConfig === 'function' && CloudSync.isUsingDefaultConfig();
+      this.toast('info', 'Firebase Updated', usingDefault ? 'Reverted to default Firebase project config.' : 'Switched back to local-only mode.');
+    }
+  }
+
+  openCloudAuthSection() {
+    if (typeof this.closeMobileSidebar === 'function') this.closeMobileSidebar();
+    this.navigate('settings');
+    setTimeout(() => {
+      const card = document.getElementById('firebase-cloud-card');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  }
+
+  updateAuthChip(status) {
+    const labelEl = document.getElementById('sidebar-auth-label');
+    const tagEl = document.getElementById('sidebar-auth-tag');
+    if (!labelEl || !tagEl || !status) return;
+    if (status.signedIn) {
+      labelEl.textContent = 'Cloud Account';
+      tagEl.className = status.pending > 0 ? 'nav-tag nav-tag-amber' : 'nav-tag nav-tag-green';
+      tagEl.textContent = status.pending > 0 ? `${status.pending} Queue` : 'Synced';
+    } else if (status.configured) {
+      labelEl.textContent = 'Sign In to Sync';
+      tagEl.className = 'nav-tag nav-tag-amber';
+      tagEl.textContent = 'Sign In';
+    } else {
+      labelEl.textContent = 'Login / Cloud Sync';
+      tagEl.className = 'nav-tag nav-tag-amber';
+      tagEl.textContent = 'Local';
     }
   }
 
