@@ -311,7 +311,7 @@ class POSEngine {
         <!-- Customer Selector -->
         <div class="form-group" style="margin-bottom: 8px;">
           <div style="display: flex; gap: 6px;">
-            <select id="pos-customer-select" class="form-select" style="font-size: 12.5px; padding: 6px 10px;" onchange="POS.selectedCustomerId = this.value">
+            <select id="pos-customer-select" class="form-select" style="flex: 1; min-width: 0; font-size: 12.5px; padding: 6px 10px;" onchange="POS.selectedCustomerId = this.value">
               <option value="">Walk-in Customer</option>
               ${customers.map(c => `
                 <option value="${c.id}" ${this.selectedCustomerId === c.id ? 'selected' : ''}>
@@ -346,7 +346,7 @@ class POSEngine {
         ` : ''}
 
         <!-- Quick Bill Discount Buttons -->
-        <div style="display: flex; gap: 6px; align-items: center; margin: 4px 0;">
+        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 4px 0;">
           <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Discount:</span>
           <button class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 11px;" onclick="POS.discountType='percent'; POS.discountValue=5; POS.renderCart();">5%</button>
           <button class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 11px;" onclick="POS.discountType='percent'; POS.discountValue=10; POS.renderCart();">10%</button>
@@ -391,9 +391,9 @@ class POSEngine {
         <!-- Fast Cash Mode Helpers -->
         ${this.paymentMode === 'Cash' ? `
           <div style="background: var(--bg-input); padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 6px;">
-            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 12px; color: var(--text-secondary); font-weight: 500;">Tendered: ₹</span>
-              <input type="number" id="pos-cash-tendered" class="form-input" style="height: 32px; padding: 4px 8px; font-weight: 700; font-size: 14px;" value="${calc.grandTotal}" oninput="POS.calculateCashChange(${calc.grandTotal})" />
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px;">
+              <span style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Tendered: ₹</span>
+              <input type="number" id="pos-cash-tendered" class="form-input" style="flex: 1; min-width: 110px; height: 32px; padding: 4px 8px; font-weight: 700; font-size: 14px;" value="${calc.grandTotal}" oninput="POS.calculateCashChange(${calc.grandTotal})" />
             </div>
 
             <!-- Fast Currency Denomination Buttons -->
@@ -648,11 +648,11 @@ class POSEngine {
 
             <!-- Modal Action Buttons -->
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
-              <div style="display: flex; gap: 8px;">
-                <button class="btn btn-primary" style="flex: 1;" onclick="window.print()">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-primary" style="flex: 1 1 140px;" onclick="window.print()">
                   ${Icons.print(15)} Print Thermal Slip
                 </button>
-                <a href="${waLink}" target="_blank" class="btn btn-success" style="flex: 1;">
+                <a href="${waLink}" target="_blank" class="btn btn-success" style="flex: 1 1 140px;">
                   ${Icons.whatsapp(15)} WhatsApp Bill
                 </a>
               </div>

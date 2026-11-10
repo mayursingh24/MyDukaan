@@ -17,8 +17,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
   <!-- Core Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=7.2" />
-  <link rel="stylesheet" href="css/components.css?v=7.2" />
+  <link rel="stylesheet" href="css/style.css?v=7.3" />
+  <link rel="stylesheet" href="css/components.css?v=7.3" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
@@ -148,8 +148,8 @@
       <!-- Sidebar Status Footer -->
       <div class="sidebar-footer">
         <div class="system-status-indicator">
-          <span class="status-dot-live"></span>
-          <span>System Online • Local DB</span>
+          <span class="status-dot-live" id="system-status-dot"></span>
+          <span id="system-online-status">Online • Live API Ready</span>
         </div>
         <button class="topbar-icon-btn" style="width: 28px; height: 28px;" onclick="App.toggleTheme()" title="Toggle Theme" id="sidebar-theme-btn">
           <span id="sidebar-theme-icon"></span>
@@ -184,7 +184,7 @@
 
         <div class="topbar-right">
           <!-- Language Selector -->
-          <div class="lang-selector-chip" style="display: flex; align-items: center; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 4px 6px;">
+          <div class="lang-selector-chip">
             <span style="font-size: 12px; margin-right: 3px;">🌐</span>
             <select id="lang-selector-select" style="background: transparent; border: none; color: var(--text-primary); font-size: 11.5px; font-weight: 700; cursor: pointer; outline: none;" onchange="I18n.setLanguage(this.value)">
               <option value="en">English</option>
@@ -194,15 +194,16 @@
           </div>
 
           <!-- Live Store Counter Status & Day-End Cash Register Trigger -->
-          <div class="counter-status-chip" onclick="App.openCashDrawerModal()" title="View Today's Cash & UPI Register (F4)" style="display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 5px 10px; cursor: pointer;">
+          <div class="counter-status-chip" onclick="App.openCashDrawerModal()" title="View Today's Cash & UPI Register (F4)">
             <span class="status-dot-live" style="width: 7px; height: 7px; background: #10B981; border-radius: 50%; box-shadow: 0 0 8px #10B981;"></span>
             <span style="font-size: 11.5px; font-weight: 700; color: #10B981;">Counter #1 Active</span>
             <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">[F4]</span>
           </div>
 
           <!-- Quick Fast New Bill Action -->
-          <button class="btn btn-primary btn-sm" onclick="App.navigate('pos')" title="New Bill (F2)" style="display: flex; align-items: center; gap: 5px; padding: 5px 12px; font-weight: 700; border-radius: var(--radius-md);">
-            <span>⚡ New Sale</span>
+          <button class="btn btn-primary btn-sm topbar-new-sale-btn" onclick="App.navigate('pos')" title="New Bill (F2)">
+            <span class="sale-label-full">⚡ New Sale</span>
+            <span class="sale-label-short">⚡ Sale</span>
           </button>
 
           <!-- Quick Barcode Scanner Trigger -->
@@ -290,29 +291,29 @@
   <div id="thermal-printable-area" style="display: none;"></div>
 
   <!-- Barcode Vision Library (Local Offline-Ready ZXing + 1D Barcode Engine) -->
-  <script src="js/html5-qrcode.min.js?v=7.2"></script>
+  <script src="js/html5-qrcode.min.js?v=7.3"></script>
 
   <!-- Modular Application Engine -->
-  <script src="js/icons.js?v=7.2"></script>
-  <script src="js/i18n.js?v=7.2"></script>
-  <script src="js/storage.js?v=7.2"></script>
-  <script src="js/scanner.js?v=7.2"></script>
-  <script src="js/pos.js?v=7.2"></script>
-  <script src="js/inventory.js?v=7.2"></script>
-  <script src="js/purchases.js?v=7.2"></script>
-  <script src="js/khata.js?v=7.2"></script>
-  <script src="js/analytics.js?v=7.2"></script>
-  <script src="js/staff.js?v=7.2"></script>
-  <script src="js/ai.js?v=7.2"></script>
-  <script src="js/app.js?v=7.2"></script>
+  <script src="js/icons.js?v=7.3"></script>
+  <script src="js/i18n.js?v=7.3"></script>
+  <script src="js/storage.js?v=7.3"></script>
+  <script src="js/scanner.js?v=7.3"></script>
+  <script src="js/pos.js?v=7.3"></script>
+  <script src="js/inventory.js?v=7.3"></script>
+  <script src="js/purchases.js?v=7.3"></script>
+  <script src="js/khata.js?v=7.3"></script>
+  <script src="js/analytics.js?v=7.3"></script>
+  <script src="js/staff.js?v=7.3"></script>
+  <script src="js/ai.js?v=7.3"></script>
+  <script src="js/app.js?v=7.3"></script>
 
   <!-- Service Worker Registration for PWA Offline Support & Instant Cache Busting -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=7.2')
+        navigator.serviceWorker.register('./sw.js?v=7.3')
           .then(reg => {
-            console.log('[PWA] Service Worker v7.2 active ✓ Scope:', reg.scope);
+            console.log('[PWA] Service Worker v7.3 active ✓ Scope:', reg.scope);
             reg.update();
           })
           .catch(err => console.log('[PWA] Service worker fallback:', err));

@@ -108,7 +108,7 @@ class AnalyticsEngine {
       <div class="card" style="padding: 12px 18px; margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Reporting Period:</div>
-          <div style="display: flex; gap: 6px;">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
             <button class="cat-chip ${this.timeRange === 'today' ? 'active' : ''}" onclick="Analytics.setTimeRange('today')">Today</button>
             <button class="cat-chip ${this.timeRange === '7days' ? 'active' : ''}" onclick="Analytics.setTimeRange('7days')">Last 7 Days</button>
             <button class="cat-chip ${this.timeRange === 'month' ? 'active' : ''}" onclick="Analytics.setTimeRange('month')">Last 30 Days</button>
@@ -300,7 +300,7 @@ class AnalyticsEngine {
         <div class="card-header">
           <div class="card-title">${Icons.wallet(16)} Store Inventory Asset Valuation</div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); gap: 14px;">
           <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
             <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Inventory Cost</div>
             <div style="font-size: 20px; font-weight: 700; margin-top: 4px;" class="tnum">₹${totalInventoryCost.toLocaleString('en-IN')}</div>

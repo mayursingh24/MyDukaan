@@ -104,8 +104,8 @@ class PurchaseEngine {
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header" style="flex-wrap: wrap; gap: 8px;">
             <div class="card-title">${Icons.receipt(16)} Wholesale Inward Bills</div>
-            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-              <input type="text" class="form-input" style="padding: 4px 10px; font-size: 12px; width: 150px;" placeholder="Search bills..." value="${this.searchQuery}" oninput="Purchases.searchQuery = this.value; Purchases.render(document.getElementById('main-view-container'));" />
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 100%;">
+              <input type="text" class="form-input" style="padding: 4px 10px; font-size: 12px; flex: 1 1 130px; min-width: 0; width: 100%; max-width: 200px;" placeholder="Search bills..." value="${this.searchQuery}" oninput="Purchases.searchQuery = this.value; Purchases.render(document.getElementById('main-view-container'));" />
               <button class="btn btn-secondary btn-sm" onclick="Purchases.exportPurchasesCSV()">
                 ${Icons.download(13)} CSV
               </button>
@@ -173,9 +173,9 @@ class PurchaseEngine {
           <div style="display: flex; flex-direction: column; gap: 10px;">
             ${suppliers.map(sup => `
               <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                  <div>
-                    <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">${sup.name}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary); word-break: break-word;">${sup.name}</div>
                     <div style="font-size: 11.5px; color: var(--text-muted);">📞 ${sup.phone} • 📍 ${sup.city || 'Local'}</div>
                   </div>
                   <span class="badge ${(sup.balanceDue || 0) > 0 ? 'badge-danger' : 'badge-success'}">
@@ -220,7 +220,7 @@ class PurchaseEngine {
             <div class="modal-title">${Icons.plus(16)} Record Inward Purchase Bill</div>
             <button class="topbar-icon-btn" onclick="Purchases.closeModals()">✕</button>
           </div>
-          <form onsubmit="event.preventDefault(); Purchases.saveInwardBill();" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+          <form class="modal-body" onsubmit="event.preventDefault(); Purchases.saveInwardBill();" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="form-row-2">
               <div class="form-group">
                 <label class="form-label">Select Supplier *</label>
@@ -254,7 +254,7 @@ class PurchaseEngine {
               <div style="font-weight: 700; font-size: 12.5px; color: var(--text-primary); margin-bottom: 8px;">
                 📦 Add Received Items to Delivery:
               </div>
-              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: flex-end;">
+              <div class="inward-add-grid">
                 <div>
                   <label class="form-label" style="font-size: 10.5px;">Product Catalog</label>
                   <select id="inward-item-prod" class="form-select" style="font-size: 12px;" onchange="Purchases.onProductSelectChange(this.value)">
@@ -270,7 +270,7 @@ class PurchaseEngine {
                   <label class="form-label" style="font-size: 10.5px;">Quantity (Units)</label>
                   <input type="number" id="inward-item-qty" class="form-input" style="font-size: 12px;" placeholder="Qty" min="1" value="10" />
                 </div>
-                <button type="button" class="btn btn-primary btn-sm" onclick="Purchases.addItemToInwardCart()">
+                <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="Purchases.addItemToInwardCart()">
                   + Add
                 </button>
               </div>
@@ -281,11 +281,11 @@ class PurchaseEngine {
               </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
               <div style="font-size: 14px; font-weight: 800; color: var(--text-primary);">
                 Total Bill Amount: <span id="inward-grand-total" style="color: var(--primary);">₹0</span>
               </div>
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="Purchases.closeModals()">Cancel</button>
                 <button type="submit" class="btn btn-primary btn-sm">
                   ${Icons.check(14)} Confirm & Add to Inventory Stock
@@ -358,8 +358,8 @@ class PurchaseEngine {
     if (totalEl) totalEl.textContent = `₹${grand.toLocaleString('en-IN')}`;
 
     container.innerHTML = this.inwardCart.map((item, idx) => `
-      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); padding: 6px 10px; border-radius: var(--radius-sm); font-size: 12px;">
-        <span style="font-weight: 600;">${item.name}</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; background: var(--bg-surface); padding: 6px 10px; border-radius: var(--radius-sm); font-size: 12px;">
+        <span style="font-weight: 600; flex: 1; min-width: 120px;">${item.name}</span>
         <div style="display: flex; align-items: center; gap: 10px;">
           <span>${item.qty} units × ₹${item.cost} = <strong>₹${item.total.toLocaleString('en-IN')}</strong></span>
           <button type="button" onclick="Purchases.removeInwardCartItem(${idx})" style="color: var(--danger); font-size: 14px; cursor: pointer;">✕</button>
@@ -439,7 +439,7 @@ class PurchaseEngine {
             <div class="modal-title">${Icons.users(16)} Add Wholesale Supplier</div>
             <button class="topbar-icon-btn" onclick="Purchases.closeModals()">✕</button>
           </div>
-          <form onsubmit="event.preventDefault(); Purchases.saveSupplier();" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <form class="modal-body" onsubmit="event.preventDefault(); Purchases.saveSupplier();" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
             <div class="form-group">
               <label class="form-label">Vendor / Company Name *</label>
               <input type="text" id="sup-name" class="form-input" placeholder="e.g. Metro Cash & Carry" required />
@@ -560,7 +560,7 @@ class PurchaseEngine {
             <div class="modal-title">${Icons.receipt(16)} Inward Delivery: ${p.billNo || p.id}</div>
             <button class="topbar-icon-btn" onclick="Purchases.closeModals()">✕</button>
           </div>
-          <div style="padding: 16px;">
+          <div class="modal-body" style="padding: 16px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12.5px;">
               <div>
                 <strong>Supplier:</strong> ${p.supplierName}<br>
@@ -572,26 +572,28 @@ class PurchaseEngine {
               </div>
             </div>
 
-            <table class="data-table" style="font-size: 12px; margin-bottom: 14px;">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Wholesale Cost</th>
-                  <th>Quantity</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(p.items || []).map(i => `
+            <div class="table-container" style="margin-bottom: 14px;">
+              <table class="data-table" style="font-size: 12px;">
+                <thead>
                   <tr>
-                    <td>${i.name}</td>
-                    <td>₹${i.cost}</td>
-                    <td>${i.qty}</td>
-                    <td style="font-weight: 700;">₹${i.total}</td>
+                    <th>Product</th>
+                    <th>Wholesale Cost</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${(p.items || []).map(i => `
+                    <tr>
+                      <td>${i.name}</td>
+                      <td>₹${i.cost}</td>
+                      <td>${i.qty}</td>
+                      <td style="font-weight: 700;">₹${i.total}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
 
             <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
               <span>Total Invoice Amount:</span>

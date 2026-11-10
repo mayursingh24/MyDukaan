@@ -1,7 +1,10 @@
 /**
- * MyDukkan24 — Real Online AI Business Advisor (Google Gemini Engine)
- * Pure Serverless Architecture: Client -> Netlify Functions (/api/gemini) -> Google Gemini API.
- * Secure: Zero client-side API key exposure. Read from Netlify Environment Variables.
+ * MyDukkan24 — Real Online AI Business Advisor & Strict Offline Failover Engine
+ * Strict Online/Offline Architecture:
+ * - ONLINE (navigator.onLine === true): Exclusively calls live Gemini Interactions API via /api/gemini.
+ *   Never silently mixes or falls back to local mock replies when online.
+ * - OFFLINE (navigator.onLine === false): Automatically switches to Inbuilt Local Retail Rule-Engine.
+ * Supports modern AI Studio keys (both `AQ.` and `AIza`) configured in Netlify or Set Key.
  */
 
 class DukaanAIEngine {
@@ -9,6 +12,21 @@ class DukaanAIEngine {
     this.chatHistory = [];
     this.lastFailedPrompt = null;
     this.isRequestInProgress = false;
+  }
+
+  getEndpoint() {
+    if (
+      window.location.protocol === 'file:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    ) {
+      return 'https://mydukaan24.netlify.app/api/gemini';
+    }
+    return '/api/gemini';
+  }
+
+  isSystemOnline() {
+    return typeof navigator === 'undefined' ? true : navigator.onLine !== false;
   }
 
   // Generate structured real-time business context snapshot
@@ -57,29 +75,36 @@ Customer Udhaar Ledger:
 
   // Open the Premium AI Copilot Interface
   openChatModal() {
+    const isOnline = this.isSystemOnline();
+    const badgeClass = isOnline ? 'badge-success' : 'badge-warning';
+    const badgeText = isOnline ? '🟢 Online • Live Gemini API' : '🟠 Offline • Local Advisor';
+    const subText = isOnline
+      ? 'Live Gemini Interactions API • Real-time inventory, sales & Udhaar'
+      : 'Offline Mode active • Inbuilt Local Store Advisor';
+
     const modalHtml = `
-      <div class="modal-backdrop" id="mydukaan-ai-modal" onclick="if(event.target === this) DukaanAI.closeModal()">
+      <div class="modal-backdrop ai-modal-backdrop" id="mydukaan-ai-modal" onclick="if(event.target === this) DukaanAI.closeModal()">
         <div class="modal-card ai-chat-modal-window">
           <!-- AI Header -->
           <div class="modal-header ai-modal-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div class="ai-avatar-badge" style="color: #60A5FA; display: flex;">
-                ${Icons.sparkles(18)}
+            <div class="ai-header-brand">
+              <div class="ai-avatar-badge" style="color: #fff; display: flex;">
+                ${Icons.sparkles(17)}
               </div>
-              <div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Dukkan Copilot AI</span>
-                  <span class="badge badge-primary">Netlify Serverless</span>
+              <div style="min-width: 0; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <span style="font-weight: 700; font-size: 14.5px; color: var(--text-primary); white-space: nowrap;">Dukkan Copilot</span>
+                  <span id="ai-mode-badge" class="badge ${badgeClass}" style="font-size: 10px;">${badgeText}</span>
                 </div>
-                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                  Grounded in real-time store inventory, sales & udhaar ledger
+                <div id="ai-mode-subtext" style="font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.3;">
+                  ${subText}
                 </div>
               </div>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()" title="Configure Gemini API Key">🔑 Set Key</button>
+            <div class="ai-header-actions">
+              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()" title="Configure Gemini API Key">🔑 Key</button>
               <button class="btn btn-secondary btn-sm" onclick="DukaanAI.clearHistory()" title="Clear Chat History">Clear</button>
-              <button class="topbar-icon-btn" onclick="DukaanAI.closeModal()">✕</button>
+              <button class="topbar-icon-btn" onclick="DukaanAI.closeModal()" aria-label="Close">✕</button>
             </div>
           </div>
 
@@ -89,8 +114,11 @@ Customer Udhaar Ledger:
             <div class="ai-msg-row ai">
               <div class="ai-msg-avatar">${Icons.sparkles(16)}</div>
               <div class="ai-msg-bubble">
-                <div style="font-weight: 600; margin-bottom: 4px; color: var(--primary);">Hello! Welcome to Dukkan Copilot.</div>
-                <p>I have live visibility into your store's stock levels, pending customer credit, and recent sales.</p>
+                <div style="font-weight: 700; margin-bottom: 4px; color: var(--primary);">Namaste! Welcome to Dukkan Copilot.</div>
+                <p id="ai-welcome-desc">${isOnline
+                  ? 'System is <strong>Online</strong> — all queries are answered strictly via the live <strong>Gemini API</strong> with your real-time store context.'
+                  : 'System is <strong>Offline</strong> — running on the inbuilt <strong>Local Store Advisor</strong> until internet returns.'
+                }</p>
                 <p style="margin-top: 6px; font-size: 12px; color: var(--text-muted);">Select a quick question below or ask me anything:</p>
               </div>
             </div>
@@ -139,6 +167,28 @@ Customer Udhaar Ledger:
     }, 120);
   }
 
+  updateConnectionBadge() {
+    const isOnline = this.isSystemOnline();
+    const badge = document.getElementById('ai-mode-badge');
+    const sub = document.getElementById('ai-mode-subtext');
+    const welcome = document.getElementById('ai-welcome-desc');
+
+    if (badge) {
+      badge.className = `badge ${isOnline ? 'badge-success' : 'badge-warning'}`;
+      badge.textContent = isOnline ? '🟢 Online • Live Gemini API' : '🟠 Offline • Local Advisor';
+    }
+    if (sub) {
+      sub.textContent = isOnline
+        ? 'Live Gemini Interactions API • Real-time inventory, sales & Udhaar'
+        : 'Offline Mode active • Inbuilt Local Store Advisor';
+    }
+    if (welcome) {
+      welcome.innerHTML = isOnline
+        ? 'System is <strong>Online</strong> — all queries are answered strictly via the live <strong>Gemini API</strong> with your real-time store context.'
+        : 'System is <strong>Offline</strong> — running on the inbuilt <strong>Local Store Advisor</strong> until internet returns.';
+    }
+  }
+
   handleKeydown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -154,24 +204,31 @@ Customer Udhaar Ledger:
     }
   }
 
-  // Quick prompt to save user's custom Gemini API key locally
+  // Quick prompt to save user's custom Gemini API key locally (supports both AQ. and AIza keys)
   promptSetApiKey() {
     const existing = localStorage.getItem('mydukaan_gemini_api_key') || '';
-    const newKey = prompt("Paste your Google Gemini API Key from aistudio.google.com:", existing);
+    const newKey = prompt(
+      'Paste your active Google Gemini API Key from aistudio.google.com/api-keys (supports AQ. and AIza keys; leave blank to use Netlify environment key):',
+      existing
+    );
     if (newKey !== null) {
       const trimmed = newKey.trim();
       if (trimmed) {
         localStorage.setItem('mydukaan_gemini_api_key', trimmed);
-        App.toast('success', 'Gemini API Key Saved', 'Now using your custom key for Copilot AI.');
-        this.appendMessage('ai', `🔑 **Custom Gemini Key configured successfully!**\nYour queries will now pass this key directly to the serverless engine.`);
+        App.toast('success', 'Gemini API Key Saved', 'Custom key saved for live Copilot & Barcode lookups.');
+        this.appendMessage(
+          'ai',
+          '🔑 **Custom Gemini API Key saved!**\nAll online queries will now authenticate using your configured key.',
+          { mode: 'system' }
+        );
       } else {
         localStorage.removeItem('mydukaan_gemini_api_key');
-        App.toast('info', 'API Key Cleared', 'Reset to Netlify environment default.');
+        App.toast('info', 'API Key Cleared', 'Reverted to Netlify server environment key.');
       }
     }
   }
 
-  // Submit Prompt to Netlify Serverless Backend (/api/gemini)
+  // Submit Prompt: STRICTLY Online API when online; Offline Rule-Engine ONLY when offline
   async submitPrompt(customPrompt = null) {
     if (this.isRequestInProgress) return;
 
@@ -185,8 +242,19 @@ Customer Udhaar Ledger:
     }
 
     this.appendMessage('user', promptText);
+
+    // STRICT OFFLINE BRANCH: Only run local engine when system is actually offline
+    if (!this.isSystemOnline()) {
+      const offlineReply = this.generateOfflineRetailAdvice(promptText);
+      this.appendMessage('ai', offlineReply, { mode: 'offline' });
+      this.lastFailedPrompt = null;
+      return;
+    }
+
+    // STRICT ONLINE BRANCH: Call live /api/gemini endpoint exclusively
     this.isRequestInProgress = true;
     this.updateSendButtonState(true);
+    this.updateConnectionBadge();
 
     const thread = document.getElementById('ai-chat-thread');
     const loaderId = `loader-${Date.now()}`;
@@ -194,26 +262,26 @@ Customer Udhaar Ledger:
       <div id="${loaderId}" class="ai-msg-row ai">
         <div class="ai-msg-avatar" style="animation: pulse 1.5s infinite;">${Icons.sparkles(16)}</div>
         <div class="ai-msg-bubble" style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 12.5px; color: var(--text-muted);">Consulting AI Engine via Netlify serverless...</span>
+          <span style="font-size: 12.5px; color: var(--text-muted);">Contacting Live Gemini API...</span>
         </div>
       </div>
     `;
-    thread.insertAdjacentHTML('beforeend', loaderHtml);
-    thread.scrollTop = thread.scrollHeight;
+    if (thread) {
+      thread.insertAdjacentHTML('beforeend', loaderHtml);
+      thread.scrollTop = thread.scrollHeight;
+    }
 
     try {
       const storeContext = this.getLiveBusinessContext();
-
-      // Resolve endpoint: /api/gemini with Netlify fallback if on local/file protocol
-      let endpoint = '/api/gemini';
-      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        endpoint = 'https://mydukaan24.netlify.app/api/gemini';
-      }
-
+      const endpoint = this.getEndpoint();
       const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 13000);
 
       let response = null;
       let result = null;
+      let netError = null;
 
       try {
         response = await fetch(endpoint, {
@@ -221,54 +289,73 @@ Customer Udhaar Ledger:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: promptText,
-            storeContext: storeContext,
+            storeContext,
             apiKey: customApiKey
-          })
+          }),
+          signal: controller.signal
         });
         result = await response.json().catch(() => ({}));
-      } catch (netErr) {
-        // Network or fetch failed (e.g. offline or CORS)
+      } catch (err) {
+        netError = err;
         response = null;
+      } finally {
+        clearTimeout(timeoutId);
       }
 
       const loader = document.getElementById(loaderId);
       if (loader) loader.remove();
 
       if (response && response.ok && result && result.text) {
-        this.appendMessage('ai', result.text);
+        this.appendMessage('ai', result.text, {
+          mode: 'online',
+          model: result.model || 'gemini-3.8-flash'
+        });
         this.lastFailedPrompt = null;
-      } else {
-        // Fallback to Inbuilt Offline Retail Rule-Engine with full context
-        const offlineReply = this.generateOfflineRetailAdvice(promptText, result, response);
-        this.appendMessage('ai', offlineReply);
-        
-        // Show subtle status notice if auth key needs attention
-        if (response && response.status === 401) {
-          this.renderNoticeBanner(`Notice: Gemini API reported 401 UNAUTHENTICATED. You can click "🔑 Set Key" in the header to enter a standard key from aistudio.google.com.`);
-        }
-        this.lastFailedPrompt = null;
+        return;
       }
-    } catch (error) {
-      const loader = document.getElementById(loaderId);
-      if (loader) loader.remove();
-      const offlineReply = this.generateOfflineRetailAdvice(promptText);
-      this.appendMessage('ai', offlineReply);
+
+      // If connectivity dropped mid-request and browser is now offline -> use local engine
+      if (!this.isSystemOnline()) {
+        const offlineReply = this.generateOfflineRetailAdvice(promptText);
+        this.appendMessage('ai', offlineReply, { mode: 'offline' });
+        this.lastFailedPrompt = null;
+        return;
+      }
+
+      // System is ONLINE but API returned an error or failed -> surface exact error honestly (DO NOT mix fake/local response!)
+      this.lastFailedPrompt = promptText;
+      const errStatus = response ? response.status : (netError?.name === 'AbortError' ? 504 : 0);
+      const errMsg =
+        (result && result.error) ||
+        (netError?.name === 'AbortError'
+          ? 'Gemini API request timed out after 13s.'
+          : netError?.message) ||
+        `Gemini API returned HTTP ${errStatus || 'Error'}.`;
+      const hintMsg = (result && result.hint) || '';
+      const isAuthFail = Boolean((result && result.authError) || errStatus === 401 || errStatus === 403);
+
+      this.renderErrorMessage(errMsg, errStatus, hintMsg, isAuthFail);
     } finally {
       this.isRequestInProgress = false;
       this.updateSendButtonState(false);
     }
   }
 
-  // Inbuilt 100% Offline Retail Rule-Engine (Zero-fail guarantee!)
-  generateOfflineRetailAdvice(prompt, result = null, response = null) {
+  runOfflineFallbackForLastPrompt() {
+    if (!this.lastFailedPrompt) return;
+    const offlineReply = this.generateOfflineRetailAdvice(this.lastFailedPrompt);
+    this.appendMessage('ai', offlineReply, { mode: 'offline' });
+  }
+
+  // Inbuilt Offline Retail Rule-Engine (Activated strictly when Offline or explicitly requested)
+  generateOfflineRetailAdvice(prompt) {
     const db = DB.getData();
     const products = db.products || [];
     const customers = db.customers || [];
     const invoices = db.invoices || [];
     const expenses = db.expenses || [];
-    const pLow = prompt.toLowerCase().trim();
+    const pLow = (prompt || '').toLowerCase().trim();
 
-    // 0. API Connection / Health Status Queries
     if (
       pLow.includes('connect') ||
       pLow.includes('api') ||
@@ -279,132 +366,106 @@ Customer Udhaar Ledger:
       pLow.includes('chal rha') ||
       pLow.includes('active')
     ) {
-      const isOnlineEndpoint = response ? 'Online (Netlify Serverless Responded)' : 'Reachable';
-      const keyStatus = (response && response.status === 401)
-        ? '⚠️ 401 UNAUTHENTICATED (Google API reported invalid key)'
-        : 'Running on Local Intelligence Engine';
-
-      return `⚡ **MyDukaan24 Copilot Status Report:**\n\n` +
-        `• **Serverless Gateway:** 🟢 ${isOnlineEndpoint}\n` +
-        `• **Store Live Data:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s,i)=>s+(i.paid||0),0).toLocaleString('en-IN')} Sales)\n` +
-        `• **AI Models:** Google Gemini 3.8 Flash & 3.5 Flash-Lite\n` +
-        `• **Cloud Key Status:** ${keyStatus}\n` +
-        `• **Active Engine:** 🛡️ **Grounded Retail Intelligence** (Synchronized with live inventory, Udhaar, and sales)\n\n` +
-        `💡 **Note on Gemini API Keys:**\n` +
-        `• Standard Google Gemini keys from **[aistudio.google.com](https://aistudio.google.com/)** start with \`AIzaSy...\`.\n` +
-        `• To test or use your personal key, click the **'🔑 Set Key'** button in this chat header to paste it directly!`;
+      const onlineNow = this.isSystemOnline();
+      return `🛡️ **Offline Store Advisor Status:**\n\n` +
+        `• **Network Status:** ${onlineNow ? '🟢 Online (API Mode Preferred)' : '🟠 Offline Mode'}\n` +
+        `• **Store Local DB:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s, i) => s + (i.paid || 0), 0).toLocaleString('en-IN')} Sales)\n` +
+        `• **Live Gemini Models:** \`gemini-3.8-flash\` / \`gemini-3.6-flash\` (Interactions API)\n\n` +
+        `💡 **API Key Note:** Modern AI Studio keys (\`AQ....\` and \`AIza...\`) are both supported via Netlify Environment Variables or **🔑 Key**.`;
     }
 
-    // 1. Friendly Greetings & Conversational Queries
     if (
       pLow === 'hii' || pLow === 'hi' || pLow === 'hello' || pLow === 'hey' || pLow === 'yo' ||
       pLow.includes('namaste') || pLow.includes('kaise ho') || pLow.includes('kya hal') ||
-      pLow.includes('bhai') || pLow.includes('who are you') || pLow.includes('kaun ho')
+      pLow.includes('who are you') || pLow.includes('kaun ho')
     ) {
-      return `🙏 **Namaste! Main aapka MyDukaan24 AI Retail Advisor hoon.**\n\n` +
-        `Aapke store ka poora live data mere pass available hai:\n` +
+      return `🙏 **Namaste! (Offline Store Advisor Mode)**\n\n` +
+        `Aapke device ka local store data active hai:\n` +
         `• Catalog me **${products.length} items** hain.\n` +
         `• **${invoices.length} billing transactions** aur **${customers.length} customer accounts** tracked hain.\n\n` +
-        `Aap mujhse pooch sakte hain:\n` +
-        `• *"Kaunsa stock khatam ho raha hai?"*\n` +
-        `• *"Kiska udhaar sabse zyada baaki hai?"*\n` +
-        `• *"Parle-G ka kitna stock aur price hai?"*\n` +
-        `• *"Aaj ki total sale aur munafa kitna hai?"*\n\n` +
-        `Bataiye Mayur ji, aaj aapke store ke liye main kya check karoon?`;
+        `Aap pooch sakte hain:\n` +
+        `• *"Which products are low in stock?"*\n` +
+        `• *"Who owes me the most Udhaar?"*\n` +
+        `• *"Store health summary"*`;
     }
 
-    // 2. Specific Product Lookup Queries (e.g. "Parle G", "Maggi", "Oil", "Atta")
-    const matchedProduct = products.find(p => pLow.includes(p.name.toLowerCase()) || (p.barcode && pLow.includes(p.barcode)) || pLow.includes(p.cat.toLowerCase()));
-    if (matchedProduct && (pLow.includes('stock') || pLow.includes('price') || pLow.includes('rate') || pLow.includes('kitna') || pLow.includes('hai'))) {
+    const matchedProduct = products.find(
+      p => pLow.includes(p.name.toLowerCase()) || (p.barcode && pLow.includes(p.barcode))
+    );
+    if (matchedProduct && (pLow.includes('stock') || pLow.includes('price') || pLow.includes('rate') || pLow.includes('kitna'))) {
       const profit = Math.max(0, matchedProduct.price - matchedProduct.cost);
       const margin = matchedProduct.price > 0 ? Math.round((profit / matchedProduct.price) * 100) : 0;
       const isLow = matchedProduct.stock <= matchedProduct.minStock;
 
-      return `📦 **Product Live Status — ${matchedProduct.name}:**\n\n` +
-        `• **Current Stock:** **${matchedProduct.stock} ${matchedProduct.unit}** ${isLow ? '⚠️ *(Low Stock Alert!)*' : '✅ *(Adequate)*'}\n` +
+      return `📦 **Local Stock Lookup — ${matchedProduct.name}:**\n\n` +
+        `• **Current Stock:** **${matchedProduct.stock} ${matchedProduct.unit}** ${isLow ? '⚠️ *(Low Stock)*' : '✅'}\n` +
         `• **Selling Price:** **₹${matchedProduct.price}** (MRP: ₹${matchedProduct.mrp})\n` +
         `• **Wholesale Cost:** ₹${matchedProduct.cost}\n` +
-        `• **Margin per Unit:** **₹${profit} (${margin}%)**\n` +
-        `• **Barcode / EAN:** \`${matchedProduct.barcode || 'N/A'}\`\n\n` +
-        `💡 *To add to bill, go to Quick Billing POS or search "${matchedProduct.name}".*`;
+        `• **Margin/Unit:** **₹${profit} (${margin}%)**\n` +
+        `• **Barcode:** \`${matchedProduct.barcode || 'N/A'}\``;
     }
 
-    // 3. Stock / Reorder Query
     if (pLow.includes('stock') || pLow.includes('reorder') || pLow.includes('khatam') || pLow.includes('maal')) {
       const low = products.filter(p => p.stock <= p.minStock);
       if (!low.length) {
-        return `✅ **Stock Health Excellent:** All **${products.length} catalog products** currently meet safe minimum stock levels. No urgent wholesale reorders required today.`;
+        return `✅ **Stock Health Good (Offline Check):** All **${products.length} catalog products** meet minimum safe stock levels.`;
       }
-      return `⚠️ **Urgent Stock Attention Required (${low.length} Items):**\n\n` +
-        low.map(p => `• **${p.name}**: Current Stock **${p.stock} ${p.unit}** (Min Alert: ${p.minStock}) — Est. Wholesale Cost: ₹${p.cost || p.price}`).join('\n') +
-        `\n\n💡 *Actionable Tip: Call your wholesale distributors to restock these before evening peak customer hours.*`;
+      return `⚠️ **Low Stock Reorder List (${low.length} Items):**\n\n` +
+        low.map(p => `• **${p.name}**: **${p.stock} ${p.unit}** (Min: ${p.minStock}) — Cost: ₹${p.cost || p.price}`).join('\n');
     }
 
-    // 4. Udhaar / Debtors / Customers
     if (pLow.includes('udhaar') || pLow.includes('debt') || pLow.includes('due') || pLow.includes('owe') || pLow.includes('baki')) {
       const debtors = customers.filter(c => (c.balanceDue || 0) > 0).sort((a, b) => b.balanceDue - a.balanceDue);
       const totalDue = debtors.reduce((s, c) => s + c.balanceDue, 0);
       if (!debtors.length) {
-        return `🎉 **Clean Ledger:** You have **₹0 in pending customer Udhaar**! All customers have fully cleared their accounts.`;
+        return `🎉 **Clean Khata (Offline Check):** ₹0 pending customer Udhaar across all accounts.`;
       }
-      return `📒 **Customer Udhaar Ledger Summary (Total: ₹${totalDue.toLocaleString('en-IN')}):**\n\n` +
-        debtors.map((c, i) => `${i + 1}. **${c.name}**: **₹${c.balanceDue.toLocaleString('en-IN')}** pending (📞 ${c.phone || 'No phone'})`).join('\n') +
-        `\n\n💡 *Actionable Tip: Go to Customers & Khata to send 1-click WhatsApp payment reminders with dynamic UPI links.*`;
+      return `📒 **Customer Udhaar Summary (Total: ₹${totalDue.toLocaleString('en-IN')}):**\n\n` +
+        debtors.map((c, i) => `${i + 1}. **${c.name}**: **₹${c.balanceDue.toLocaleString('en-IN')}** (📞 ${c.phone || 'No phone'})`).join('\n');
     }
 
-    // 5. Store Health / Summary / Sales / Revenue
     if (pLow.includes('summary') || pLow.includes('health') || pLow.includes('revenue') || pLow.includes('sale') || pLow.includes('aaj') || pLow.includes('earning')) {
       const today = new Date().toISOString().split('T')[0];
       const todayInvoices = invoices.filter(i => (i.date || '').startsWith(today));
       const todayRev = todayInvoices.reduce((s, i) => s + (i.paid || 0), 0);
       const totalRev = invoices.reduce((s, i) => s + (i.paid || 0), 0);
       const totalUdhaar = customers.reduce((s, c) => s + (c.balanceDue || 0), 0);
-      const stockVal = products.reduce((s, p) => s + (p.stock * p.price), 0);
+      const stockVal = Math.round(products.reduce((s, p) => s + ((Number(p.stock) || 0) * (Number(p.price) || 0)), 0));
       const totalExp = expenses.reduce((s, e) => s + (e.amount || 0), 0);
 
-      return `📊 **Executive Store Performance Snapshot:**\n\n` +
+      return `📊 **Local Store Snapshot (Offline Advisor):**\n\n` +
         `• **Today's Revenue:** ₹${todayRev.toLocaleString('en-IN')} (${todayInvoices.length} Bills)\n` +
-        `• **Total Gross Sales:** ₹${totalRev.toLocaleString('en-IN')} (${invoices.length} Invoices)\n` +
-        `• **Current Inventory Valuation:** ₹${stockVal.toLocaleString('en-IN')} across ${products.length} SKUs\n` +
-        `• **Pending Customer Udhaar:** ₹${totalUdhaar.toLocaleString('en-IN')}\n` +
-        `• **Total Operating Expenses:** ₹${totalExp.toLocaleString('en-IN')}\n\n` +
-        `📈 **Financial Health Verdict:** Store operations are stable. Focus on recovering pending customer credit to accelerate working capital turnover.`;
+        `• **Total Sales:** ₹${totalRev.toLocaleString('en-IN')} (${invoices.length} Invoices)\n` +
+        `• **Inventory Value:** ₹${stockVal.toLocaleString('en-IN')} (${products.length} SKUs)\n` +
+        `• **Pending Udhaar:** ₹${totalUdhaar.toLocaleString('en-IN')}\n` +
+        `• **Operating Expenses:** ₹${totalExp.toLocaleString('en-IN')}`;
     }
 
-    // 6. WhatsApp Reminder Draft
     if (pLow.includes('whatsapp') || pLow.includes('reminder') || pLow.includes('draft') || pLow.includes('message')) {
-      const topDebtor = customers.find(c => (c.balanceDue || 0) > 0) || { name: "Ramesh Sharma", balanceDue: 1850 };
+      const topDebtor = customers.find(c => (c.balanceDue || 0) > 0) || { name: 'Customer', balanceDue: 500 };
       const shopName = db.shop ? (db.shop.name || 'MyDukkan24 Mart') : 'MyDukkan24 Mart';
       const upi = db.shop ? (db.shop.upiId || '6306437348@upi') : '6306437348@upi';
 
-      return `📱 **Ready-to-Send WhatsApp Payment Reminder:**\n\n` +
+      return `📱 **WhatsApp Reminder Draft (Offline):**\n\n` +
         `\`\`\`\n` +
         `Namaste ${topDebtor.name} ji,\n` +
         `Aapka ${shopName} par ₹${topDebtor.balanceDue.toLocaleString('en-IN')} ka hisab pending hai.\n` +
-        `Kripya suvidha anusar is UPI ID par bhugtan karein:\n` +
-        `UPI ID: ${upi}\n` +
-        `Dhanyawad! Visit again.\n` +
-        `\`\`\`\n\n` +
-        `👉 *Click Customer & Khata to send this directly via WhatsApp with 1-click.*`;
+        `Kripya is UPI ID par bhugtan karein: ${upi}\n` +
+        `Dhanyawad!\n` +
+        `\`\`\``;
     }
 
-    // 7. Margin / Profit Growth
     if (pLow.includes('margin') || pLow.includes('profit') || pLow.includes('grow') || pLow.includes('increase') || pLow.includes('munafa')) {
-      return `💡 **3 Practical Ways to Boost Kirana Net Margins This Month:**\n\n` +
-        `1. **Impulse Counter Placement:** Place high-margin items (chocolates, mints, spices) right near the billing desk. FMCG packaged goods here yield 22-28% margins.\n` +
-        `2. **Fast FMCG Bundling:** Offer combo savings on high-demand staples (e.g. Atta 5kg + Sunflower Oil 1L) to increase average basket size per walking customer.\n` +
-        `3. **Strict Credit Limits:** Cap maximum customer Udhaar to ₹3,000 per family. Fast repayments increase cash flow and let you buy wholesale stock with bulk cash discounts.`;
+      return `💡 **3 Kirana Margin Boosters (Offline Advisor):**\n\n` +
+        `1. **Counter Placement:** Keep high-margin FMCG items (spices, chocolates, snacks) right at the counter.\n` +
+        `2. **Staple Combos:** Bundle Atta + Cooking Oil to raise average bill value.\n` +
+        `3. **Udhaar Turnover:** Cap unpaid credit per customer and use 1-click WhatsApp UPI reminders weekly.`;
     }
 
-    // Default intelligent retail assistance
-    return `🏪 **Retail Intelligence Response:**\n\n` +
-      `Your store currently tracks **${products.length} SKUs**, **${invoices.length} billing transactions**, and **${customers.length} customer accounts**.\n\n` +
-      `You can ask me:\n` +
-      `• *"Which products are low in stock?"*\n` +
-      `• *"Who owes me the most in pending Udhaar?"*\n` +
-      `• *"Give me an executive business health summary"* \n` +
-      `• *"Draft a polite WhatsApp payment reminder"*\n` +
-      `• *"3 practical ways to increase net profit margin"*`;
+    return `🟠 **Offline Mode • Local Store Summary:**\n\n` +
+      `Your local database tracks **${products.length} SKUs**, **${invoices.length} invoices**, and **${customers.length} customers**.\n` +
+      `Internet connection will automatically re-enable full conversational **Live Gemini API** answers.\n\n` +
+      `Try asking: *"Low stock items"*, *"Top Udhaar debtors"*, or *"Store summary"*.`;
   }
 
   renderNoticeBanner(noticeText) {
@@ -425,23 +486,31 @@ Customer Udhaar Ledger:
     thread.scrollTop = thread.scrollHeight;
   }
 
-  appendMessage(role, text) {
-    this.chatHistory.push({ role, text, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+  appendMessage(role, text, meta = {}) {
+    const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    this.chatHistory.push({ role, text, timestamp: ts, meta });
 
     const thread = document.getElementById('ai-chat-thread');
     if (!thread) return;
 
     const isAi = role === 'ai';
-    const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const msgId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const formattedText = isAi ? this.formatMarkdown(text) : this.escapeHtml(text);
+
+    let sourceTag = '';
+    if (isAi && meta.mode === 'online') {
+      sourceTag = `<span style="color: var(--success); font-weight: 700; margin-right: 8px;">🟢 Live • ${this.escapeHtml(meta.model || 'Gemini API')}</span>`;
+    } else if (isAi && meta.mode === 'offline') {
+      sourceTag = `<span style="color: var(--warning); font-weight: 700; margin-right: 8px;">🟠 Offline • Local Engine</span>`;
+    }
 
     const msgHtml = `
       <div class="ai-msg-row ${role}" id="${msgId}">
         <div class="ai-msg-avatar">${isAi ? Icons.sparkles(16) : Icons.staff(16)}</div>
         <div class="ai-msg-bubble">
           <div class="ai-msg-text">${formattedText}</div>
-          <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; text-align: right;">
-            ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 4px;">
+            ${sourceTag}<span>${ts}</span>
           </div>
         </div>
       </div>
@@ -451,11 +520,11 @@ Customer Udhaar Ledger:
     thread.scrollTop = thread.scrollHeight;
   }
 
-  renderErrorMessage(errorText) {
+  renderErrorMessage(errorText, status = 0, hint = '', isAuthFail = false) {
     const thread = document.getElementById('ai-chat-thread');
     if (!thread) return;
 
-    const isKeyIssue = errorText.includes('GEMINI_API_KEY') || errorText.includes('401');
+    const statusBadge = status ? `HTTP ${status}` : 'Connection Error';
 
     const errorHtml = `
       <div class="ai-msg-row ai">
@@ -463,17 +532,33 @@ Customer Udhaar Ledger:
           ${Icons.alert(16)}
         </div>
         <div class="ai-msg-bubble" style="border-color: var(--danger-border);">
-          <div style="font-weight: 700; color: var(--danger); font-size: 13px;">AI Connection Notice</div>
-          <div style="font-size: 12.5px; color: var(--text-primary); margin-top: 4px;">${this.escapeHtml(errorText)}</div>
-          ${isKeyIssue ? `
-            <div style="margin-top: 8px; font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
-              Ensure <code>GEMINI_API_KEY</code> is set in your <strong>Netlify Site Settings → Environment Variables</strong>.
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+            <span style="font-weight: 700; color: var(--danger); font-size: 13px;">Live Gemini API Error</span>
+            <span class="badge badge-danger" style="font-size: 10px;">${this.escapeHtml(statusBadge)}</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--text-primary); margin-top: 6px; word-break: break-word;">${this.escapeHtml(errorText)}</div>
+          ${hint ? `
+            <div style="margin-top: 6px; font-size: 11.5px; color: var(--text-muted); line-height: 1.45;">
+              ${this.escapeHtml(hint)}
             </div>
           ` : ''}
-          <div style="display: flex; gap: 8px; margin-top: 10px;">
+          ${isAuthFail ? `
+            <div style="margin-top: 6px; font-size: 11px; color: var(--warning); line-height: 1.45;">
+              Note: Online mode does not fake replies with local data when API auth fails. Configure an active Gemini key in Netlify or click <strong>🔑 Set Key</strong>.
+            </div>
+          ` : ''}
+          <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
             ${this.lastFailedPrompt ? `
               <button class="btn btn-primary btn-sm" onclick="DukaanAI.retryLastPrompt()">
-                ${Icons.refresh(13)} Retry Request
+                ${Icons.refresh(13)} Retry API
+              </button>
+            ` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()">
+              🔑 Set Key
+            </button>
+            ${this.lastFailedPrompt ? `
+              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.runOfflineFallbackForLastPrompt()">
+                🛡️ Use Offline Advisor Once
               </button>
             ` : ''}
           </div>
@@ -497,15 +582,24 @@ Customer Udhaar Ledger:
 
     this.chatHistory.forEach(msg => {
       const isAi = msg.role === 'ai';
-      const msgId = `msg-hist-${Math.random().toString(36).substr(2, 6)}`;
+      const msgId = `msg-hist-${Math.random().toString(36).slice(2, 8)}`;
       const formattedText = isAi ? this.formatMarkdown(msg.text) : this.escapeHtml(msg.text);
+      const meta = msg.meta || {};
+      let sourceTag = '';
+      if (isAi && meta.mode === 'online') {
+        sourceTag = `<span style="color: var(--success); font-weight: 700; margin-right: 8px;">🟢 Live • ${this.escapeHtml(meta.model || 'Gemini API')}</span>`;
+      } else if (isAi && meta.mode === 'offline') {
+        sourceTag = `<span style="color: var(--warning); font-weight: 700; margin-right: 8px;">🟠 Offline • Local Engine</span>`;
+      }
 
       thread.insertAdjacentHTML('beforeend', `
         <div class="ai-msg-row ${msg.role}" id="${msgId}">
           <div class="ai-msg-avatar">${isAi ? Icons.sparkles(16) : Icons.staff(16)}</div>
           <div class="ai-msg-bubble">
             <div class="ai-msg-text">${formattedText}</div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; text-align: right;">${msg.timestamp || ''}</div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: flex-end; align-items: center; gap: 4px;">
+              ${sourceTag}<span>${msg.timestamp || ''}</span>
+            </div>
           </div>
         </div>
       `);
@@ -517,11 +611,12 @@ Customer Udhaar Ledger:
     this.chatHistory = [];
     const thread = document.getElementById('ai-chat-thread');
     if (thread) {
+      const isOnline = this.isSystemOnline();
       thread.innerHTML = `
         <div class="ai-msg-row ai">
           <div class="ai-msg-avatar">${Icons.sparkles(16)}</div>
           <div class="ai-msg-bubble">
-            <p>Chat history cleared. How can I assist your store operations?</p>
+            <p>Chat history cleared. ${isOnline ? 'System is Online (Live Gemini API ready).' : 'System is Offline (Local Advisor ready).'}</p>
           </div>
         </div>
       `;
@@ -537,8 +632,9 @@ Customer Udhaar Ledger:
   }
 
   formatMarkdown(text) {
-    if (!text) return "";
-    return text
+    if (!text) return '';
+    return this.escapeHtml(text)
+      .replace(/```(?:\w+)?\n?([\s\S]*?)```/g, '<pre style="background: var(--bg-input); padding: 8px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 11.5px; white-space: pre-wrap; margin: 6px 0; border: 1px solid var(--border-subtle);">$1</pre>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`([^`]+)`/g, '<code style="background: var(--bg-input); padding: 2px 4px; border-radius: 4px; font-family: var(--font-mono); font-size: 11.5px;">$1</code>')
@@ -547,36 +643,68 @@ Customer Udhaar Ledger:
   }
 
   escapeHtml(str) {
-    return (str || '').replace(/[&<>"']/g, function(m) {
+    return String(str || '').replace(/[&<>"']/g, function(m) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
     });
   }
 
-  // Lookup barcode details online using Netlify serverless /api/gemini
+  // Lookup barcode details online strictly via serverless /api/gemini
   async lookupBarcodeOnline(barcode) {
-    const cleanBarcode = String(barcode).trim();
-    if (!cleanBarcode) return null;
+    const cleanBarcode = String(barcode || '').trim();
+    if (!cleanBarcode) return { ok: false, found: false, error: 'Empty barcode' };
+
+    if (!this.isSystemOnline()) {
+      return { ok: false, offline: true, found: false, error: 'System is offline.' };
+    }
+
+    const endpoint = this.getEndpoint();
+    const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 11000);
 
     try {
-      const response = await fetch('/api/gemini', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'lookupBarcode',
-          barcode: cleanBarcode
-        })
+          barcode: cleanBarcode,
+          apiKey: customApiKey
+        }),
+        signal: controller.signal
       });
 
+      const result = await response.json().catch(() => ({}));
+
       if (response.ok) {
-        const result = await response.json();
-        if (result && result.found) {
-          return result;
-        }
+        return {
+          ok: true,
+          found: Boolean(result && result.found && result.product),
+          product: (result && result.product) || null,
+          model: (result && result.model) || 'gemini-3.8-flash',
+          message: (result && result.message) || ''
+        };
       }
+
+      return {
+        ok: false,
+        status: response.status,
+        authError: Boolean(result?.authError || response.status === 401 || response.status === 403),
+        error: result?.error || `Gemini API returned HTTP ${response.status}`,
+        hint: result?.hint || '',
+        found: false
+      };
     } catch (e) {
       console.warn('[Dukaan AI] Barcode lookup error:', e);
+      return {
+        ok: false,
+        offline: !this.isSystemOnline(),
+        found: false,
+        error: e.name === 'AbortError' ? 'Live barcode search timed out.' : (e.message || 'Network error')
+      };
+    } finally {
+      clearTimeout(timeoutId);
     }
-    return null;
   }
 
   closeModal() {

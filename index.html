@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/landing.css?v=7.2" />
+  <link rel="stylesheet" href="css/landing.css?v=7.3" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
@@ -180,7 +180,7 @@
             <div class="lp-sim-wrapper">
               <!-- Simulator Control & Status Bar -->
               <div class="lp-sim-top-bar">
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                   <span class="pulse-glow" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
                   <span style="font-size: 12px; font-weight: 700; color: #F8FAFC; font-family: var(--font-heading);">
                     ⚡ Interactive Kirana POS Simulator
@@ -189,7 +189,7 @@
                     (Try clicking items below)
                   </span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                   <button id="sim-audio-btn" class="lp-sim-btn" style="background: rgba(255,255,255,0.06); color: #CBD5E1; padding: 4px 10px; font-size: 11px;" onclick="SimPOS.toggleAudio()">
                     🔊 Sound: ON
                   </button>
@@ -203,7 +203,7 @@
               </div>
 
               <!-- 4-Stat Header Grid with Rolling Animated Counters -->
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div class="lp-sim-kpi-grid">
                 <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
                   <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Today's Revenue</div>
                   <div style="font-size: 22px; font-weight: 800; color: #10B981; margin-top: 4px; font-family: var(--font-mono);" id="kpi-rev-counter">₹14,850</div>
@@ -424,7 +424,7 @@
               Scan using PhonePe, Google Pay, Paytm, or BHIM UPI
             </div>
 
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="lp-btn-primary" style="flex: 1; justify-content: center; font-size: 12.5px; background: #10B981;" onclick="SimPOS.simulatePaymentSuccess()">
                 ✓ Simulate Customer Payment
               </button>
@@ -488,12 +488,12 @@
           </p>
           
           <div style="background: #0B0E18; padding: 22px; border-radius: var(--lp-radius-md); border: 1.5px solid rgba(255,255,255,0.12);">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; font-weight: 700;">
               <span style="font-size: 14.5px; color: #CBD5E1;">Daily Customers Billed:</span>
               <span id="roi-cust-val" style="font-size: 22px; font-family: var(--font-mono); color: #818CF8; font-weight: 900;">120 Customers / Day</span>
             </div>
             <input type="range" min="30" max="500" step="10" value="120" class="roi-slider" id="roi-slider" oninput="updateRoiCalc(this.value)" />
-            <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--lp-text-muted); font-family: var(--font-mono);">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 11.5px; color: var(--lp-text-muted); font-family: var(--font-mono);">
               <span>30 (Small Kirana)</span>
               <span>150 (Corner Retailer)</span>
               <span>500 (Busy Supermarket)</span>
@@ -902,25 +902,25 @@
               <h3 style="font-family: var(--font-heading); font-size: 18px; color: #fff; margin-bottom: 14px;">Direct Help & Creator Support</h3>
               
               <div style="display: flex; flex-direction: column; gap: 14px;">
-                <a href="https://wa.me/916306437348?text=Hello%20Mayur,%20I%20want%20to%20know%20more%20about%20MyDukaan24" target="_blank" style="display: flex; align-items: center; gap: 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
-                  <span style="font-size: 24px;">💬</span>
-                  <div>
+                <a href="https://wa.me/916306437348?text=Hello%20Mayur,%20I%20want%20to%20know%20more%20about%20MyDukaan24" target="_blank" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
+                  <span style="font-size: 24px; flex-shrink: 0;">💬</span>
+                  <div style="flex: 1; min-width: 0; overflow-wrap: anywhere;">
                     <div style="font-weight: 700; color: #10B981; font-size: 14px;">WhatsApp Direct: +91 6306437348</div>
                     <div style="font-size: 11.5px; color: var(--lp-text-muted);">Instant merchant support & feature queries</div>
                   </div>
                 </a>
 
-                <a href="tel:+916306437348" style="display: flex; align-items: center; gap: 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
-                  <span style="font-size: 24px;">📞</span>
-                  <div>
+                <a href="tel:+916306437348" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
+                  <span style="font-size: 24px; flex-shrink: 0;">📞</span>
+                  <div style="flex: 1; min-width: 0; overflow-wrap: anywhere;">
                     <div style="font-weight: 700; color: #818CF8; font-size: 14px;">Call Direct: +91 6306437348</div>
                     <div style="font-size: 11.5px; color: var(--lp-text-muted);">Direct phone support for shopkeepers</div>
                   </div>
                 </a>
 
-                <a href="mailto:mayur4singhhh@gmail.com" style="display: flex; align-items: center; gap: 12px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
-                  <span style="font-size: 24px;">📧</span>
-                  <div>
+                <a href="mailto:mayur4singhhh@gmail.com" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
+                  <span style="font-size: 24px; flex-shrink: 0;">📧</span>
+                  <div style="flex: 1; min-width: 0; overflow-wrap: anywhere;">
                     <div style="font-weight: 700; color: #60A5FA; font-size: 14px;">mayur4singhhh@gmail.com</div>
                     <div style="font-size: 11.5px; color: var(--lp-text-muted);">Official developer & enterprise contact</div>
                   </div>
@@ -933,7 +933,7 @@
               </div>
             </div>
 
-            <div style="border-top: 1px solid var(--lp-border); padding-top: 14px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="border-top: 1px solid var(--lp-border); padding-top: 14px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <span style="font-size: 12px; color: var(--lp-text-muted);">Verified Production Deployment</span>
               <a href="app.html" class="lp-btn-secondary" style="padding: 6px 14px; font-size: 12px;">Launch Web App →</a>
             </div>
@@ -970,7 +970,7 @@
             <div class="creator-meta">
               <h3>Mayur Singh <span class="lp-brand-tag" style="background: var(--lp-primary); color: #fff;">Lead Creator & Deployer</span></h3>
               <p>📍 Lucknow, UP • 📞 <a href="tel:+916306437348" style="color: #10B981; font-weight: 700;">+91 6306437348</a> • 📧 <a href="mailto:mayur4singhhh@gmail.com" style="color: #818CF8;">mayur4singhhh@gmail.com</a></p>
-              <div style="display: flex; gap: 14px; margin-top: 8px; font-size: 13px;">
+              <div style="display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 8px; font-size: 13px;">
                 <a href="https://instagram.com/_mayur.x24" target="_blank" style="color: #818CF8; font-weight: 700;">
                   Instagram: @_mayur.x24
                 </a>
@@ -981,7 +981,7 @@
               </div>
             </div>
           </div>
-          <div style="display: flex; gap: 10px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             <a href="https://github.com/mayursingh24" target="_blank" class="lp-btn-secondary">
               GitHub @mayursingh24
             </a>
@@ -1010,20 +1010,6 @@
         © 2026 Mayur Singh (Lucknow, India). All rights reserved. Deployed on Netlify.
       </div>
     </footer>
-
-    <!-- Mobile Sticky Terminal Launch Dock -->
-    <div class="lp-mobile-dock">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 28px; height: 28px; border-radius: 6px; object-fit: contain; background: #141B2D; padding: 2px;" alt="Logo" />
-        <div>
-          <div style="font-weight: 800; font-size: 13px; color: #fff; line-height: 1.2;">MyDukkan24</div>
-          <div style="font-size: 10px; color: #60A5FA; font-family: var(--font-mono);">Retail Business OS</div>
-        </div>
-      </div>
-      <a href="app.html" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12.5px; border-radius: var(--lp-radius-full);">
-        ⚡ Open App →
-      </a>
-    </div>
   </div>
 
   <!-- INTERACTIVE PLAYGROUND & ANIMATIONS JAVASCRIPT -->
@@ -1408,9 +1394,9 @@
     // Service Worker Registration for Instant Cache Busting & Offline Support
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=7.2')
+        navigator.serviceWorker.register('./sw.js?v=7.3')
           .then(reg => {
-            console.log('[PWA] Service Worker v7.1 active ✓ Scope:', reg.scope);
+            console.log('[PWA] Service Worker v7.3 active ✓ Scope:', reg.scope);
             reg.update();
           })
           .catch(err => console.log('[PWA] Service worker fallback:', err));

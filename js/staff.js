@@ -78,13 +78,13 @@ class StaffEngine {
             return `
               <div style="background: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
+                  <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 200px;">
+                    <div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--radius-md); background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
                       ${emp.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
+                    <div style="min-width: 0; flex: 1;">
                       <div style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${emp.name}</div>
-                      <div style="font-size: 11.5px; color: var(--text-muted);">
+                      <div style="font-size: 11.5px; color: var(--text-muted); word-break: break-word;">
                         ${emp.role} • Phone: ${emp.phone} • ₹${emp.salary.toLocaleString('en-IN')}/month
                       </div>
                     </div>

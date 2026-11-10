@@ -17,6 +17,7 @@ class AppController {
     this.updateNotificationBadge();
     this.updateHeaderStoreName();
     this.updateI18nLabels();
+    this.initNetworkMonitor();
     this.navigate(this.currentView);
 
     // Listen for PWA native installation
@@ -92,10 +93,10 @@ class AppController {
       item.classList.toggle('active', item.dataset.view === viewName);
     });
 
-    // Toggle Mobile Sticky Bar visibility (Only in POS view)
+    // Toggle Mobile Sticky Bar visibility (Only in POS view; CSS handles <= 900px)
     const mobilePosBar = document.getElementById('mobile-pos-sticky-bar');
     if (mobilePosBar) {
-      mobilePosBar.style.display = (viewName === 'pos' && window.innerWidth <= 900) ? 'flex' : 'none';
+      mobilePosBar.classList.toggle('pos-active', viewName === 'pos');
     }
 
     // Close mobile drawer if open
@@ -103,6 +104,7 @@ class AppController {
 
     const container = document.getElementById('main-view-container');
     if (!container) return;
+    container.classList.toggle('is-pos-view', viewName === 'pos');
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -188,7 +190,7 @@ class AppController {
     const totalRevenue = invoices.reduce((s, i) => s + (i.paid || 0), 0);
     const totalUdhaar = customers.reduce((s, c) => s + (c.balanceDue || 0), 0);
     const lowStock = products.filter(p => p.stock <= p.minStock);
-    const totalInventoryValue = products.reduce((s, p) => s + (p.cost * p.stock), 0);
+    const totalInventoryValue = Math.round(products.reduce((s, p) => s + ((Number(p.cost) || 0) * (Number(p.stock) || 0)), 0));
     const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
 
     // Format current date nicely
@@ -309,10 +311,10 @@ class AppController {
                 <thead>
                   <tr>
                     <th>Invoice ID</th>
-                    <th>Date</th>
+                    <th class="hide-mobile-col">Date</th>
                     <th>Customer</th>
                     <th>Amount</th>
-                    <th>Payment</th>
+                    <th class="hide-mobile-col">Payment</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -320,10 +322,10 @@ class AppController {
                   ${invoices.slice(0, 6).map(inv => `
                     <tr>
                       <td style="font-family: var(--font-mono); font-weight: 600; font-size: 12.5px;">${inv.id}</td>
-                      <td>${inv.date}</td>
+                      <td class="hide-mobile-col">${inv.date}</td>
                       <td style="font-weight: 500;">${inv.customerName || 'Walk-in Customer'}</td>
                       <td style="font-weight: 700; color: var(--text-primary);" class="tnum">₹${inv.total.toLocaleString('en-IN')}</td>
-                      <td>
+                      <td class="hide-mobile-col">
                         <span class="badge ${inv.paymentMode === 'Cash' ? 'badge-success' : inv.paymentMode === 'UPI' ? 'badge-primary' : 'badge-warning'}">
                           ${inv.paymentMode}
                         </span>
@@ -351,7 +353,7 @@ class AppController {
         </div>
 
         <!-- Right: Urgent Stock Attention & Fast Action Center -->
-        <div style="display: flex; flex-direction: column; gap: 18px;">
+        <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0;">
           <!-- Low Stock Action Card -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
@@ -363,14 +365,14 @@ class AppController {
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
               ${lowStock.length ? lowStock.slice(0, 4).map(p => `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-                  <div>
-                    <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary);">${p.name}</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary); word-break: break-word;">${p.name}</div>
                     <div style="font-size: 11px; color: var(--danger); font-weight: 500;">
                       Stock: ${p.stock} ${p.unit} (Min: ${p.minStock})
                     </div>
                   </div>
-                  <button class="btn btn-secondary btn-sm" onclick="Inventory.quickRestock('${p.id}')">
+                  <button class="btn btn-secondary btn-sm" style="flex-shrink: 0;" onclick="Inventory.quickRestock('${p.id}')">
                     + Restock
                   </button>
                 </div>
@@ -510,15 +512,15 @@ class AppController {
       <div class="kpi-grid" id="inventory-kpi-row"></div>
 
       <!-- Filters & Search Toolbar -->
-      <div class="card" style="padding: 14px 18px; margin-bottom: 18px;">
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 220px; position: relative;">
+      <div class="card" style="padding: 14px 16px; margin-bottom: 18px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1 1 200px; min-width: 0; width: 100%; position: relative;">
             <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
             <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search SKU, name, or barcode..." oninput="Inventory.setSearch(this.value)" />
           </div>
 
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <select class="form-select" style="width: 140px;" onchange="Inventory.filterCategory = this.value; Inventory.render();">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1 1 220px; min-width: 0;">
+            <select class="form-select" style="flex: 1 1 125px; min-width: 0;" onchange="Inventory.filterCategory = this.value; Inventory.render();">
               <option value="All">All Categories</option>
               <option value="Grocery">Grocery</option>
               <option value="Dairy">Dairy</option>
@@ -529,7 +531,7 @@ class AppController {
               <option value="Household">Household</option>
             </select>
 
-            <select class="form-select" style="width: 140px;" onchange="Inventory.filterStock = this.value; Inventory.render();">
+            <select class="form-select" style="flex: 1 1 125px; min-width: 0;" onchange="Inventory.filterStock = this.value; Inventory.render();">
               <option value="All">All Stock Status</option>
               <option value="Low">Low Stock Alerts</option>
               <option value="OutOfStock">Out of Stock</option>
@@ -617,11 +619,11 @@ class AppController {
               <thead>
                 <tr>
                   <th>Invoice #</th>
-                  <th>Date</th>
+                  <th class="hide-mobile-col">Date</th>
                   <th>Customer</th>
-                  <th>Items</th>
+                  <th class="hide-mobile-col">Items</th>
                   <th>Grand Total</th>
-                  <th>Payment Mode</th>
+                  <th class="hide-mobile-col">Payment Mode</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
@@ -630,11 +632,11 @@ class AppController {
                 ${invoices.map(inv => `
                   <tr>
                     <td style="font-family: var(--font-mono); font-weight: 700;">${inv.id}</td>
-                    <td>${inv.date}</td>
+                    <td class="hide-mobile-col">${inv.date}</td>
                     <td style="font-weight: 600;">${inv.customerName || 'Walk-in'}</td>
-                    <td>${inv.items ? inv.items.length : 0} items</td>
+                    <td class="hide-mobile-col">${inv.items ? inv.items.length : 0} items</td>
                     <td style="font-weight: 700; color: var(--text-primary);" class="tnum">₹${inv.total.toLocaleString('en-IN')}</td>
-                    <td><span class="badge badge-muted">${inv.paymentMode}</span></td>
+                    <td class="hide-mobile-col"><span class="badge badge-muted">${inv.paymentMode}</span></td>
                     <td><span class="badge ${inv.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${inv.status}</span></td>
                     <td>
                       <button class="btn btn-secondary btn-sm" onclick="POS.openReceiptModal(DB.getData().invoices.find(x => x.id === '${inv.id}'))">
@@ -705,9 +707,9 @@ class AppController {
                 <tr>
                   <th>Date</th>
                   <th>Description</th>
-                  <th>Category</th>
+                  <th class="hide-mobile-col">Category</th>
                   <th>Amount</th>
-                  <th>Status</th>
+                  <th class="hide-mobile-col">Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -716,9 +718,9 @@ class AppController {
                   <tr>
                     <td>${e.date}</td>
                     <td style="font-weight: 600;">${e.desc}</td>
-                    <td><span class="badge badge-muted">${e.cat}</span></td>
+                    <td class="hide-mobile-col"><span class="badge badge-muted">${e.cat}</span></td>
                     <td style="font-weight: 700; color: var(--danger);" class="tnum">₹${e.amount.toLocaleString('en-IN')}</td>
-                    <td><span class="badge ${e.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${e.status}</span></td>
+                    <td class="hide-mobile-col"><span class="badge ${e.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${e.status}</span></td>
                     <td>
                       <button class="btn btn-danger btn-sm" onclick="App.deleteExpense('${e.id}')" title="Delete">
                         ${Icons.trash(14)}
@@ -907,8 +909,8 @@ class AppController {
               ${Icons.store(16)}
             </div>
           </div>
-          <div class="kpi-val" style="font-size: 16px; font-weight: 800;">${shop.name || 'MyDukkan24 Mart'}</div>
-          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px;">UPI: ${shop.upiId || '6306437348@upi'}</div>
+          <div class="kpi-val" style="font-size: 16px; font-weight: 800; word-break: break-word;">${shop.name || 'MyDukkan24 Mart'}</div>
+          <div class="kpi-trend" style="color: var(--text-muted); font-size: 11px; overflow-wrap: anywhere;">UPI: ${shop.upiId || '6306437348@upi'}</div>
         </div>
 
         <div class="kpi-card">
@@ -951,7 +953,7 @@ class AppController {
 
       <div class="responsive-equal-grid">
         <!-- Column 1: Store Profile & Receipt Settings -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
           <!-- Store Profile Card -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
@@ -998,11 +1000,11 @@ class AppController {
               </div>
 
               <!-- Live Store UPI QR Preview -->
-              <div style="background: var(--bg-card); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(shop.upiId || '6306437348@upi')}&pn=${encodeURIComponent(shop.name || 'MyDukkan24')}" alt="Store UPI QR" style="width: 72px; height: 72px; border-radius: 8px; background: #fff; padding: 4px; display: block;" />
-                <div style="flex: 1;">
+              <div style="background: var(--bg-card); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 14px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(shop.upiId || '6306437348@upi')}&pn=${encodeURIComponent(shop.name || 'MyDukkan24')}" alt="Store UPI QR" style="width: 72px; height: 72px; border-radius: 8px; background: #fff; padding: 4px; display: block; flex-shrink: 0;" />
+                <div style="flex: 1; min-width: 170px;">
                   <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Active Dynamic UPI QR</div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">VPA: <code style="color: var(--primary);">${shop.upiId || '6306437348@upi'}</code></div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow-wrap: anywhere;">VPA: <code style="color: var(--primary);">${shop.upiId || '6306437348@upi'}</code></div>
                   <div style="font-size: 11px; color: var(--success); font-weight: 600; margin-top: 3px;">Accepts PhonePe, GPay, Paytm, BHIM</div>
                 </div>
               </div>
@@ -1056,21 +1058,21 @@ class AppController {
             <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
               Monitor real-time cash drawer tally, digital UPI collections, and print day-end reconciliation reports.
             </p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-              <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px;">
+              <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Today's Cash In Drawer</div>
                 <div style="font-size: 18px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-top: 2px;">
                   ₹${(db.invoices || []).filter(i => i.paymentMode === 'Cash').reduce((sum, i) => sum + (Number(i.paid) || 0), 0).toLocaleString('en-IN')}
                 </div>
               </div>
-              <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Today's UPI Collection</div>
                 <div style="font-size: 18px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 2px;">
                   ₹${(db.invoices || []).filter(i => i.paymentMode === 'UPI').reduce((sum, i) => sum + (Number(i.paid) || 0), 0).toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="App.openCashDrawerModal()">
                 ${Icons.receipt(14)} View Closing Sheet & Print
               </button>
@@ -1079,7 +1081,7 @@ class AppController {
         </div>
 
         <!-- Column 2: Theme Studio, Audio & Database Backups -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
           <!-- Dynamic Accent Theme Palette Studio -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
@@ -1100,8 +1102,8 @@ class AppController {
               `).join('')}
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-              <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="flex: 1; min-width: 140px;">
                 <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Base Display Mode</div>
                 <div style="font-size: 11px; color: var(--text-muted);">Current: ${theme === 'dark' ? 'Pro Dark SaaS' : 'Clean Light Minimal'}</div>
               </div>
@@ -1111,12 +1113,12 @@ class AppController {
             </div>
 
             <!-- Language Switcher Studio -->
-            <div style="margin-top: 10px; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
-              <div>
+            <div style="margin-top: 10px; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <div style="flex: 1; min-width: 150px;">
                 <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">🌐 Display Language / भाषा</div>
                 <div style="font-size: 11px; color: var(--text-muted);">Dynamic localization across menus, bills & reports</div>
               </div>
-              <select class="form-select" style="width: auto; font-size: 12px; padding: 4px 10px;" onchange="I18n.setLanguage(this.value); App.renderSettingsView(document.getElementById('main-view-container'));">
+              <select class="form-select" style="width: auto; min-width: 130px; font-size: 12px; padding: 6px 10px;" onchange="I18n.setLanguage(this.value); App.renderSettingsView(document.getElementById('main-view-container'));">
                 <option value="en" ${I18n.getLanguage() === 'en' ? 'selected' : ''}>English</option>
                 <option value="hi" ${I18n.getLanguage() === 'hi' ? 'selected' : ''}>हिन्दी (Hindi)</option>
                 <option value="hinglish" ${I18n.getLanguage() === 'hinglish' ? 'selected' : ''}>Hinglish</option>
@@ -1257,6 +1259,36 @@ class AppController {
     DB.saveData(db);
     this.updateHeaderStoreName();
     this.toast('success', 'Saved', 'Store profile updated successfully');
+  }
+
+  initNetworkMonitor() {
+    const syncUI = () => {
+      const online = navigator.onLine !== false;
+      const statusEl = document.getElementById('system-online-status');
+      const dotEl = document.getElementById('system-status-dot');
+      if (statusEl) {
+        statusEl.textContent = online ? 'Online • Live API' : 'Offline • Local Mode';
+      }
+      if (dotEl) {
+        dotEl.style.backgroundColor = online ? 'var(--success)' : 'var(--warning)';
+        dotEl.style.boxShadow = online
+          ? '0 0 8px rgba(16, 185, 129, 0.7)'
+          : '0 0 8px rgba(245, 158, 11, 0.7)';
+      }
+      if (window.DukaanAI && typeof DukaanAI.updateConnectionBadge === 'function') {
+        DukaanAI.updateConnectionBadge();
+      }
+    };
+
+    syncUI();
+    window.addEventListener('online', () => {
+      syncUI();
+      this.toast('success', 'Online Mode Restored', 'Internet connected — AI & Barcode lookups will use Live APIs.');
+    });
+    window.addEventListener('offline', () => {
+      syncUI();
+      this.toast('warning', 'Offline Mode Active', 'No internet — switched automatically to inbuilt Local DB & Advisor.');
+    });
   }
 
   // Test Netlify Backend Probe
@@ -1561,9 +1593,9 @@ class AppController {
       <div class="responsive-split-grid" style="margin-bottom: 24px;">
         <!-- Left: Official App Download Card -->
         <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(16,185,129,0.08) 100%); border-color: rgba(37,99,235,0.3);">
-          <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
-            <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 76px; height: 76px; border-radius: 16px; object-fit: contain; box-shadow: 0 8px 24px rgba(0,0,0,0.3); background: #141B2D; padding: 4px;" alt="MyDukkan24 App Icon" />
-            <div>
+          <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 20px;">
+            <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 72px; height: 72px; border-radius: 16px; object-fit: contain; box-shadow: 0 8px 24px rgba(0,0,0,0.3); background: #141B2D; padding: 4px; flex-shrink: 0;" alt="MyDukkan24 App Icon" />
+            <div style="flex: 1; min-width: 180px;">
               <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0;">MyDukkan24 Retail OS</h2>
                 <span class="badge badge-success">Production Release</span>
@@ -1585,7 +1617,7 @@ class AppController {
             <div style="display: flex; flex-direction: column; gap: 12px;">
               <!-- Option 1: PWA Web APK -->
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
-                <div>
+                <div style="flex: 1; min-width: 180px;">
                   <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">
                     ⚡ Option 1: 1-Click Native App Install (PWA Web-APK)
                   </div>
@@ -1600,7 +1632,7 @@ class AppController {
 
               <!-- Option 2: Direct APK Download -->
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
-                <div>
+                <div style="flex: 1; min-width: 180px;">
                   <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">
                     🤖 Option 2: Download Android APK Package (.apk)
                   </div>
@@ -1649,7 +1681,7 @@ class AppController {
                 <span>🍎 For iPhones & iPads (Safari):</span>
               </div>
               <ol style="margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7;">
-                <li>Open <strong>Safari</strong> and navigate to <code>mydukaan24.netlify.app</code>.</li>
+                <li>Open <strong>Safari</strong> and navigate to <code style="overflow-wrap: anywhere;">mydukaan24.netlify.app</code>.</li>
                 <li>Tap the <strong>Share</strong> button (square icon with upward arrow).</li>
                 <li>Scroll down and select <strong>"Add to Home Screen"</strong>.</li>
                 <li>Tap <strong>"Add"</strong> in top right. Enjoy a fast standalone iOS POS experience.</li>
@@ -1707,26 +1739,26 @@ class AppController {
               Date: ${today} • Store: ${db.shop?.name || 'MyDukkan24 Mart'}
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
-              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px;">
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Cash Sales</div>
                 <div style="font-size: 17px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-top: 2px;">
                   ₹${cashSales.toLocaleString('en-IN')}
                 </div>
               </div>
-              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">UPI Digital</div>
                 <div style="font-size: 17px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 2px;">
                   ₹${upiSales.toLocaleString('en-IN')}
                 </div>
               </div>
-              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Card POS</div>
                 <div style="font-size: 17px; font-weight: 800; color: #A78BFA; font-family: var(--font-mono); margin-top: 2px;">
                   ₹${cardSales.toLocaleString('en-IN')}
                 </div>
               </div>
-              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Udhaar Issued</div>
                 <div style="font-size: 17px; font-weight: 800; color: #F43F5E; font-family: var(--font-mono); margin-top: 2px;">
                   ₹${udhaarSales.toLocaleString('en-IN')}
@@ -1753,8 +1785,8 @@ class AppController {
               </div>
             </div>
 
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-primary" style="flex: 1; justify-content: center;" onclick="window.print()">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-primary" style="flex: 1 1 170px; justify-content: center;" onclick="window.print()">
                 ${Icons.print(14)} Print Day-End Z-Report
               </button>
               <button class="btn btn-secondary" onclick="App.closeCashDrawerModal()">

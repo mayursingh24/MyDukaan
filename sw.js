@@ -1,10 +1,10 @@
 /**
- * MyDukaan24 — Service Worker v7.2
+ * MyDukaan24 — Service Worker v7.3
  * Created & Deployed by Mayur Singh (Lucknow, India)
  * High-Speed Offline-Ready PWA & Pure Network-First Caching Engine
  */
 
-const CACHE_NAME = 'mydukkan24-v7.2';
+const CACHE_NAME = 'mydukkan24-v7.3';
 
 const ASSETS_TO_PRECACHE = [
   './',
@@ -14,22 +14,22 @@ const ASSETS_TO_PRECACHE = [
   './assets/LOGO.jpeg',
   './assets/logo.svg',
   './assets/MyDukkan24-v4.apk',
-  './css/style.css?v=7.2',
-  './css/components.css?v=7.2',
-  './css/landing.css?v=7.2',
-  './js/html5-qrcode.min.js?v=7.2',
-  './js/icons.js?v=7.2',
-  './js/i18n.js?v=7.2',
-  './js/storage.js?v=7.2',
-  './js/scanner.js?v=7.2',
-  './js/pos.js?v=7.2',
-  './js/inventory.js?v=7.2',
-  './js/purchases.js?v=7.2',
-  './js/khata.js?v=7.2',
-  './js/analytics.js?v=7.2',
-  './js/staff.js?v=7.2',
-  './js/ai.js?v=7.2',
-  './js/app.js?v=7.2'
+  './css/style.css?v=7.3',
+  './css/components.css?v=7.3',
+  './css/landing.css?v=7.3',
+  './js/html5-qrcode.min.js?v=7.3',
+  './js/icons.js?v=7.3',
+  './js/i18n.js?v=7.3',
+  './js/storage.js?v=7.3',
+  './js/scanner.js?v=7.3',
+  './js/pos.js?v=7.3',
+  './js/inventory.js?v=7.3',
+  './js/purchases.js?v=7.3',
+  './js/khata.js?v=7.3',
+  './js/analytics.js?v=7.3',
+  './js/staff.js?v=7.3',
+  './js/ai.js?v=7.3',
+  './js/app.js?v=7.3'
 ];
 
 // Install: Cache core assets and activate immediately
@@ -37,7 +37,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW v7.2] Precaching assets');
+      console.log('[SW v7.3] Precaching assets');
       return cache.addAll(ASSETS_TO_PRECACHE).catch(err => {
         console.warn('[SW] Precache non-blocking error:', err);
       });
@@ -52,7 +52,7 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[SW v7.2] Deleting obsolete cache:', key);
+            console.log('[SW v7.3] Deleting obsolete cache:', key);
             return caches.delete(key);
           }
         })
@@ -68,7 +68,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
 
   // Never cache Netlify serverless functions or external APIs
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/.netlify/functions/')) {
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/.netlify/functions/')) {
     return;
   }
 

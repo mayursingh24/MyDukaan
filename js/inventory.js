@@ -28,8 +28,8 @@ class InventoryEngine {
     const totalStockQty = products.reduce((s, p) => s + p.stock, 0);
     const lowStockItems = products.filter(p => p.stock > 0 && p.stock <= p.minStock);
     const outOfStockItems = products.filter(p => p.stock <= 0);
-    const stockValuation = products.reduce((s, p) => s + (p.cost * p.stock), 0);
-    const retailValuation = products.reduce((s, p) => s + (p.price * p.stock), 0);
+    const stockValuation = Math.round(products.reduce((s, p) => s + ((Number(p.cost) || 0) * (Number(p.stock) || 0)), 0));
+    const retailValuation = Math.round(products.reduce((s, p) => s + ((Number(p.price) || 0) * (Number(p.stock) || 0)), 0));
 
     if (statsContainer) {
       statsContainer.innerHTML = `
@@ -262,7 +262,7 @@ class InventoryEngine {
 
               <div class="form-group">
                 <label class="form-label">Barcode / EAN-13 / SKU</label>
-                <div style="display: flex; gap: 6px;">
+                <div class="barcode-input-group">
                   <input type="text" id="prod-form-barcode" class="form-input" style="font-family: var(--font-mono);" placeholder="8901234567890" value="${isEdit ? product.barcode : (prefilledBarcode || '')}" />
                   <button type="button" class="btn btn-secondary btn-sm" onclick="Inventory.generateSku()" title="Generate Random Barcode">
                     Generate
@@ -270,7 +270,7 @@ class InventoryEngine {
                   <button type="button" class="btn btn-secondary btn-sm" onclick="BarcodeScanner.openScannerModal(code => { document.getElementById('prod-form-barcode').value = code; Inventory.fetchBarcodeFromGoogle(); })" title="Scan with camera">
                     ${Icons.camera(14)}
                   </button>
-                  <button type="button" class="btn btn-primary btn-sm" onclick="Inventory.fetchBarcodeFromGoogle()" title="Auto-fill details using AI">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="Inventory.fetchBarcodeFromGoogle()" title="Auto-fill details">
                     Auto-Fill
                   </button>
                 </div>
@@ -380,7 +380,7 @@ class InventoryEngine {
     App.updateNotificationBadge();
   }
 
-  // High-Speed Multi-Tier Barcode & FMCG Resolver (Master DB + Open Food Facts + GS1 + Gemini)
+  // Strict Online vs. Offline Barcode Resolver
   async fetchBarcodeFromGoogle() {
     const barcode = document.getElementById('prod-form-barcode')?.value?.trim();
     if (!barcode) {
@@ -388,29 +388,43 @@ class InventoryEngine {
       return;
     }
 
-    App.toast('info', 'Identifying...', `Looking up product for barcode ${barcode}`);
+    const isOnline = typeof navigator === 'undefined' ? true : navigator.onLine !== false;
+    App.toast(
+      'info',
+      isOnline ? 'Live Online Lookup...' : 'Offline Lookup...',
+      isOnline ? `Querying live APIs for ${barcode}` : `Checking local catalog for ${barcode}`
+    );
 
     let matched = null;
+    let sourceLabel = '';
+    let apiErrorMsg = '';
 
-    // 1. Check Indian FMCG Master DB (0ms instant)
-    if (window.BarcodeScannerEngine && BarcodeScannerEngine.FMCG_MASTER_DB && BarcodeScannerEngine.FMCG_MASTER_DB[barcode]) {
-      matched = BarcodeScannerEngine.FMCG_MASTER_DB[barcode];
-    }
+    const applyFields = (item, label, modeTag) => {
+      const nameEl = document.getElementById('prod-form-name');
+      const mrpEl = document.getElementById('prod-form-mrp');
+      const priceEl = document.getElementById('prod-form-price');
+      const costEl = document.getElementById('prod-form-cost');
+      const catEl = document.getElementById('prod-form-cat');
 
-    // 2. Check local barcode cache
-    if (!matched) {
+      if (nameEl) nameEl.value = item.name || '';
+      if (mrpEl) mrpEl.value = item.mrp || '';
+      if (priceEl) priceEl.value = item.price || '';
+      if (costEl) costEl.value = item.cost || '';
+      if (catEl && item.cat) catEl.value = item.cat;
+
+      App.toast('success', `${modeTag} Auto-Filled`, `${item.name} (${label})`);
+    };
+
+    if (isOnline) {
+      // STRICT ONLINE PATH: Query Open Food Facts & Live Gemini Interactions API
       try {
-        const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
-        if (cache[barcode]) matched = cache[barcode];
-      } catch (e) {}
-    }
-
-    // 3. Check Open Food Facts API directly
-    if (!matched) {
-      try {
-        const offRes = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,brands,categories,quantity`, {
-          signal: AbortSignal.timeout(3000)
-        });
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3500);
+        const offRes = await fetch(
+          `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,brands,categories,quantity`,
+          { signal: controller.signal }
+        );
+        clearTimeout(tid);
         if (offRes.ok) {
           const offData = await offRes.json();
           if (offData && offData.status === 1 && offData.product && offData.product.product_name) {
@@ -418,87 +432,77 @@ class InventoryEngine {
             matched = {
               name: `${p.product_name} ${p.quantity || ''}`.trim(),
               brand: p.brands || 'Packaged Brand',
-              cat: 'Grocery',
+              cat: window.BarcodeScanner ? BarcodeScanner.normalizeCategory(p.categories || 'Grocery') : 'Grocery',
               mrp: 35,
               price: 30,
               cost: 25
             };
+            sourceLabel = 'Open Food Facts';
           }
         }
       } catch (e) {}
-    }
 
-    // 4. Check Netlify / Gemini Serverless Endpoint
-    if (!matched) {
-      try {
-        let ep = '/api/gemini';
-        if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          ep = 'https://mydukaan24.netlify.app/api/gemini';
+      if (!matched && window.DukaanAI && typeof DukaanAI.lookupBarcodeOnline === 'function') {
+        const res = await DukaanAI.lookupBarcodeOnline(barcode);
+        if (res && res.ok && res.found && res.product && res.product.name) {
+          const prodObj = res.product;
+          matched = {
+            name: prodObj.name,
+            brand: prodObj.brand || '',
+            cat: prodObj.cat || 'Grocery',
+            mrp: Number(prodObj.mrp) || 30,
+            price: Number(prodObj.price) || 28,
+            cost: Number(prodObj.cost) || 24
+          };
+          sourceLabel = `Gemini ${res.model || 'API'}`;
+        } else if (res && !res.ok && !res.offline) {
+          apiErrorMsg = res.error || `HTTP ${res.status || 'Error'}`;
         }
-        const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
-        const res = await fetch(ep, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'lookupBarcode', barcode, apiKey: customApiKey })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const prodObj = data.product || data;
-          if (data && data.found && prodObj.name) {
-            matched = {
-              name: prodObj.name,
-              brand: prodObj.brand || '',
-              cat: prodObj.cat || prodObj.category || 'Grocery',
-              mrp: Number(prodObj.mrp) || 30,
-              price: Number(prodObj.price) || 28,
-              cost: Number(prodObj.cost) || 24
-            };
-          }
-        }
-      } catch (e) {}
-    }
-
-    // 5. Check GS1 India Manufacturer Intelligence
-    if (!matched && window.BarcodeScannerEngine && typeof BarcodeScannerEngine.resolveGS1Company === 'function') {
-      const gs1 = BarcodeScannerEngine.resolveGS1Company(barcode);
-      if (gs1) {
-        matched = {
-          name: `${gs1.brand} Product (${barcode.slice(-4)})`,
-          brand: gs1.brand,
-          cat: gs1.cat || 'Grocery',
-          mrp: gs1.typicalMrp,
-          price: Math.round(gs1.typicalMrp * 0.9),
-          cost: Math.round(gs1.typicalMrp * 0.75)
-        };
       }
+
+      if (matched) {
+        try {
+          const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
+          cache[barcode] = { ...matched, barcode };
+          localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
+        } catch (e) {}
+        applyFields(matched, sourceLabel, '🟢 Online');
+        return;
+      }
+
+      // Online lookup missed or failed — check if user wants optional local hint without silent mixing
+      const localHint = window.BarcodeScanner && typeof BarcodeScanner.getLocalOfflineHint === 'function'
+        ? BarcodeScanner.getLocalOfflineHint(barcode)
+        : null;
+
+      if (apiErrorMsg) {
+        App.toast('danger', 'Live Barcode API Error', apiErrorMsg);
+      } else {
+        App.toast('warning', 'Not Found Online', 'Live APIs had no match. Enter product details manually.');
+      }
+
+      if (localHint && localHint.item) {
+        const useHint = confirm(
+          `${apiErrorMsg ? 'Live Gemini API failed: ' + apiErrorMsg : 'Live online databases had no exact match for ' + barcode}.\n\n` +
+          `Apply local catalog hint "${localHint.item.name}" instead?`
+        );
+        if (useHint) {
+          applyFields(localHint.item, localHint.sourceLabel, '📦 Local Hint');
+        }
+      }
+      return;
     }
 
-    // 6. Universal Fallback
-    if (!matched) {
-      matched = {
-        name: `Kirana Product (${barcode.slice(-4)})`,
-        brand: 'Packaged Brand',
-        cat: 'Grocery',
-        mrp: 30,
-        price: 25,
-        cost: 20
-      };
+    // STRICT OFFLINE PATH: Query Local Master DB / Cache / GS1 Prefix
+    const offlineHit = window.BarcodeScanner && typeof BarcodeScanner.getLocalOfflineHint === 'function'
+      ? BarcodeScanner.getLocalOfflineHint(barcode)
+      : null;
+
+    if (offlineHit && offlineHit.item) {
+      applyFields(offlineHit.item, offlineHit.sourceLabel, '🟠 Offline');
+    } else {
+      App.toast('warning', 'Offline: Unknown Barcode', 'Enter product details manually below.');
     }
-
-    // Auto-fill form fields
-    const nameEl = document.getElementById('prod-form-name');
-    const mrpEl = document.getElementById('prod-form-mrp');
-    const priceEl = document.getElementById('prod-form-price');
-    const costEl = document.getElementById('prod-form-cost');
-    const catEl = document.getElementById('prod-form-cat');
-
-    if (nameEl) nameEl.value = matched.name || '';
-    if (mrpEl) mrpEl.value = matched.mrp || '';
-    if (priceEl) priceEl.value = matched.price || '';
-    if (costEl) costEl.value = matched.cost || '';
-    if (catEl && matched.cat) catEl.value = matched.cat;
-
-    App.toast('success', 'Product Auto-Filled!', `${matched.name} (₹${matched.price})`);
   }
 
   closeModal() {

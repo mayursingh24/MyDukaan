@@ -111,27 +111,27 @@ class KhataEngine {
         `https://wa.me/?text=${reminderMsg}`;
 
       return `
-        <div class="card" style="margin-bottom: 12px; padding: 14px 18px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-input); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--primary);">
+        <div class="card" style="margin-bottom: 12px; padding: 14px 16px;">
+          <div class="khata-card-row">
+            <div class="khata-customer-main">
+              <div style="width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-md); background: var(--bg-input); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--primary);">
                 ${c.name.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              <div style="min-width: 0; flex: 1;">
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
                   <span>${c.name}</span>
                   <span class="badge ${c.tier === 'Gold' ? 'badge-warning' : c.tier === 'Silver' ? 'badge-primary' : 'badge-muted'}">
                     ${c.tier || 'Regular'}
                   </span>
                 </div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; word-break: break-word;">
                   Phone: ${c.phone || 'N/A'} ${c.notes ? `• ${c.notes}` : ''}
                 </div>
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 18px; margin-left: auto;">
-              <div style="text-align: right;">
+            <div class="khata-card-right">
+              <div class="khata-balance-block">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;">Balance Due</div>
                 <div style="font-size: 16px; font-weight: 700; color: ${hasDue ? 'var(--danger)' : 'var(--success)'};" class="tnum">
                   ${hasDue ? `₹${c.balanceDue.toLocaleString('en-IN')}` : '₹0 (Clear)'}
@@ -139,7 +139,7 @@ class KhataEngine {
                 <div style="font-size: 11px; color: var(--text-muted);">Points: ${c.points || 0}</div>
               </div>
 
-              <div style="display: flex; gap: 6px; align-items: center;">
+              <div class="khata-card-actions">
                 ${hasDue ? `
                   <button class="btn btn-success btn-sm" onclick="Khata.openRecordPaymentModal('${c.id}')">
                     ${Icons.wallet(14)} Settle

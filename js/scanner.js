@@ -89,9 +89,9 @@ class BarcodeScannerEngine {
           </div>
 
           <!-- Manual / Quick Barcode Search Bar with Live Auto-Trigger -->
-          <div style="padding: 10px 16px; background: var(--bg-input); border-bottom: 1px solid var(--border-subtle); display: flex; gap: 8px;">
-            <input type="text" id="manual-barcode-input" class="form-input" style="padding: 7px 10px; font-size: 13px; font-family: var(--font-mono);" placeholder="Enter barcode (e.g. 8901719908262)" oninput="BarcodeScanner.handleInputLive(this.value)" onkeydown="if(event.key==='Enter') BarcodeScanner.handleManualSubmit()" autofocus />
-            <button class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 7px 14px;" onclick="BarcodeScanner.handleManualSubmit()">
+          <div style="padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border-subtle); display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="manual-barcode-input" class="form-input" style="padding: 8px 10px; font-size: 13px; font-family: var(--font-mono); flex: 1; min-width: 0;" placeholder="Enter barcode (e.g. 8901719908262)" oninput="BarcodeScanner.handleInputLive(this.value)" onkeydown="if(event.key==='Enter') BarcodeScanner.handleManualSubmit()" autofocus />
+            <button class="btn btn-primary btn-sm" style="white-space: nowrap; flex-shrink: 0; padding: 8px 14px;" onclick="BarcodeScanner.handleManualSubmit()">
               ${Icons.search(13)} Lookup
             </button>
           </div>
@@ -100,7 +100,7 @@ class BarcodeScannerEngine {
           <div id="scanned-detection-area" style="display: none;" class="scanned-detection-card"></div>
 
           <!-- Multi-action Control Bar -->
-          <div style="padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); flex-wrap: wrap; gap: 8px;">
+          <div style="padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
               <label class="btn btn-secondary btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin: 0;">
                 <input type="file" accept="image/*" style="display: none;" onchange="if(this.files && this.files[0]) BarcodeScanner.scanImageFile(this.files[0])" />
@@ -188,7 +188,7 @@ class BarcodeScannerEngine {
           formatsToSupport: formats,
           verbose: false,
           experimentalFeatures: {
-            useBarCodeDetectorIfSupported: false // Keep FALSE so ZXing 1D barcode decoder runs on all browsers!
+            useBarCodeDetectorIfSupported: ('BarcodeDetector' in window)
           }
         });
 
@@ -206,10 +206,10 @@ class BarcodeScannerEngine {
         } catch (camErr) {}
 
         const scanConfig = {
-          fps: 24,
+          fps: 20,
           qrbox: (viewfinderWidth, viewfinderHeight) => ({
-            width: Math.min(Math.round(viewfinderWidth * 0.95), 460),
-            height: Math.min(Math.round(viewfinderHeight * 0.8), 260)
+            width: Math.max(180, Math.min(Math.round(viewfinderWidth * 0.88), 380)),
+            height: Math.max(95, Math.min(Math.round(viewfinderHeight * 0.65), 185))
           }),
           aspectRatio: 1.777778
         };
@@ -344,18 +344,18 @@ class BarcodeScannerEngine {
 
       resultArea.innerHTML = `
         <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${product.name}</div>
-            <span class="badge badge-success">In Stock (${product.stock} ${product.unit})</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); word-break: break-word;">${this.escapeHtml(product.name)}</div>
+            <span class="badge badge-success">In Stock (${product.stock} ${this.escapeHtml(product.unit || 'unit')})</span>
           </div>
-          <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: 8px;">
-            <span>Barcode: ${product.barcode}</span>
+          <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <span>Barcode: ${this.escapeHtml(product.barcode)}</span>
             <span>MRP: ₹${product.mrp}</span>
             <span style="font-weight: 700; color: var(--text-primary);">Price: ₹${product.price}</span>
             ${discount > 0 ? `<span style="color: var(--success); font-weight: 600;">Save ₹${discount}</span>` : ''}
           </div>
-          <div style="display: flex; gap: 8px; margin-top: 10px;">
-            <button class="btn btn-primary" style="flex: 1;" onclick="BarcodeScanner.addToCartFromScanner('${product.id}')">
+          <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" style="flex: 1 1 180px;" onclick="BarcodeScanner.addToCartFromScanner('${product.id}')">
               ${Icons.plus(14)} Add to Bill Cart (₹${product.price})
             </button>
             <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.closeScannerModal(); App.navigate('inventory'); Inventory.openEditProductModal('${product.id}')">
@@ -531,48 +531,153 @@ class BarcodeScannerEngine {
     return null;
   }
 
+  escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+  }
+
+  getLocalOfflineHint(barcode) {
+    const cleanCode = String(barcode || '').trim();
+    if (!cleanCode) return null;
+
+    if (BarcodeScanner.FMCG_MASTER_DB[cleanCode]) {
+      return {
+        item: { ...BarcodeScanner.FMCG_MASTER_DB[cleanCode], barcode: cleanCode },
+        sourceLabel: '🟠 Offline • Kirana Master DB'
+      };
+    }
+
+    try {
+      const cached = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
+      if (cached[cleanCode] && cached[cleanCode].name) {
+        return {
+          item: { ...cached[cleanCode], barcode: cleanCode },
+          sourceLabel: '🟠 Offline • Local Saved Cache'
+        };
+      }
+    } catch (e) {}
+
+    const gs1 = BarcodeScannerEngine.resolveGS1Company(cleanCode);
+    if (gs1) {
+      const estPrice = Math.round(gs1.typicalMrp * 0.9);
+      return {
+        item: {
+          barcode: cleanCode,
+          name: `${gs1.brand} Product (${cleanCode.slice(-4)})`,
+          brand: gs1.brand,
+          cat: gs1.cat || 'Grocery',
+          mrp: gs1.typicalMrp,
+          price: estPrice,
+          cost: Math.round(estPrice * 0.82),
+          unit: 'pack',
+          emoji: gs1.emoji || '📦'
+        },
+        sourceLabel: `🟠 Offline • GS1 Prefix (${gs1.brand})`
+      };
+    }
+
+    return null;
+  }
+
+  renderMatchedBarcodeCard(matchedItem, sourceLabel, barcode) {
+    const freshArea = document.getElementById('scanned-detection-area');
+    if (!freshArea || !matchedItem || !matchedItem.name) return;
+
+    const cleanName = matchedItem.name;
+    const cleanPrice = Number(matchedItem.price) || 20;
+    const cleanMrp = Number(matchedItem.mrp) || Math.round(cleanPrice * 1.15);
+    const cleanCost = Number(matchedItem.cost) || Math.round(cleanPrice * 0.85);
+    const cleanCat = matchedItem.cat || 'Grocery';
+    const cleanBrand = matchedItem.brand || '';
+    const cleanImg = matchedItem.imageUrl || null;
+    const isOnlineTag = sourceLabel.includes('Online');
+
+    freshArea.innerHTML = `
+      <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+          <span class="badge ${isOnlineTag ? 'badge-success' : 'badge-warning'}">${this.escapeHtml(sourceLabel)}</span>
+          <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">EAN: ${this.escapeHtml(barcode)}</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+          ${cleanImg ? `
+            <img src="${this.escapeHtml(cleanImg)}" alt="Product" style="width: 48px; height: 48px; border-radius: 8px; object-fit: contain; background: #fff; padding: 2px; flex-shrink: 0;" onerror="this.style.display='none'" />
+          ` : `<div style="font-size: 30px; flex-shrink: 0;">${this.escapeHtml(matchedItem.emoji || '📦')}</div>`}
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; font-weight: 800; color: var(--text-primary); word-break: break-word;">${this.escapeHtml(cleanName)}</div>
+            <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
+              ${cleanBrand ? `Brand: <strong>${this.escapeHtml(cleanBrand)}</strong> • ` : ''}Category: <strong>${this.escapeHtml(cleanCat)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="scanner-form-grid" style="margin-bottom: 10px;">
+          <div>
+            <label class="form-label" style="font-size: 10.5px;">Product Name</label>
+            <input type="text" id="google-edit-name" class="form-input" style="font-size: 12px;" value="${this.escapeHtml(cleanName)}" />
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 10.5px;">Sell Price (₹)</label>
+            <input type="number" id="google-edit-price" class="form-input" style="font-size: 12px;" value="${cleanPrice}" />
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 10.5px;">MRP (₹)</label>
+            <input type="number" id="google-edit-mrp" class="form-input" style="font-size: 12px;" value="${cleanMrp}" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" data-barcode="${this.escapeHtml(barcode)}" data-cat="${this.escapeHtml(cleanCat)}" data-cost="${cleanCost}" onclick="BarcodeScanner.confirmAndSaveProduct(this.dataset.barcode, this.dataset.cat, Number(this.dataset.cost))">
+          ${Icons.check(14)} Save into Inventory & Add to Bill (₹${cleanPrice})
+        </button>
+      </div>
+    `;
+    freshArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  applyLocalHint(barcode) {
+    const localHint = this.getLocalOfflineHint(barcode);
+    if (localHint && localHint.item) {
+      this.renderMatchedBarcodeCard(localHint.item, localHint.sourceLabel, barcode);
+    }
+  }
+
   async fetchAndRenderGoogleBarcode(barcode) {
     const resultArea = document.getElementById('scanned-detection-area');
     if (!resultArea) return;
+
+    const isOnline = typeof navigator === 'undefined' ? true : navigator.onLine !== false;
 
     resultArea.innerHTML = `
       <div style="padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); text-align: center;">
         <div style="display: inline-block; width: 18px; height: 18px; border: 2px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-bottom: 6px;"></div>
         <div style="font-size: 13px; font-weight: 700; color: var(--text-primary);">
-          Identifying Barcode ${barcode}...
+          Identifying Barcode ${this.escapeHtml(barcode)}...
         </div>
         <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-          Checking Open Food Facts & FMCG Master Registry
+          ${isOnline
+            ? '🟢 Online Mode: Checking Open Food Facts & Gemini Search Grounding'
+            : '🟠 Offline Mode: Checking Local Kirana Registry & Saved Cache'}
         </div>
       </div>
     `;
 
     let matchedItem = null;
     let sourceLabel = '';
+    let onlineApiError = null;
+    let onlineApiStatus = 0;
 
-    // Step 1: Check Local Master FMCG Dictionary (0ms offline)
-    if (BarcodeScanner.FMCG_MASTER_DB[barcode]) {
-      matchedItem = { ...BarcodeScanner.FMCG_MASTER_DB[barcode], barcode };
-      sourceLabel = 'Verified Kirana Master DB';
-    }
-
-    // Step 2: Check Local Scanned Product Cache
-    if (!matchedItem) {
+    if (isOnline) {
+      // STRICT ONLINE PATH: Query live Open Food Facts API & Gemini Grounding ONLY
+      // Step 1: Open Food Facts v2 API
       try {
-        const cached = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
-        if (cached[barcode]) {
-          matchedItem = cached[barcode];
-          sourceLabel = 'Local Barcode Cache';
-        }
-      } catch(e){}
-    }
-
-    // Step 3: Check Open Food Facts Global API
-    if (!matchedItem) {
-      try {
-        const offRes = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,brands,categories,quantity,image_front_url`, {
-          signal: AbortSignal.timeout(3500)
-        });
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3500);
+        const offRes = await fetch(
+          `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,brands,categories,quantity,image_front_url`,
+          { signal: controller.signal }
+        );
+        clearTimeout(tid);
         if (offRes.ok) {
           const offData = await offRes.json();
           if (offData && offData.status === 1 && offData.product) {
@@ -581,7 +686,7 @@ class BarcodeScannerEngine {
             if (name) {
               matchedItem = {
                 barcode,
-                name: name,
+                name,
                 brand: p.brands || 'Packaged Brand',
                 cat: this.normalizeCategory(p.categories || 'Grocery'),
                 mrp: 30,
@@ -591,54 +696,38 @@ class BarcodeScannerEngine {
                 imageUrl: p.image_front_url || null,
                 emoji: '📦'
               };
-              sourceLabel = 'Open Food Facts Registry';
+              sourceLabel = '🟢 Online • Open Food Facts';
             }
           }
         }
-      } catch(e) {}
-    }
+      } catch (e) {}
 
-    // Step 4: AI Grounding Lookup (Netlify / Gemini)
-    if (!matchedItem && window.DukaanAI && typeof DukaanAI.lookupBarcodeOnline === 'function') {
-      try {
-        const geminiResult = await DukaanAI.lookupBarcodeOnline(barcode);
-        if (geminiResult && geminiResult.name) {
-          matchedItem = geminiResult;
-          sourceLabel = 'Google Gemini Grounding';
+      // Step 2: Gemini Grounding via /api/gemini
+      if (!matchedItem && window.DukaanAI && typeof DukaanAI.lookupBarcodeOnline === 'function') {
+        const geminiRes = await DukaanAI.lookupBarcodeOnline(barcode);
+        if (geminiRes && geminiRes.ok && geminiRes.found && geminiRes.product && geminiRes.product.name) {
+          matchedItem = geminiRes.product;
+          sourceLabel = `🟢 Online • Gemini (${geminiRes.model || 'Search Grounding'})`;
+        } else if (geminiRes && !geminiRes.ok && !geminiRes.offline) {
+          onlineApiError = geminiRes.error || 'Gemini barcode lookup failed';
+          onlineApiStatus = geminiRes.status || 0;
         }
-      } catch (err) {}
-    }
+      }
 
-    // Step 5: GS1 India & Global Manufacturer Intelligence (Always succeeds for 890... barcodes)
-    if (!matchedItem) {
-      const gs1 = BarcodeScannerEngine.resolveGS1Company(barcode);
-      if (gs1) {
-        const estPrice = Math.round(gs1.typicalMrp * 0.9);
-        matchedItem = {
-          barcode,
-          name: `${gs1.brand} Product (${barcode.slice(-4)})`,
-          brand: gs1.brand,
-          cat: gs1.cat || 'Grocery',
-          mrp: gs1.typicalMrp,
-          price: estPrice,
-          cost: Math.round(estPrice * 0.82),
-          unit: 'pack',
-          emoji: gs1.emoji || '📦'
-        };
-        sourceLabel = `GS1 Registry (${gs1.brand})`;
-      } else {
-        matchedItem = {
-          barcode,
-          name: `Kirana Item (${barcode.slice(-4)})`,
-          brand: 'Packaged Goods',
-          cat: 'Grocery',
-          mrp: 35,
-          price: 30,
-          cost: 25,
-          unit: 'pack',
-          emoji: '📦'
-        };
-        sourceLabel = 'Auto Barcode Vision';
+      // Persist online match to cache for future offline scans
+      if (matchedItem && matchedItem.name) {
+        try {
+          const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
+          cache[barcode] = matchedItem;
+          localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
+        } catch (e) {}
+      }
+    } else {
+      // STRICT OFFLINE PATH: System is offline -> use local FMCG catalog / cache / GS1 prefix
+      const offlineHit = this.getLocalOfflineHint(barcode);
+      if (offlineHit) {
+        matchedItem = offlineHit.item;
+        sourceLabel = offlineHit.sourceLabel;
       }
     }
 
@@ -646,100 +735,72 @@ class BarcodeScannerEngine {
     if (!freshArea) return;
 
     if (matchedItem && matchedItem.name) {
-      const cleanName = matchedItem.name;
-      const cleanPrice = Number(matchedItem.price) || 20;
-      const cleanMrp = Number(matchedItem.mrp) || Math.round(cleanPrice * 1.15);
-      const cleanCost = Number(matchedItem.cost) || Math.round(cleanPrice * 0.85);
-      const cleanCat = matchedItem.cat || 'Grocery';
-      const cleanBrand = matchedItem.brand || '';
-      const cleanImg = matchedItem.imageUrl || null;
-
-      // Cache this barcode locally for instant future scans
-      try {
-        const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
-        cache[barcode] = matchedItem;
-        localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
-      } catch(e){}
-
-      freshArea.innerHTML = `
-        <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="badge badge-primary">⚡ ${sourceLabel}</span>
-            <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">EAN: ${barcode}</span>
-          </div>
-
-          <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
-            ${cleanImg ? `
-              <img src="${cleanImg}" alt="Product" style="width: 50px; height: 50px; border-radius: 8px; object-fit: contain; background: #fff; padding: 2px;" onerror="this.style.display='none'" />
-            ` : `<div style="font-size: 32px;">${matchedItem.emoji || '📦'}</div>`}
-            <div style="flex: 1;">
-              <div style="font-size: 14px; font-weight: 800; color: var(--text-primary);">${cleanName}</div>
-              <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
-                ${cleanBrand ? `Brand: <strong>${cleanBrand}</strong> • ` : ''}Category: <strong>${cleanCat}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-            <div>
-              <label class="form-label" style="font-size: 10.5px;">Product Name</label>
-              <input type="text" id="google-edit-name" class="form-input" style="font-size: 12px;" value="${cleanName}" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 10.5px;">Sell Price (₹)</label>
-              <input type="number" id="google-edit-price" class="form-input" style="font-size: 12px;" value="${cleanPrice}" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 10.5px;">MRP (₹)</label>
-              <input type="number" id="google-edit-mrp" class="form-input" style="font-size: 12px;" value="${cleanMrp}" />
-            </div>
-          </div>
-
-          <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="BarcodeScanner.confirmAndSaveProduct('${barcode}', '${cleanCat}', '${cleanCost}')">
-            ${Icons.check(14)} Save into Inventory & Add to Bill (₹${cleanPrice})
-          </button>
-        </div>
-      `;
-    } else {
-      // Clean fallback: Allow merchant to type once and save permanently
-      freshArea.innerHTML = `
-        <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-size: 12.5px; font-weight: 700; color: var(--warning);">
-              Unregistered Barcode: ${barcode}
-            </div>
-            <span class="badge badge-warning">New Item</span>
-          </div>
-          <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 10px;">
-            This barcode is not in public databases yet. Enter details below to register once — it will be remembered permanently:
-          </p>
-          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-            <div>
-              <label class="form-label" style="font-size: 10.5px;">Product Name *</label>
-              <input type="text" id="quick-add-name" class="form-input" placeholder="e.g. Parle Hide & Seek 120g" required />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 10.5px;">Selling Price *</label>
-              <input type="number" id="quick-add-price" class="form-input" placeholder="₹ Price" required />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 10.5px;">Category</label>
-              <select id="quick-add-cat" class="form-select" style="font-size: 11.5px;">
-                <option value="Grocery">Grocery</option>
-                <option value="Snacks">Snacks</option>
-                <option value="Beverages">Beverages</option>
-                <option value="Dairy">Dairy</option>
-                <option value="Personal Care">Personal Care</option>
-                <option value="Household">Household</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="BarcodeScanner.quickRegisterAndAddToCart('${barcode}')">
-            ${Icons.check(14)} Save to Inventory & Add to Bill
-          </button>
-        </div>
-      `;
+      this.renderMatchedBarcodeCard(matchedItem, sourceLabel, barcode);
+      return;
     }
+
+    // No match: render clean manual form + explicit opt-in local hint button (never mix silently while online!)
+    const localHint = isOnline ? this.getLocalOfflineHint(barcode) : null;
+    const statusBadge = isOnline
+      ? `<span class="badge ${onlineApiError ? 'badge-danger' : 'badge-warning'}">${onlineApiError ? `Online API Error (${onlineApiStatus || 'Err'})` : 'Online: Not Found'}</span>`
+      : `<span class="badge badge-warning">Offline: New Item</span>`;
+
+    freshArea.innerHTML = `
+      <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--warning);">
+            Barcode: ${this.escapeHtml(barcode)}
+          </div>
+          ${statusBadge}
+        </div>
+        ${onlineApiError ? `
+          <div style="background: var(--danger-light); border: 1px solid var(--danger-border); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 11.5px; color: var(--text-primary); word-break: break-word;">
+            <strong style="color: var(--danger);">Live Gemini Lookup Failed:</strong> ${this.escapeHtml(onlineApiError)}
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+              <button class="btn btn-primary btn-sm" data-barcode="${this.escapeHtml(barcode)}" onclick="BarcodeScanner.fetchAndRenderGoogleBarcode(this.dataset.barcode)">↻ Retry Online</button>
+              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()">🔑 Set Key</button>
+            </div>
+          </div>
+        ` : `
+          <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 10px;">
+            ${isOnline
+              ? 'Live APIs did not return an exact match for this barcode. Enter product details once to register locally:'
+              : 'System is offline and barcode is not cached yet. Enter details below to register:'}
+          </p>
+        `}
+        ${localHint ? `
+          <div style="margin-bottom: 10px;">
+            <button class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center; border-style: dashed;" data-barcode="${this.escapeHtml(barcode)}" onclick="BarcodeScanner.applyLocalHint(this.dataset.barcode)">
+              📦 Use Local Catalog Hint: ${this.escapeHtml(localHint.item.name)}
+            </button>
+          </div>
+        ` : ''}
+        <div class="scanner-form-grid" style="margin-bottom: 10px;">
+          <div>
+            <label class="form-label" style="font-size: 10.5px;">Product Name *</label>
+            <input type="text" id="quick-add-name" class="form-input" placeholder="e.g. Parle Hide & Seek 120g" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 10.5px;">Selling Price *</label>
+            <input type="number" id="quick-add-price" class="form-input" placeholder="₹ Price" required />
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 10.5px;">Category</label>
+            <select id="quick-add-cat" class="form-select" style="font-size: 11.5px;">
+              <option value="Grocery">Grocery</option>
+              <option value="Snacks">Snacks</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Dairy">Dairy</option>
+              <option value="Personal Care">Personal Care</option>
+              <option value="Household">Household</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" data-barcode="${this.escapeHtml(barcode)}" onclick="BarcodeScanner.quickRegisterAndAddToCart(this.dataset.barcode)">
+          ${Icons.check(14)} Save to Inventory & Add to Bill
+        </button>
+      </div>
+    `;
 
     freshArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -756,7 +817,7 @@ class BarcodeScannerEngine {
     return 'Grocery';
   }
 
-  confirmAndSaveProduct(barcode, cat = 'Grocery') {
+  confirmAndSaveProduct(barcode, cat = 'Grocery', estimatedCost = null) {
     const nameIn = document.getElementById('google-edit-name');
     const priceIn = document.getElementById('google-edit-price');
     const mrpIn = document.getElementById('google-edit-mrp');
@@ -764,7 +825,7 @@ class BarcodeScannerEngine {
     const name = nameIn && nameIn.value.trim() ? nameIn.value.trim() : `Product ${barcode.slice(-4)}`;
     const price = priceIn && parseFloat(priceIn.value) > 0 ? parseFloat(priceIn.value) : 20;
     const mrp = mrpIn && parseFloat(mrpIn.value) > 0 ? parseFloat(mrpIn.value) : Math.round(price * 1.15);
-    const cost = Math.round(price * 0.85);
+    const cost = Number(estimatedCost) > 0 ? Number(estimatedCost) : Math.round(price * 0.85);
 
     const newProduct = {
       id: `P${Date.now().toString().slice(-4)}`,

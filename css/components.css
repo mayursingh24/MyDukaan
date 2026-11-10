@@ -47,30 +47,86 @@
   gap: 10px;
 }
 
+.barcode-input-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.barcode-input-group .form-input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.khata-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.khata-customer-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.khata-card-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.khata-balance-block {
+  text-align: right;
+  min-width: 90px;
+}
+
+.khata-card-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 /* ==========================================================================
    POS TERMINAL LAYOUT & HIGH-SPEED BILLING
    ========================================================================== */
 .pos-layout {
   display: grid;
-  grid-template-columns: 1fr 390px;
+  grid-template-columns: minmax(0, 1fr) 390px;
   gap: 20px;
   align-items: start;
+}
+
+.pos-layout > * {
+  min-width: 0;
 }
 
 .pos-catalog-panel {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pos-search-row {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .pos-search-input-wrap {
-  flex: 1;
+  flex: 1 1 180px;
+  min-width: 0;
   position: relative;
 }
 
@@ -134,7 +190,7 @@
 /* POS Products Grid */
 .pos-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 165px), 1fr));
   gap: 12px;
 }
 
@@ -143,6 +199,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 12px;
+  min-width: 0;
   cursor: pointer;
   transition: transform 0.12s, border-color 0.12s, background-color 0.12s;
   display: flex;
@@ -466,7 +523,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(6px);
-  z-index: 1100;
+  z-index: 10030;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -479,7 +536,8 @@
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 480px;
-  max-height: 90vh;
+  max-height: 92vh;
+  max-height: 92dvh;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -491,6 +549,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -503,6 +562,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#html5-qr-reader,
+#html5-qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 #scanner-video-preview {
@@ -595,15 +661,37 @@
 /* ==========================================================================
    AI COPILOT MODAL & CHAT INTERFACE
    ========================================================================== */
+.ai-modal-backdrop {
+  z-index: 10025;
+}
+
 .ai-chat-modal-window {
   max-width: 600px;
-  height: 620px;
+  height: min(620px, 88vh);
   display: flex;
   flex-direction: column;
 }
 
 .ai-modal-header {
-  padding: 14px 18px;
+  padding: 12px 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.ai-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .ai-chat-thread {
@@ -652,6 +740,8 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .ai-msg-row.user .ai-msg-bubble {
@@ -751,20 +841,21 @@
    ========================================================================== */
 @media (max-width: 900px) {
   .pos-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
 
   .pos-cart-panel {
     position: fixed;
     top: auto;
-    bottom: 60px;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
-    max-height: 80vh;
+    max-height: calc(100vh - 118px);
+    max-height: calc(100dvh - 118px);
     border-radius: 16px 16px 0 0;
-    z-index: 92;
-    transform: translateY(110%);
+    z-index: 9985;
+    transform: translateY(115%);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
   }
@@ -774,22 +865,26 @@
   }
 
   .mobile-pos-sticky-bar {
-    display: flex;
+    display: none;
     position: fixed;
-    bottom: 60px;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
-    height: 50px;
+    height: 48px;
     background: var(--primary);
     color: #FFFFFF;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    z-index: 91;
+    z-index: 9980;
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobile-pos-sticky-bar.pos-active {
+    display: flex;
   }
 
   .form-row-2, .form-row-3 {
@@ -801,14 +896,21 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .ai-modal-backdrop {
+    padding: 0;
+  }
+
   .ai-chat-modal-window {
     height: 100vh;
+    height: 100dvh;
     max-height: 100vh;
+    max-height: 100dvh;
+    max-width: 100%;
     border-radius: 0;
   }
 
   .pos-products-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
@@ -816,12 +918,67 @@
     padding: 10px 8px;
   }
 
-  .pos-prod-name {
+  .pos-prod-title {
     font-size: 12px;
   }
 
   .pos-prod-price {
     font-size: 13.5px;
+  }
+
+  .notification-popover {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: 56px;
+    width: auto;
+    max-width: none;
+  }
+
+  .khata-card-row {
+    align-items: flex-start;
+  }
+
+  .khata-card-right {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+  }
+
+  .khata-balance-block {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .scanner-modal-backdrop {
+    padding: 8px;
+  }
+
+  .scanner-viewport-wrap {
+    height: 210px;
+  }
+
+  #html5-qr-reader {
+    min-height: 200px !important;
+  }
+
+  .scanner-target-reticle {
+    width: 82%;
+    max-width: 260px;
+    height: 112px;
+  }
+
+  .ai-msg-bubble {
+    max-width: 88%;
+  }
+}
+
+@media (max-width: 350px) {
+  .pos-products-grid {
+    grid-template-columns: 1fr;
   }
 }
 
