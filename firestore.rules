@@ -21,6 +21,8 @@ rules_version = '2';
 //      - shops: list <= 50 items (optional)
 //      - activeShopId: string <= 100 (optional)
 //      - attendance: map <= 200 entries (optional)
+//      - parkedCarts: list <= 25 items (optional)
+//      - ownerPinHash: string <= 128 (optional)
 //      - theme: 'dark' | 'light' (optional)
 //      - accent: string <= 40 (optional)
 //      - language: 'en' | 'hi' | 'hinglish' (optional)
@@ -34,13 +36,15 @@ rules_version = '2';
 //      - id: string == productId, 1..100 (required, immutable)
 //      - name: string 1..220 (required)
 //      - price: number >= 0 (required)
-//      - stock: number >= 0 (required)
+//      - stock: number >= 0 (required, accepts decimal quantities)
 //      - cat: string <= 80 (optional)
 //      - barcode: string <= 80 (optional)
 //      - mrp: number >= 0 (optional)
 //      - cost: number >= 0 (optional)
 //      - unit: string <= 40 (optional)
-//      - minStock: number >= 0 (optional)
+//      - minStock: number >= 0 (optional, accepts decimal quantities)
+//      - gstRate: number 0..100 (optional)
+//      - expiryDate: string <= 40 (optional)
 //      - emoji: string <= 20 (optional)
 //      - shopId: string <= 100 (optional)
 //      - updatedAt: number >= 0 (optional)
@@ -70,13 +74,21 @@ rules_version = '2';
 //      - customerId: string <= 100 or null (optional)
 //      - customerName: string <= 180 (optional)
 //      - customerPhone: string <= 40 (optional)
+//      - cashierName: string <= 140 (optional)
 //      - subtotal: number >= 0 (optional)
 //      - tax: number >= 0 (optional)
+//      - gstBreakdown: map <= 10 entries (optional)
+//      - discountType: 'flat' | 'pct' (optional)
+//      - discountValue: number >= 0 (optional)
 //      - discount: number >= 0 (optional)
 //      - paid: number >= 0 (optional)
 //      - due: number >= 0 (optional)
 //      - paymentMode: string <= 40 (optional)
 //      - status: string <= 40 (optional)
+//      - refundAmount: number >= 0 (optional)
+//      - returnedItems: list <= 500 items (optional)
+//      - lastReturnDate: string <= 40 (optional)
+//      - refundMode: string <= 40 (optional)
 //      - shopId: string <= 100 (optional)
 //      - updatedAt: number >= 0 (optional)
 //
@@ -222,15 +234,17 @@ service cloud.firestore {
     function isValidMetaStore(data) {
       return hasRequiredFields(data, ['shop', 'updatedAt']) &&
         hasOnlyAllowedFields(data, [
-          'shop', 'shops', 'activeShopId', 'attendance', 'theme',
-          'accent', 'language', 'soundEnabled', 'updatedAt',
-          'updatedByDevice', 'ownerEmail'
+          'shop', 'shops', 'activeShopId', 'attendance', 'parkedCarts',
+          'ownerPinHash', 'theme', 'accent', 'language', 'soundEnabled',
+          'updatedAt', 'updatedByDevice', 'ownerEmail'
         ]) &&
         isValidShopMap(data.shop) &&
         isNonNegNumber(data.updatedAt) &&
         (!('shops' in data) || (data.shops is list && data.shops.size() <= 50)) &&
         isOptionalString(data, 'activeShopId', 100) &&
         (!('attendance' in data) || (data.attendance is map && data.attendance.size() <= 200)) &&
+        (!('parkedCarts' in data) || (data.parkedCarts is list && data.parkedCarts.size() <= 25)) &&
+        isOptionalString(data, 'ownerPinHash', 128) &&
         (!('theme' in data) || data.theme in ['dark', 'light']) &&
         isOptionalString(data, 'accent', 40) &&
         (!('language' in data) || data.language in ['en', 'hi', 'hinglish']) &&
@@ -244,7 +258,8 @@ service cloud.firestore {
       return hasRequiredFields(data, ['id', 'name', 'price', 'stock']) &&
         hasOnlyAllowedFields(data, [
           'id', 'name', 'cat', 'barcode', 'mrp', 'price', 'cost',
-          'stock', 'unit', 'minStock', 'emoji', 'shopId', 'updatedAt'
+          'stock', 'unit', 'minStock', 'gstRate', 'expiryDate',
+          'emoji', 'shopId', 'updatedAt'
         ]) &&
         isValidDocId(data, 'id', productId) &&
         isNonEmptyString(data.name, 220) &&
@@ -256,6 +271,9 @@ service cloud.firestore {
         isOptionalNonNegNumber(data, 'cost') &&
         isOptionalString(data, 'unit', 40) &&
         isOptionalNonNegNumber(data, 'minStock') &&
+        isOptionalNonNegNumber(data, 'gstRate') &&
+        (!('gstRate' in data) || data.gstRate <= 100) &&
+        isOptionalString(data, 'expiryDate', 40) &&
         isOptionalString(data, 'emoji', 20) &&
         isOptionalString(data, 'shopId', 100) &&
         isOptionalNonNegNumber(data, 'updatedAt');
@@ -285,8 +303,10 @@ service cloud.firestore {
       return hasRequiredFields(data, ['id', 'date', 'items', 'total']) &&
         hasOnlyAllowedFields(data, [
           'id', 'date', 'time', 'customerId', 'customerName', 'customerPhone',
-          'items', 'subtotal', 'tax', 'discount', 'total', 'paid', 'due',
-          'paymentMode', 'status', 'shopId', 'updatedAt'
+          'cashierName', 'items', 'subtotal', 'tax', 'gstBreakdown',
+          'discountType', 'discountValue', 'discount', 'total', 'paid', 'due',
+          'paymentMode', 'status', 'refundAmount', 'returnedItems',
+          'lastReturnDate', 'refundMode', 'shopId', 'updatedAt'
         ]) &&
         isValidDocId(data, 'id', invoiceId) &&
         isNonEmptyString(data.date, 40) &&
@@ -298,13 +318,21 @@ service cloud.firestore {
           (data.customerId is string && data.customerId.size() <= 100)) &&
         isOptionalString(data, 'customerName', 180) &&
         isOptionalString(data, 'customerPhone', 40) &&
+        isOptionalString(data, 'cashierName', 140) &&
         isOptionalNonNegNumber(data, 'subtotal') &&
         isOptionalNonNegNumber(data, 'tax') &&
+        (!('gstBreakdown' in data) || (data.gstBreakdown is map && data.gstBreakdown.size() <= 10)) &&
+        (!('discountType' in data) || (data.discountType is string && data.discountType in ['flat', 'pct'])) &&
+        isOptionalNonNegNumber(data, 'discountValue') &&
         isOptionalNonNegNumber(data, 'discount') &&
         isOptionalNonNegNumber(data, 'paid') &&
         isOptionalNonNegNumber(data, 'due') &&
         isOptionalString(data, 'paymentMode', 40) &&
         isOptionalString(data, 'status', 40) &&
+        isOptionalNonNegNumber(data, 'refundAmount') &&
+        (!('returnedItems' in data) || (data.returnedItems is list && data.returnedItems.size() <= 500)) &&
+        isOptionalString(data, 'lastReturnDate', 40) &&
+        isOptionalString(data, 'refundMode', 40) &&
         isOptionalString(data, 'shopId', 100) &&
         isOptionalNonNegNumber(data, 'updatedAt');
     }

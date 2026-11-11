@@ -73,8 +73,12 @@ Customer Udhaar Ledger:
 `.trim();
   }
 
-  // Open the Premium AI Copilot Interface
+  // Open the Premium AI Copilot Interface (Owner-only financial context)
   openChatModal() {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.toast('warning', 'Owner Only', 'Dukkan Copilot financial insights are restricted in Cashier Mode.');
+      return;
+    }
     const isOnline = this.isSystemOnline();
     const badgeClass = isOnline ? 'badge-success' : 'badge-warning';
     const badgeText = isOnline ? '🟢 Online • Live Gemini API' : '🟠 Offline • Local Advisor';
@@ -327,7 +331,7 @@ Customer Udhaar Ledger:
       const errMsg =
         (result && result.error) ||
         (netError?.name === 'AbortError'
-          ? 'Gemini API request timed out after 13s.'
+          ? 'Gemini API request timed out after 24s.'
           : netError?.message) ||
         `Gemini API returned HTTP ${errStatus || 'Error'}.`;
       const hintMsg = (result && result.hint) || '';
@@ -369,7 +373,7 @@ Customer Udhaar Ledger:
       return `🛡️ **Offline Store Advisor Status:**\n\n` +
         `• **Network Status:** ${onlineNow ? '🟢 Online (API Mode Preferred)' : '🟠 Offline Mode'}\n` +
         `• **Store Local DB:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s, i) => s + (i.paid || 0), 0).toLocaleString('en-IN')} Sales)\n` +
-        `• **Live Gemini Models:** \`gemini-3.8-flash\` / \`gemini-3.6-flash\` (Interactions API)\n\n` +
+        `• **Live Gemini Models:** \`gemini-3.8-flash\` / \`gemini-3.5-flash-lite\` (Interactions API)\n\n` +
         `💡 **Server Status:** Online queries connect directly via the built-in \`/api/gemini\` endpoint.`;
     }
 
@@ -424,7 +428,7 @@ Customer Udhaar Ledger:
     }
 
     if (pLow.includes('summary') || pLow.includes('health') || pLow.includes('revenue') || pLow.includes('sale') || pLow.includes('aaj') || pLow.includes('earning')) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = (window.DB && DB.getLocalDateStr) ? DB.getLocalDateStr() : new Date().toISOString().split('T')[0];
       const todayInvoices = invoices.filter(i => (i.date || '').startsWith(today));
       const todayRev = todayInvoices.reduce((s, i) => s + (i.paid || 0), 0);
       const totalRev = invoices.reduce((s, i) => s + (i.paid || 0), 0);
@@ -695,6 +699,149 @@ Customer Udhaar Ledger:
         offline: !this.isSystemOnline(),
         found: false,
         error: e.name === 'AbortError' ? 'Live barcode search timed out.' : (e.message || 'Network error')
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // Gemini Vision: Parse Wholesaler Bill / Purchase Invoice Photo
+  async scanPurchaseBillOnline(imageBase64, mimeType = 'image/jpeg', catalogHints = []) {
+    if (!imageBase64) return { ok: false, error: 'Bill image is required.' };
+    if (!this.isSystemOnline()) {
+      return { ok: false, offline: true, error: 'System is offline. Internet connection required for AI Bill Vision Scanner.' };
+    }
+
+    const endpoint = this.getEndpoint();
+    const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 26000);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'scanPurchaseBill',
+          imageBase64,
+          mimeType,
+          catalogHints,
+          apiKey: customApiKey
+        }),
+        signal: controller.signal
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result && result.bill) {
+        return {
+          ok: true,
+          bill: result.bill,
+          model: result.model || 'gemini-3.8-flash'
+        };
+      }
+      return {
+        ok: false,
+        status: response.status,
+        error: result?.error || `Gemini Bill Vision returned HTTP ${response.status}`,
+        hint: result?.hint || ''
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        offline: !this.isSystemOnline(),
+        error: e.name === 'AbortError' ? 'AI bill scan timed out. Try a tighter crop or smaller photo.' : (e.message || 'Network error')
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // Gemini NLU: Parse Hindi / Hinglish Voice Order against store catalog
+  async parseVoiceCartOnline(transcript, catalogHints = []) {
+    if (!transcript || !String(transcript).trim()) {
+      return { ok: false, error: 'Empty voice transcript.' };
+    }
+    if (!this.isSystemOnline()) {
+      return { ok: false, offline: true, error: 'System is offline.' };
+    }
+
+    const endpoint = this.getEndpoint();
+    const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 16000);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'parseVoiceCart',
+          transcript,
+          catalogHints,
+          apiKey: customApiKey
+        }),
+        signal: controller.signal
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result && result.result) {
+        return {
+          ok: true,
+          result: result.result,
+          model: result.model || 'gemini-3.8-flash'
+        };
+      }
+      return {
+        ok: false,
+        status: response.status,
+        error: result?.error || `Voice NLU returned HTTP ${response.status}`
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        offline: !this.isSystemOnline(),
+        error: e.name === 'AbortError' ? 'Voice NLU request timed out.' : (e.message || 'Network error')
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // Gemini Demand Prediction: 30-day velocity restock analysis
+  async predictRestockOnline(velocitySummary, prompt = '') {
+    if (!this.isSystemOnline()) {
+      return { ok: false, offline: true, error: 'System is offline.' };
+    }
+
+    const endpoint = this.getEndpoint();
+    const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 22000);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'predictRestock',
+          velocitySummary,
+          prompt,
+          apiKey: customApiKey
+        }),
+        signal: controller.signal
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result && result.text) {
+        return { ok: true, text: result.text, model: result.model || 'gemini-3.8-flash' };
+      }
+      return {
+        ok: false,
+        status: response.status,
+        error: result?.error || `Restock AI returned HTTP ${response.status}`
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        offline: !this.isSystemOnline(),
+        error: e.name === 'AbortError' ? 'Restock forecast timed out.' : (e.message || 'Network error')
       };
     } finally {
       clearTimeout(timeoutId);

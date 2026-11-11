@@ -5,6 +5,11 @@
 
 class StaffEngine {
   render() {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('manage staff & payroll');
+      return;
+    }
+
     const container = document.getElementById('staff-content-view');
     if (!container) return;
 
@@ -17,7 +22,7 @@ class StaffEngine {
     const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     const todayDateNum = today.getDate();
 
-    const totalSalaryBudget = staffList.reduce((s, st) => s + (st.salary || 0), 0);
+    const totalSalaryBudget = staffList.reduce((s, st) => s + (Number(st.salary) || 0), 0);
 
     container.innerHTML = `
       <div class="kpi-grid">
@@ -47,7 +52,7 @@ class StaffEngine {
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title">${Icons.calendar(16)} Monthly Attendance — ${currentMonth}</div>
+            <div class="card-title">${Icons.calendar(16)} Monthly Attendance — ${DB.escapeHtml(currentMonth)}</div>
             <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
               Click any date button to cycle status: Present (Green) → Half-Day (Amber) → Absent (Red)
             </div>
@@ -73,19 +78,19 @@ class StaffEngine {
 
             // Estimate pro-rated salary for current month
             const effectiveDays = presentCount + (halfCount * 0.5);
-            const estPay = Math.round((emp.salary / daysInMonth) * effectiveDays);
+            const estPay = Math.round(((Number(emp.salary) || 0) / daysInMonth) * effectiveDays);
 
             return `
               <div style="background: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                   <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 200px;">
                     <div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--radius-md); background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
-                      ${emp.name.charAt(0).toUpperCase()}
+                      ${DB.escapeHtml((emp.name || 'S').charAt(0).toUpperCase())}
                     </div>
                     <div style="min-width: 0; flex: 1;">
-                      <div style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${emp.name}</div>
+                      <div style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${DB.escapeHtml(emp.name)}</div>
                       <div style="font-size: 11.5px; color: var(--text-muted); word-break: break-word;">
-                        ${emp.role} • Phone: ${emp.phone} • ₹${emp.salary.toLocaleString('en-IN')}/month
+                        ${DB.escapeHtml(emp.role)} • Phone: ${DB.escapeHtml(emp.phone || '')} • ₹${(Number(emp.salary) || 0).toLocaleString('en-IN')}/month
                       </div>
                     </div>
                   </div>
@@ -95,7 +100,7 @@ class StaffEngine {
                     <span class="badge badge-warning">${halfCount} Half</span>
                     <span class="badge badge-danger">${leaveCount} Absent</span>
                     <span class="badge badge-primary" title="Estimated Earned Pay so far">Est: ₹${estPay.toLocaleString('en-IN')}</span>
-                    <button class="btn btn-danger btn-sm" onclick="Staff.deleteStaff('${emp.id}')" title="Delete employee">
+                    <button class="btn btn-danger btn-sm" onclick="Staff.deleteStaff('${DB.escapeHtml(emp.id)}')" title="Delete employee">
                       ${Icons.trash(13)}
                     </button>
                   </div>
@@ -110,9 +115,9 @@ class StaffEngine {
                     const bg = status === 'present' ? 'var(--success-light)' : status === 'half' ? 'var(--warning-light)' : status === 'leave' ? 'var(--danger-light)' : 'transparent';
 
                     return `
-                      <button 
+                      <button
                         style="height: 32px; border-radius: 4px; font-size: 11px; font-weight: 700; border: 1px solid ${color}; background: ${bg}; color: ${isFuture ? 'var(--text-muted)' : color}; cursor: ${isFuture ? 'default' : 'pointer'};"
-                        ${isFuture ? 'disabled' : `onclick="Staff.cycleAttendance('${emp.id}', ${day})"`}
+                        ${isFuture ? 'disabled' : `onclick="Staff.cycleAttendance('${DB.escapeHtml(emp.id)}', ${day})"`}
                         title="Day ${day}: ${status}"
                       >
                         ${day}
@@ -129,6 +134,11 @@ class StaffEngine {
   }
 
   cycleAttendance(empId, day) {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('edit staff attendance');
+      return;
+    }
+
     const db = DB.getData();
     if (!db.attendance) db.attendance = {};
     if (!db.attendance[empId]) db.attendance[empId] = {};
@@ -142,6 +152,11 @@ class StaffEngine {
   }
 
   openAddStaffModal() {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('add employees');
+      return;
+    }
+
     const modalHtml = `
       <div class="modal-backdrop" id="add-staff-modal" onclick="if(event.target === this) Staff.closeModal()">
         <div class="modal-card" style="max-width: 440px;">
@@ -168,7 +183,7 @@ class StaffEngine {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Monthly Salary (₹) *</label>
-                  <input type="number" id="staff-salary-input" class="form-input" required placeholder="15000" />
+                  <input type="number" id="staff-salary-input" class="form-input" required min="0" placeholder="15000" />
                 </div>
               </div>
 
@@ -204,12 +219,12 @@ class StaffEngine {
     }
 
     const newEmp = {
-      id: `S${Date.now().toString().slice(-4)}`,
+      id: DB.uid('S'),
       name,
       role,
       salary,
       phone,
-      joinDate: new Date().toISOString().split('T')[0],
+      joinDate: DB.getLocalDateStr(),
       status: "Active"
     };
 
@@ -220,6 +235,11 @@ class StaffEngine {
   }
 
   deleteStaff(id) {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('remove employees');
+      return;
+    }
+
     const db = DB.getData();
     const emp = (db.staff || []).find(s => s.id === id);
     if (!emp) return;

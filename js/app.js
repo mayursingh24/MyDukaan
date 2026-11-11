@@ -23,6 +23,10 @@ class AppController {
   init() {
     this.applyTheme();
     this.setupIcons();
+    if (this.isCashierMode()) {
+      this.currentView = 'pos';
+    }
+    this.applyRoleUI();
     this.initKeyboardShortcuts();
     this.updateNotificationBadge();
     this.updateHeaderStoreName();
@@ -44,6 +48,240 @@ class AppController {
         this.closeNotificationPopover();
       }
     });
+  }
+
+  // =========================================================================
+  // ROLE-BASED ACCESS CONTROL (OWNER vs CASHIER)
+  // =========================================================================
+  isCashierMode() {
+    return Boolean(window.DB && typeof DB.getDeviceRole === 'function' && DB.getDeviceRole() === 'cashier');
+  }
+
+  getActiveCashierName() {
+    return window.DB && typeof DB.getDeviceCashierName === 'function' ? DB.getDeviceCashierName() : '';
+  }
+
+  applyRoleUI() {
+    const cashier = this.isCashierMode();
+    const cashierName = this.getActiveCashierName() || 'Counter';
+    if (document.body) {
+      document.body.setAttribute('data-role', cashier ? 'cashier' : 'owner');
+    }
+
+    const chip = document.getElementById('topbar-role-chip');
+    if (chip) {
+      chip.classList.toggle('cashier-active', cashier);
+      chip.innerHTML = cashier
+        ? `🔒 Cashier (${this.escapeHtml(cashierName)}) • Unlock`
+        : `👑 Owner Mode`;
+      chip.title = cashier
+        ? 'Counter locked in Cashier Mode — click to unlock Owner PIN'
+        : 'Switch counter terminal to Cashier-only mode';
+    }
+
+    const roleLabel = document.getElementById('sidebar-role-label');
+    const roleTag = document.getElementById('sidebar-role-tag');
+    if (roleLabel && roleTag) {
+      if (cashier) {
+        roleLabel.textContent = 'Unlock Owner Mode (PIN)';
+        roleTag.className = 'nav-tag nav-tag-amber';
+        roleTag.textContent = 'Cashier';
+      } else {
+        roleLabel.textContent = 'Switch to Cashier Mode';
+        roleTag.className = 'nav-tag nav-tag-green';
+        roleTag.textContent = 'Owner';
+      }
+    }
+
+    const mobileRoleBtn = document.getElementById('mobile-sidebar-role-btn');
+    if (mobileRoleBtn) {
+      mobileRoleBtn.textContent = cashier
+        ? '🔓 Unlock Owner Mode (PIN)'
+        : '🔒 Switch to Cashier Mode';
+    }
+  }
+
+  requireOwner(actionDesc = 'access this feature') {
+    this.toast('warning', 'Owner Access Required', `Enter Owner PIN to ${actionDesc}.`);
+    this.openUnlockOwnerModal();
+  }
+
+  toggleRoleMode() {
+    if (this.isCashierMode()) {
+      this.openUnlockOwnerModal();
+    } else {
+      this.openSwitchToCashierModal();
+    }
+  }
+
+  openSwitchToCashierModal() {
+    const existing = document.getElementById('role-switch-modal');
+    if (existing) existing.remove();
+
+    const db = DB.getData();
+    const hasPin = Boolean(db.ownerPinHash);
+    const staffNames = (db.staff || []).map(s => s.name).filter(Boolean);
+    const currentCashier = this.getActiveCashierName() || (staffNames[0] || 'Counter Cashier');
+
+    const modalHtml = `
+      <div class="modal-backdrop" id="role-switch-modal" onclick="if(event.target === this) document.getElementById('role-switch-modal').remove()">
+        <div class="modal-card" style="max-width: 440px;">
+          <div class="modal-header">
+            <div class="modal-title">${Icons.lock(16)} Switch Counter to Cashier Mode</div>
+            <button class="topbar-icon-btn" onclick="document.getElementById('role-switch-modal').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 10px 12px; font-size: 12px; color: var(--text-primary); margin-bottom: 14px; line-height: 1.5;">
+              <strong>Cashier Restrictions:</strong> Cashier can only use <strong>POS Billing</strong>, <strong>Barcode Scanner</strong> &amp; <strong>Read-Only Stock Lookup</strong>. Analytics, P&amp;L, Cost Margins, Deletes, Udhaar Settlement &amp; Settings will stay locked behind your Owner PIN.
+            </div>
+            <form onsubmit="event.preventDefault(); App.confirmSwitchToCashier();">
+              <div class="form-group">
+                <label class="form-label">Active Cashier / Counter Staff Name *</label>
+                <input type="text" id="cashier-name-input" class="form-input" required maxlength="40" value="${this.escapeHtml(currentCashier)}" placeholder="e.g. Suresh Counter 1" />
+                ${staffNames.length ? `
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+                    ${staffNames.slice(0, 4).map(nm => `
+                      <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px;" onclick="document.getElementById('cashier-name-input').value='${this.escapeHtml(nm)}'">${this.escapeHtml(nm)}</button>
+                    `).join('')}
+                  </div>
+                ` : ''}
+              </div>
+
+              ${!hasPin ? `
+                <div style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.3); padding: 12px; border-radius: var(--radius-md); margin-bottom: 14px;">
+                  <div style="font-size: 12px; font-weight: 700; color: #60A5FA; margin-bottom: 8px;">Set Your 4–6 Digit Owner Unlock PIN First</div>
+                  <div class="form-row-2">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="form-label">New Owner PIN *</label>
+                      <input type="password" id="switch-set-pin" class="form-input" required minlength="4" maxlength="6" inputmode="numeric" pattern="[0-9]{4,6}" placeholder="4-6 digits" />
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="form-label">Confirm PIN *</label>
+                      <input type="password" id="switch-confirm-pin" class="form-input" required minlength="4" maxlength="6" inputmode="numeric" pattern="[0-9]{4,6}" placeholder="Repeat PIN" />
+                    </div>
+                  </div>
+                </div>
+              ` : `
+                <div style="font-size: 12px; color: var(--success); margin-bottom: 14px; font-weight: 600;">
+                  ✓ Your encrypted Owner PIN is active and required to unlock later.
+                </div>
+              `}
+
+              <div class="modal-footer" style="padding: 8px 0 0; background: none;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('role-switch-modal').remove()">Cancel</button>
+                <button type="submit" class="btn btn-primary">${Icons.lock(14)} Lock to Cashier Mode</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  async confirmSwitchToCashier() {
+    const db = DB.getData();
+    const cashierName = (document.getElementById('cashier-name-input')?.value || '').trim() || 'Counter Cashier';
+
+    if (!db.ownerPinHash) {
+      const p1 = (document.getElementById('switch-set-pin')?.value || '').trim();
+      const p2 = (document.getElementById('switch-confirm-pin')?.value || '').trim();
+      if (!/^\d{4,6}$/.test(p1)) {
+        this.toast('warning', 'Invalid PIN', 'Enter a 4 to 6 digit numeric Owner PIN.');
+        return;
+      }
+      if (p1 !== p2) {
+        this.toast('danger', 'PIN Mismatch', 'Owner PIN and Confirm PIN must match.');
+        return;
+      }
+      db.ownerPinHash = await DB.hashPin(p1);
+      DB.saveData(db);
+    }
+
+    DB.setDeviceRole('cashier', cashierName);
+    document.getElementById('role-switch-modal')?.remove();
+    this.applyRoleUI();
+    this.navigate('pos');
+    this.toast('success', 'Cashier Mode Enabled', `Terminal locked for ${cashierName} (POS + View-Only Stock).`);
+  }
+
+  openUnlockOwnerModal() {
+    const existing = document.getElementById('unlock-owner-modal');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-backdrop" id="unlock-owner-modal" onclick="if(event.target === this) document.getElementById('unlock-owner-modal').remove()">
+        <div class="modal-card" style="max-width: 400px;">
+          <div class="modal-header">
+            <div class="modal-title">${Icons.lock(16)} Owner PIN Unlock</div>
+            <button class="topbar-icon-btn" onclick="document.getElementById('unlock-owner-modal').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <form onsubmit="event.preventDefault(); App.submitOwnerPinUnlock();">
+              <div class="form-group">
+                <label class="form-label">Enter 4–6 Digit Owner PIN *</label>
+                <input type="password" id="unlock-owner-pin-input" class="form-input" required minlength="4" maxlength="8" inputmode="numeric" autofocus placeholder="••••" style="font-family: var(--font-mono); font-size: 18px; letter-spacing: 4px; text-align: center;" />
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+                Forgot PIN? Sign in on the Shop Owner's own phone/laptop in <strong>Settings → Counter Security</strong> to update the Owner PIN via Cloud Sync.
+              </div>
+              <div class="modal-footer" style="padding: 8px 0 0; background: none;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('unlock-owner-modal').remove()">Stay Cashier</button>
+                <button type="submit" class="btn btn-primary">${Icons.check(14)} Unlock Owner Access</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    setTimeout(() => document.getElementById('unlock-owner-pin-input')?.focus(), 50);
+  }
+
+  async submitOwnerPinUnlock() {
+    const pin = (document.getElementById('unlock-owner-pin-input')?.value || '').trim();
+    if (!pin) return;
+    const db = DB.getData();
+    const enteredHash = await DB.hashPin(pin);
+    const valid = db.ownerPinHash ? (enteredHash === db.ownerPinHash) : (pin === '1234');
+
+    if (!valid) {
+      this.toast('danger', 'Wrong PIN', 'Incorrect Owner PIN. Counter remains in Cashier Mode.');
+      const inp = document.getElementById('unlock-owner-pin-input');
+      if (inp) { inp.value = ''; inp.focus(); }
+      return;
+    }
+
+    DB.setDeviceRole('owner');
+    document.getElementById('unlock-owner-modal')?.remove();
+    this.applyRoleUI();
+    this.navigate('dashboard');
+    this.toast('success', 'Owner Mode Unlocked', 'Full store access restored.');
+  }
+
+  async saveOwnerPinSettings() {
+    if (this.isCashierMode()) {
+      this.requireOwner('change Owner PIN');
+      return;
+    }
+    const pin1 = (document.getElementById('set-owner-pin-new')?.value || '').trim();
+    const pin2 = (document.getElementById('set-owner-pin-confirm')?.value || '').trim();
+    if (!/^\d{4,6}$/.test(pin1)) {
+      this.toast('warning', 'Invalid PIN', 'Enter a 4 to 6 digit numeric PIN.');
+      return;
+    }
+    if (pin1 !== pin2) {
+      this.toast('danger', 'PIN Mismatch', 'New PIN and confirmation must match.');
+      return;
+    }
+    const db = DB.getData();
+    db.ownerPinHash = await DB.hashPin(pin1);
+    DB.saveData(db);
+    this.toast('success', 'Owner PIN Updated', 'Encrypted Owner PIN saved & synced across devices.');
+    if (this.currentView === 'settings') {
+      const container = document.getElementById('main-view-container');
+      if (container) this.renderSettingsView(container);
+    }
   }
 
   // Inject crisp SVG icons dynamically
@@ -91,6 +329,14 @@ class AppController {
 
   // Master Navigation Router
   navigate(viewName) {
+    if (this.isCashierMode()) {
+      const allowedCashierViews = ['pos', 'inventory', 'products', 'help'];
+      if (!allowedCashierViews.includes(viewName)) {
+        this.requireOwner(`open ${viewName}`);
+        return;
+      }
+    }
+
     this.currentView = viewName;
 
     // Update Desktop Sidebar active states
@@ -119,6 +365,12 @@ class AppController {
   renderViewOnly(viewName) {
     const container = document.getElementById('main-view-container');
     if (!container) return;
+
+    if (this.isCashierMode() && !['pos', 'inventory', 'products', 'help'].includes(viewName)) {
+      viewName = 'pos';
+      this.currentView = 'pos';
+    }
+
     container.classList.toggle('is-pos-view', viewName === 'pos');
 
     switch (viewName) {
@@ -194,6 +446,7 @@ class AppController {
   }
 
   refreshActiveViewFromCloud() {
+    this.applyRoleUI();
     if (document.querySelector('.modal-backdrop, .scanner-modal-backdrop')) return;
     const container = document.getElementById('main-view-container');
     if (!container) return;
@@ -211,23 +464,38 @@ class AppController {
     if (scrollY > 0) window.scrollTo(0, scrollY);
   }
 
+  getExpiringProducts(products = []) {
+    return (products || []).filter(p => {
+      if (!window.Inventory || typeof Inventory.getExpiryMeta !== 'function') return false;
+      const ex = Inventory.getExpiryMeta(p.expiryDate);
+      return Boolean(ex && (ex.status === 'expiring7' || ex.status === 'expired'));
+    });
+  }
+
   // 1. ADVANCED EXECUTIVE DASHBOARD
   renderDashboardView(container) {
+    if (this.isCashierMode()) {
+      this.navigate('pos');
+      return;
+    }
+
     const db = DB.getData();
     const shop = db.shop || {};
     const products = db.products || [];
     const customers = db.customers || [];
     const invoices = db.invoices || [];
-    const expenses = db.expenses || [];
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = DB.getLocalDateStr();
     const todayInvoices = invoices.filter(i => i.date === todayStr);
-    const todaySales = todayInvoices.reduce((s, i) => s + (i.paid || 0), 0);
-    const totalRevenue = invoices.reduce((s, i) => s + (i.paid || 0), 0);
-    const totalUdhaar = customers.reduce((s, c) => s + (c.balanceDue || 0), 0);
-    const lowStock = products.filter(p => p.stock <= p.minStock);
+    const todaySales = DB.round2(todayInvoices.reduce((s, i) => s + Math.max(0, (Number(i.total) || 0) - (Number(i.refundAmount) || 0)), 0));
+    const totalUdhaar = DB.round2(customers.reduce((s, c) => s + (Number(c.balanceDue) || 0), 0));
+    const lowStock = products.filter(p => (Number(p.stock) || 0) <= (Number(p.minStock) || 0));
+    const expiringSoon = this.getExpiringProducts(products);
     const totalInventoryValue = Math.round(products.reduce((s, p) => s + ((Number(p.cost) || 0) * (Number(p.stock) || 0)), 0));
-    const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+    const totalUnits = DB.roundQty(products.reduce((s, p) => s + (Number(p.stock) || 0), 0));
+    const restockAlerts = window.Inventory && typeof Inventory.computeRestockPredictions === 'function'
+      ? Inventory.computeRestockPredictions().filter(r => r.urgency !== 'ok').slice(0, 4)
+      : [];
 
     // Format current date nicely
     const dateFormatted = new Date().toLocaleDateString('en-IN', {
@@ -241,7 +509,7 @@ class AppController {
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>Executive Dashboard</h1>
-          <p>${dateFormatted} • ${shop.name || 'MyDukkan24 Store'} • Active Terminal</p>
+          <p>${dateFormatted} • ${this.escapeHtml(shop.name || 'MyDukkan24 Store')} • Owner Terminal</p>
         </div>
         <div class="page-actions-row">
           <button class="btn btn-secondary" onclick="BarcodeScanner.openScannerModal()">
@@ -252,6 +520,26 @@ class AppController {
           </button>
         </div>
       </div>
+
+      <!-- Expiry Warning Banner -->
+      ${expiringSoon.length ? `
+        <div class="card" style="background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.35); margin-bottom: 14px; padding: 12px 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="color: var(--danger); display: flex;">${Icons.calendar(18)}</span>
+              <div>
+                <strong style="color: var(--danger); font-size: 13px;">Expiry Alert (≤7 Days):</strong>
+                <span style="font-size: 12.5px; color: var(--text-primary); margin-left: 4px;">
+                  ${expiringSoon.length} item(s) expiring within 7 days or already expired (${expiringSoon.slice(0, 2).map(p => this.escapeHtml(p.name)).join(', ')}${expiringSoon.length > 2 ? '...' : ''}).
+                </span>
+              </div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="App.navigate('inventory'); Inventory.setStockFilter('Expiring7');">
+              Review Expiring →
+            </button>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- Critical Stock Warning Banner -->
       ${lowStock.length ? `
@@ -266,7 +554,7 @@ class AppController {
                 </span>
               </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="App.navigate('inventory'); Inventory.filterStock = 'Low'; Inventory.render();">
+            <button class="btn btn-secondary btn-sm" onclick="App.navigate('inventory'); Inventory.setStockFilter('Low');">
               Review Items →
             </button>
           </div>
@@ -277,7 +565,7 @@ class AppController {
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Today's Sales</span>
+            <span class="kpi-title">Today's Sales (Net)</span>
             <div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">
               ${Icons.wallet(16)}
             </div>
@@ -297,20 +585,20 @@ class AppController {
           </div>
           <div class="kpi-val" data-kpi-target="${totalUdhaar}" data-kpi-prefix="₹" style="color: ${totalUdhaar > 0 ? 'var(--danger)' : 'var(--success)'};">₹0</div>
           <div class="kpi-trend" style="color: var(--text-muted);">
-            ${customers.filter(c => c.balanceDue > 0).length} customer balances due
+            ${customers.filter(c => (Number(c.balanceDue) || 0) > 0).length} customer balances due
           </div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
-            <span class="kpi-title">Stock Status</span>
-            <div class="kpi-icon-badge" style="background: ${lowStock.length ? 'var(--warning-light)' : 'var(--success-light)'}; color: ${lowStock.length ? 'var(--warning)' : 'var(--success)'};">
+            <span class="kpi-title">Stock & Expiry Alerts</span>
+            <div class="kpi-icon-badge" style="background: ${lowStock.length + expiringSoon.length ? 'var(--warning-light)' : 'var(--success-light)'}; color: ${lowStock.length + expiringSoon.length ? 'var(--warning)' : 'var(--success)'};">
               ${Icons.inventory(16)}
             </div>
           </div>
           <div class="kpi-val" data-kpi-target="${lowStock.length}" style="color: ${lowStock.length ? 'var(--warning)' : 'var(--text-primary)'};">0</div>
-          <div class="kpi-trend" style="color: ${lowStock.length ? 'var(--warning)' : 'var(--text-muted)'};">
-            ${lowStock.length ? 'Items need reordering' : 'All items well-stocked'}
+          <div class="kpi-trend" style="color: ${expiringSoon.length ? 'var(--danger)' : lowStock.length ? 'var(--warning)' : 'var(--text-muted)'};">
+            ${expiringSoon.length ? `${expiringSoon.length} expiring soon` : (lowStock.length ? 'Items need reordering' : 'All items well-stocked')}
           </div>
         </div>
 
@@ -323,7 +611,7 @@ class AppController {
           </div>
           <div class="kpi-val" data-kpi-target="${totalInventoryValue}" data-kpi-prefix="₹">₹0</div>
           <div class="kpi-trend" style="color: var(--text-muted);">
-            ${products.length} SKUs (${products.reduce((s, p) => s + p.stock, 0)} units)
+            ${products.length} SKUs (${totalUnits} units)
           </div>
         </div>
       </div>
@@ -355,24 +643,32 @@ class AppController {
                   </tr>
                 </thead>
                 <tbody>
-                  ${invoices.slice(0, 6).map(inv => `
+                  ${invoices.slice(0, 6).map(inv => {
+                    const netAmt = Math.max(0, DB.round2((Number(inv.total) || 0) - (Number(inv.refundAmount) || 0)));
+                    return `
                     <tr>
-                      <td style="font-family: var(--font-mono); font-weight: 600; font-size: 12.5px;">${inv.id}</td>
-                      <td class="hide-mobile-col">${inv.date}</td>
-                      <td style="font-weight: 500;">${inv.customerName || 'Walk-in Customer'}</td>
-                      <td style="font-weight: 700; color: var(--text-primary);" class="tnum">₹${inv.total.toLocaleString('en-IN')}</td>
+                      <td style="font-family: var(--font-mono); font-weight: 600; font-size: 12.5px;">${this.escapeHtml(inv.id)}</td>
+                      <td class="hide-mobile-col">${this.escapeHtml(inv.date || '')}</td>
+                      <td style="font-weight: 500;">${this.escapeHtml(inv.customerName || 'Walk-in Customer')}</td>
+                      <td style="font-weight: 700; color: var(--text-primary);" class="tnum">
+                        ₹${netAmt.toLocaleString('en-IN')}
+                        ${Number(inv.refundAmount) > 0 ? `<div style="font-size: 10px; color: var(--danger);">Ret: -₹${DB.round2(inv.refundAmount)}</div>` : ''}
+                      </td>
                       <td class="hide-mobile-col">
                         <span class="badge ${inv.paymentMode === 'Cash' ? 'badge-success' : inv.paymentMode === 'UPI' ? 'badge-primary' : 'badge-warning'}">
-                          ${inv.paymentMode}
+                          ${this.escapeHtml(inv.paymentMode || '')}
                         </span>
                       </td>
                       <td>
-                        <button class="btn btn-secondary btn-sm" onclick="POS.openReceiptModal(DB.getData().invoices.find(x => x.id === '${inv.id}'))" title="View Thermal Receipt">
-                          ${Icons.print(14)} Receipt
-                        </button>
+                        <div style="display: flex; gap: 6px;">
+                          <button class="btn btn-secondary btn-sm" onclick="POS.openReceiptModal(DB.getData().invoices.find(x => x.id === '${this.escapeHtml(inv.id)}'))" title="View Thermal Receipt">
+                            ${Icons.print(14)} Receipt
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
@@ -388,8 +684,39 @@ class AppController {
           `}
         </div>
 
-        <!-- Right: Urgent Stock Attention & Fast Action Center -->
+        <!-- Right: Smart Demand Predictor, Low Stock & Fast Action Center -->
         <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0;">
+          <!-- Smart Auto-Restock Demand Card -->
+          <div class="card" style="margin-bottom: 0; border-color: rgba(59, 130, 246, 0.25);">
+            <div class="card-header">
+              <div class="card-title" style="color: #60A5FA;">
+                ${Icons.sparkles(16)} Smart Auto-Restock AI
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="if(window.Inventory) Inventory.openRestockPredictorModal()">
+                Advisor →
+              </button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${restockAlerts.length ? restockAlerts.map(r => `
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary); word-break: break-word;">${this.escapeHtml(r.name)}</div>
+                    <div style="font-size: 11px; color: ${r.urgency === 'critical' ? 'var(--danger)' : 'var(--warning)'}; font-weight: 600;">
+                      ${r.daysLeft < 99 ? `Runs out in ~${r.daysLeft}d` : 'Below min stock'} • Order ${r.suggestedOrderQty} ${this.escapeHtml(r.unit)}
+                    </div>
+                  </div>
+                  <button class="btn btn-primary btn-sm" style="flex-shrink: 0;" onclick="Inventory.openRestockPredictorModal()">
+                    Plan Order
+                  </button>
+                </div>
+              `).join('') : `
+                <div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">
+                  ✓ 30-day velocity healthy. Open Advisor for AI forecast.
+                </div>
+              `}
+            </div>
+          </div>
+
           <!-- Low Stock Action Card -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
@@ -403,12 +730,12 @@ class AppController {
               ${lowStock.length ? lowStock.slice(0, 4).map(p => `
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
                   <div style="flex: 1; min-width: 0;">
-                    <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary); word-break: break-word;">${p.name}</div>
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary); word-break: break-word;">${this.escapeHtml(p.name)}</div>
                     <div style="font-size: 11px; color: var(--danger); font-weight: 500;">
-                      Stock: ${p.stock} ${p.unit} (Min: ${p.minStock})
+                      Stock: ${DB.roundQty(p.stock)} ${this.escapeHtml(p.unit || '')} (Min: ${DB.roundQty(p.minStock)})
                     </div>
                   </div>
-                  <button class="btn btn-secondary btn-sm" style="flex-shrink: 0;" onclick="Inventory.quickRestock('${p.id}')">
+                  <button class="btn btn-secondary btn-sm" style="flex-shrink: 0;" onclick="Inventory.quickRestock('${this.escapeHtml(p.id)}')">
                     + Restock
                   </button>
                 </div>
@@ -451,10 +778,10 @@ class AppController {
   animateKpiNumbers() {
     const kpiEls = document.querySelectorAll('[data-kpi-target]');
     kpiEls.forEach(el => {
-      const target = parseFloat(el.dataset.kpiTarget) || 0;
+      const target = DB.round2(parseFloat(el.dataset.kpiTarget) || 0);
       const prefix = el.dataset.kpiPrefix || '';
       const suffix = el.dataset.kpiSuffix || '';
-      const duration = 600;
+      const duration = 500;
       let startTime = null;
 
       function step(timestamp) {
@@ -475,7 +802,22 @@ class AppController {
 
   // 2. POS BILLING VIEW WRAPPER
   renderPOSView(container) {
+    const cashier = this.isCashierMode();
+    const cashierName = this.getActiveCashierName() || 'Counter Cashier';
+
     container.innerHTML = `
+      ${cashier ? `
+        <div class="card" style="margin-bottom: 14px; padding: 10px 14px; background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.35); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px;">
+            <span class="badge badge-warning">Cashier Mode</span>
+            <span style="color: var(--text-primary);">Logged counter staff: <strong>${this.escapeHtml(cashierName)}</strong> • Billing &amp; View-Only Stock Active</span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="App.openUnlockOwnerModal()">
+            ${Icons.lock(12)} Unlock Owner (PIN)
+          </button>
+        </div>
+      ` : ''}
+
       <div class="pos-layout">
         <!-- Left: Product Search, Category Filter & Products Grid -->
         <div class="pos-catalog-panel">
@@ -484,7 +826,10 @@ class AppController {
               <span class="pos-search-icon">${Icons.search(16)}</span>
               <input type="text" id="pos-search-input" class="form-input pos-search-input" placeholder="Search product name, category, or scan barcode..." oninput="POS.setSearchQuery(this.value)" onkeydown="POS.handleSearchKeydown(event)" autofocus />
             </div>
-            <button class="btn btn-secondary" onclick="BarcodeScanner.openScannerModal()" title="Open Camera Scanner">
+            <button type="button" class="btn btn-secondary" onclick="POS.openVoiceBillingModal()" title="Hindi / Hinglish Voice Billing">
+              ${Icons.mic(16)} Voice
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="BarcodeScanner.openScannerModal()" title="Open Camera Scanner">
               ${Icons.camera(16)} Scan
             </button>
           </div>
@@ -512,9 +857,15 @@ class AppController {
               ${Icons.pos(16)} Current Bill
               <span class="badge badge-primary" id="pos-cart-count">0</span>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <button class="btn btn-secondary btn-sm" onclick="POS.clearCart()">Clear</button>
-              <button class="topbar-icon-btn mobile-only" style="width: 28px; height: 28px;" onclick="POS.toggleMobileCartDrawer()">✕</button>
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="POS.openParkedCartsModal()" title="View Held / Parked Customer Bills">
+                Queue <span class="badge badge-warning" id="pos-parked-count" style="display: none; margin-left: 3px;">0</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="POS.parkActiveCart()" title="Hold current bill and serve next customer">
+                ${Icons.pause(12)} Hold
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="POS.clearCart()">Clear</button>
+              <button type="button" class="topbar-icon-btn mobile-only" style="width: 28px; height: 28px;" onclick="POS.toggleMobileCartDrawer()">✕</button>
             </div>
           </div>
 
@@ -528,19 +879,37 @@ class AppController {
 
   // 3. INVENTORY & STOCK VIEW WRAPPER
   renderInventoryView(container) {
+    const cashier = this.isCashierMode();
+    const activeCat = window.Inventory ? Inventory.filterCategory : 'All';
+    const activeStock = window.Inventory ? Inventory.filterStock : 'All';
+    const cats = ['All', 'Grocery', 'Dairy', 'Oils', 'Snacks', 'Beverages', 'Personal Care', 'Household', 'Chocolates', 'Healthcare', 'General'];
+
     container.innerHTML = `
       <div class="page-header-row">
         <div class="page-title-block">
-          <h1>Inventory & Stock Management</h1>
-          <p>Monitor SKUs, safety thresholds, cost valuation and profit margins</p>
+          <h1>${cashier ? 'Stock Lookup (Cashier View-Only)' : 'Inventory & Stock Management'}</h1>
+          <p>${cashier ? 'Check real-time prices, expiry dates, and stock counts for checkout billing' : 'Monitor SKUs, expiry dates, bulk CSV imports, smart AI restock & margins'}</p>
         </div>
         <div class="page-actions-row">
-          <button class="btn btn-secondary" onclick="DB.downloadFile(DB.exportCSV('products'), 'products.csv')">
-            ${Icons.download(14)} Export CSV
-          </button>
-          <button class="btn btn-primary" onclick="Inventory.openProductModal()">
-            ${Icons.plus(15)} Add Product
-          </button>
+          ${cashier ? `
+            <span class="badge badge-warning" style="padding: 7px 12px; font-size: 12px;">🔒 Read-Only Stock</span>
+            <button type="button" class="btn btn-secondary" onclick="App.openUnlockOwnerModal()">
+              ${Icons.lock(14)} Unlock Owner
+            </button>
+          ` : `
+            <button type="button" class="btn btn-secondary" onclick="Inventory.openRestockPredictorModal()" title="Smart 30-Day Demand & Restock AI">
+              ${Icons.sparkles(14)} Smart Restock AI
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="Inventory.openBulkImportModal()" title="Bulk Import 500+ Products from CSV / Excel">
+              ${Icons.upload(14)} Import CSV
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="DB.downloadFile(DB.exportCSV('products'), 'products.csv')">
+              ${Icons.download(14)} Export CSV
+            </button>
+            <button type="button" class="btn btn-primary" onclick="Inventory.openProductModal()">
+              ${Icons.plus(15)} Add Product
+            </button>
+          `}
         </div>
       </div>
 
@@ -552,25 +921,20 @@ class AppController {
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <div style="flex: 1 1 200px; min-width: 0; width: 100%; position: relative;">
             <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
-            <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search SKU, name, or barcode..." oninput="Inventory.setSearch(this.value)" />
+            <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search SKU, name, or barcode..." value="${this.escapeHtml(window.Inventory ? Inventory.searchQuery : '')}" oninput="Inventory.setSearch(this.value)" />
           </div>
 
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1 1 220px; min-width: 0;">
-            <select class="form-select" style="flex: 1 1 125px; min-width: 0;" onchange="Inventory.filterCategory = this.value; Inventory.render();">
-              <option value="All">All Categories</option>
-              <option value="Grocery">Grocery</option>
-              <option value="Dairy">Dairy</option>
-              <option value="Oils">Oils</option>
-              <option value="Snacks">Snacks</option>
-              <option value="Beverages">Beverages</option>
-              <option value="Personal Care">Personal Care</option>
-              <option value="Household">Household</option>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1 1 240px; min-width: 0;">
+            <select id="inv-filter-category-select" class="form-select" style="flex: 1 1 130px; min-width: 0;" onchange="Inventory.filterCategory = this.value; Inventory.render();">
+              ${cats.map(c => `<option value="${c}" ${activeCat === c ? 'selected' : ''}>${c === 'All' ? 'All Categories' : c}</option>`).join('')}
             </select>
 
-            <select class="form-select" style="flex: 1 1 125px; min-width: 0;" onchange="Inventory.filterStock = this.value; Inventory.render();">
-              <option value="All">All Stock Status</option>
-              <option value="Low">Low Stock Alerts</option>
-              <option value="OutOfStock">Out of Stock</option>
+            <select id="inv-filter-stock-select" class="form-select" style="flex: 1 1 140px; min-width: 0;" onchange="Inventory.setStockFilter(this.value);">
+              <option value="All" ${activeStock === 'All' ? 'selected' : ''}>All Stock Status</option>
+              <option value="Low" ${activeStock === 'Low' ? 'selected' : ''}>Low Stock Alerts</option>
+              <option value="OutOfStock" ${activeStock === 'OutOfStock' ? 'selected' : ''}>Out of Stock</option>
+              <option value="Expiring7" ${activeStock === 'Expiring7' ? 'selected' : ''}>Expiring ≤7 Days / Expired</option>
+              <option value="Expired" ${activeStock === 'Expired' ? 'selected' : ''}>Expired Only</option>
             </select>
           </div>
         </div>
@@ -584,10 +948,10 @@ class AppController {
               <th>SKU / Product</th>
               <th>Category</th>
               <th>Selling Price</th>
-              <th>Cost & Margin</th>
+              ${!cashier ? '<th>Cost &amp; Margin</th>' : ''}
               <th>Stock Level</th>
               <th>Barcode</th>
-              <th>Actions</th>
+              <th>${cashier ? 'Billing' : 'Actions'}</th>
             </tr>
           </thead>
           <tbody id="inventory-table-tbody"></tbody>
@@ -630,7 +994,7 @@ class AppController {
     `;
   }
 
-  // 5. INVOICES & BILLING HISTORY VIEW
+  // 5. INVOICES, SALES LEDGER & RETURNS VIEW
   renderInvoicesView(container) {
     const db = DB.getData();
     const invoices = db.invoices || [];
@@ -638,13 +1002,20 @@ class AppController {
     container.innerHTML = `
       <div class="page-header-row">
         <div class="page-title-block">
-          <h1>Billing History & Invoices</h1>
-          <p>Review past sales transactions, reprint thermal receipts, and share WhatsApp invoices</p>
+          <h1>Billing History, Sales Returns &amp; Invoices</h1>
+          <p>Review sales transactions, process item returns/refunds, reprint receipts &amp; WhatsApp bills</p>
         </div>
         <div class="page-actions-row">
           <button class="btn btn-secondary" onclick="DB.downloadFile(DB.exportCSV('invoices'), 'invoices.csv')">
             ${Icons.download(14)} Export Invoices CSV
           </button>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 12px 16px; margin-bottom: 16px;">
+        <div style="position: relative;">
+          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
+          <input type="text" id="invoices-search-input" class="form-input" style="padding-left: 36px;" placeholder="Search by Invoice # or Customer name..." oninput="App.filterInvoicesTable(this.value)" />
         </div>
       </div>
 
@@ -658,29 +1029,51 @@ class AppController {
                   <th class="hide-mobile-col">Date</th>
                   <th>Customer</th>
                   <th class="hide-mobile-col">Items</th>
-                  <th>Grand Total</th>
+                  <th>Net Total</th>
                   <th class="hide-mobile-col">Payment Mode</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                ${invoices.map(inv => `
-                  <tr>
-                    <td style="font-family: var(--font-mono); font-weight: 700;">${inv.id}</td>
-                    <td class="hide-mobile-col">${inv.date}</td>
-                    <td style="font-weight: 600;">${inv.customerName || 'Walk-in'}</td>
+              <tbody id="invoices-ledger-tbody">
+                ${invoices.map(inv => {
+                  const refundAmt = Number(inv.refundAmount) || 0;
+                  const netTotal = Math.max(0, DB.round2((Number(inv.total) || 0) - refundAmt));
+                  const status = inv.status || 'Paid';
+                  const isFullRefund = status === 'Refunded' || netTotal <= 0;
+                  const statusClass = status === 'Refunded'
+                    ? 'badge-danger'
+                    : (status === 'Partial Return' || status === 'Udhaar Due' || status === 'Partial' ? 'badge-warning' : 'badge-success');
+                  return `
+                  <tr data-search="${this.escapeHtml(`${inv.id || ''} ${inv.customerName || ''} ${inv.date || ''}`.toLowerCase())}">
+                    <td style="font-family: var(--font-mono); font-weight: 700;">
+                      ${this.escapeHtml(inv.id)}
+                      ${inv.cashierName ? `<div style="font-size: 10px; font-weight: 500; color: var(--text-muted);">By: ${this.escapeHtml(inv.cashierName)}</div>` : ''}
+                    </td>
+                    <td class="hide-mobile-col">${this.escapeHtml(inv.date || '')}</td>
+                    <td style="font-weight: 600;">${this.escapeHtml(inv.customerName || 'Walk-in')}</td>
                     <td class="hide-mobile-col">${inv.items ? inv.items.length : 0} items</td>
-                    <td style="font-weight: 700; color: var(--text-primary);" class="tnum">₹${inv.total.toLocaleString('en-IN')}</td>
-                    <td class="hide-mobile-col"><span class="badge badge-muted">${inv.paymentMode}</span></td>
-                    <td><span class="badge ${inv.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${inv.status}</span></td>
+                    <td style="font-weight: 700; color: var(--text-primary);" class="tnum">
+                      ₹${netTotal.toLocaleString('en-IN')}
+                      ${refundAmt > 0 ? `<div style="font-size: 10.5px; color: var(--danger); font-weight: 600;">Refunded: -₹${DB.round2(refundAmt).toLocaleString('en-IN')}</div>` : ''}
+                    </td>
+                    <td class="hide-mobile-col"><span class="badge badge-muted">${this.escapeHtml(inv.paymentMode || '')}</span></td>
+                    <td><span class="badge ${statusClass}">${this.escapeHtml(status)}</span></td>
                     <td>
-                      <button class="btn btn-secondary btn-sm" onclick="POS.openReceiptModal(DB.getData().invoices.find(x => x.id === '${inv.id}'))">
-                        ${Icons.print(14)} Receipt
-                      </button>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="POS.openReceiptModal(DB.getData().invoices.find(x => x.id === '${this.escapeHtml(inv.id)}'))">
+                          ${Icons.print(14)} Receipt
+                        </button>
+                        ${!isFullRefund ? `
+                          <button type="button" class="btn btn-secondary btn-sm" style="color: var(--warning);" onclick="App.openReturnInvoiceModal('${this.escapeHtml(inv.id)}')" title="Process Sales Return / Refund">
+                            ${Icons.rotateCcw(13)} Return
+                          </button>
+                        ` : ''}
+                      </div>
                     </td>
                   </tr>
-                `).join('')}
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -693,6 +1086,270 @@ class AppController {
         `}
       </div>
     `;
+  }
+
+  filterInvoicesTable(q) {
+    const query = String(q || '').toLowerCase().trim();
+    document.querySelectorAll('#invoices-ledger-tbody tr').forEach(row => {
+      const hay = row.dataset.search || '';
+      row.style.display = !query || hay.includes(query) ? '' : 'none';
+    });
+  }
+
+  _getReturnedMapForInvoice(inv) {
+    const map = {};
+    (inv.returnedItems || []).forEach(r => {
+      if (!r || !r.id) return;
+      map[r.id] = DB.roundQty((map[r.id] || 0) + (Number(r.qty) || 0));
+    });
+    return map;
+  }
+
+  _calculateReturnTotals(inv) {
+    const db = DB.getData();
+    const products = db.products || [];
+    const returnedMap = this._getReturnedMapForInvoice(inv);
+    const invSubtotal = Number(inv.subtotal) || 0;
+    const invDiscount = Number(inv.discount) || 0;
+    const netFactor = invSubtotal > 0 ? Math.max(0, (invSubtotal - invDiscount) / invSubtotal) : 1;
+    const defaultRate = Number(db.shop?.taxRate ?? 5);
+
+    const lines = [];
+    let refundSubtotalNet = 0;
+    let refundTax = 0;
+
+    (inv.items || []).forEach(it => {
+      const inputEl = document.querySelector(`[data-return-item="${it.id}"]`);
+      const origQty = Number(it.qty) || 0;
+      const alreadyRet = returnedMap[it.id] || 0;
+      const remQty = Math.max(0, DB.roundQty(origQty - alreadyRet));
+      const reqQty = Math.min(remQty, Math.max(0, DB.roundQty(parseFloat(inputEl?.value) || 0)));
+      if (reqQty <= 0) return;
+
+      const prod = products.find(p => p.id === it.id);
+      const gstRate = [0, 5, 12, 18].includes(Number(it.gstRate))
+        ? Number(it.gstRate)
+        : ([0, 5, 12, 18].includes(Number(prod?.gstRate)) ? Number(prod.gstRate) : defaultRate);
+
+      const unitPrice = Number(it.price) || (origQty > 0 ? (Number(it.total) || 0) / origQty : 0);
+      const lineTaxable = DB.round2(unitPrice * reqQty * netFactor);
+      const lineTax = DB.round2((lineTaxable * gstRate) / 100);
+      const lineValue = DB.round2(lineTaxable + lineTax);
+
+      refundSubtotalNet = DB.round2(refundSubtotalNet + lineTaxable);
+      refundTax = DB.round2(refundTax + lineTax);
+      lines.push({
+        id: it.id,
+        name: it.name,
+        qty: reqQty,
+        remQty,
+        refundValue: lineValue
+      });
+    });
+
+    const maxRefundRemaining = Math.max(0, DB.round2((Number(inv.total) || 0) - (Number(inv.refundAmount) || 0)));
+    const totalRefund = Math.min(maxRefundRemaining, DB.round2(refundSubtotalNet + refundTax));
+    return { lines, refundSubtotalNet, refundTax, totalRefund, maxRefundRemaining };
+  }
+
+  recalcReturnPreview(invId) {
+    const db = DB.getData();
+    const inv = (db.invoices || []).find(i => i.id === invId);
+    const previewEl = document.getElementById('return-calc-summary');
+    if (!inv || !previewEl) return;
+
+    const calc = this._calculateReturnTotals(inv);
+    previewEl.innerHTML = `
+      <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+        <span>Items Selected (${calc.lines.length} lines):</span>
+        <strong class="tnum">₹${calc.refundSubtotalNet.toLocaleString('en-IN')}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+        <span>GST Tax Reversal:</span>
+        <strong class="tnum">₹${calc.refundTax.toLocaleString('en-IN')}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; padding-top: 6px; border-top: 1px dashed var(--border-medium); color: var(--warning);">
+        <span>Total Refund / Credit Value:</span>
+        <span class="tnum">₹${calc.totalRefund.toLocaleString('en-IN')}</span>
+      </div>
+    `;
+  }
+
+  openReturnInvoiceModal(invId) {
+    if (this.isCashierMode()) {
+      this.requireOwner('process sales returns and refunds');
+      return;
+    }
+
+    const db = DB.getData();
+    const inv = (db.invoices || []).find(i => i.id === invId);
+    if (!inv) return;
+
+    const returnedMap = this._getReturnedMapForInvoice(inv);
+    const cust = inv.customerId ? (db.customers || []).find(c => c.id === inv.customerId) : null;
+    const hasDue = (Number(inv.due) || 0) > 0 || (cust && (Number(cust.balanceDue) || 0) > 0);
+    const defaultMode = hasDue ? 'Adjust Udhaar' : (inv.paymentMode === 'UPI' ? 'UPI' : 'Cash');
+
+    const existing = document.getElementById('return-invoice-modal');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-backdrop" id="return-invoice-modal" onclick="if(event.target === this) document.getElementById('return-invoice-modal').remove()">
+        <div class="modal-card" style="max-width: 580px;">
+          <div class="modal-header">
+            <div class="modal-title">${Icons.rotateCcw(16)} Sales Return / Refund — #${this.escapeHtml(inv.id)}</div>
+            <button class="topbar-icon-btn" onclick="document.getElementById('return-invoice-modal').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+              Customer: <strong>${this.escapeHtml(inv.customerName || 'Walk-in')}</strong> • Billed: <strong>${this.escapeHtml(inv.date || '')}</strong> • Mode: <strong>${this.escapeHtml(inv.paymentMode || 'Cash')}</strong>
+            </div>
+
+            <div class="table-container" style="margin-bottom: 12px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Rate</th>
+                    <th>Billed / Left</th>
+                    <th>Return Qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(inv.items || []).map(it => {
+                    const origQty = DB.roundQty(it.qty || 0);
+                    const retQty = returnedMap[it.id] || 0;
+                    const remQty = Math.max(0, DB.roundQty(origQty - retQty));
+                    return `
+                      <tr>
+                        <td style="font-weight: 600; font-size: 12.5px;">
+                          ${this.escapeHtml(it.name)}
+                          ${retQty > 0 ? `<div style="font-size: 10.5px; color: var(--warning);">Already returned: ${retQty}</div>` : ''}
+                        </td>
+                        <td class="tnum" style="font-size: 12px;">₹${DB.round2(it.price || 0)}</td>
+                        <td class="tnum" style="font-size: 12px;">${origQty} / <strong>${remQty}</strong></td>
+                        <td>
+                          ${remQty > 0 ? `
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                              <input type="number" step="any" min="0" max="${remQty}" value="0" class="form-input" style="width: 72px; padding: 5px 7px; font-size: 12.5px;" data-return-item="${this.escapeHtml(it.id)}" oninput="App.recalcReturnPreview('${this.escapeHtml(inv.id)}')" />
+                              <button type="button" class="btn btn-secondary btn-sm" style="padding: 4px 6px; font-size: 10.5px;" onclick="const inp=this.previousElementSibling; inp.value='${remQty}'; App.recalcReturnPreview('${this.escapeHtml(inv.id)}');">Max</button>
+                            </div>
+                          ` : '<span class="badge badge-muted">Returned</span>'}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label">Refund Settlement Mode *</label>
+                <select id="return-refund-mode" class="form-select">
+                  <option value="Cash" ${defaultMode === 'Cash' ? 'selected' : ''}>Cash Refund from Drawer</option>
+                  <option value="UPI" ${defaultMode === 'UPI' ? 'selected' : ''}>UPI Refund Transfer</option>
+                  <option value="Adjust Udhaar" ${defaultMode === 'Adjust Udhaar' ? 'selected' : ''} ${inv.customerId ? '' : 'disabled'}>Adjust in Customer Udhaar Khata</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Return Reason</label>
+                <input type="text" id="return-reason" class="form-input" placeholder="e.g. Damaged pack / Exchange" />
+              </div>
+            </div>
+
+            <div id="return-calc-summary" style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 12px;"></div>
+
+            <div class="modal-footer" style="padding: 8px 0 0; background: none;">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('return-invoice-modal').remove()">Cancel</button>
+              <button type="button" class="btn btn-primary" onclick="App.processReturn('${this.escapeHtml(inv.id)}')">
+                ${Icons.check(14)} Confirm Return &amp; Restore Stock
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    this.recalcReturnPreview(invId);
+  }
+
+  processReturn(invId) {
+    if (this.isCashierMode()) {
+      this.requireOwner('process sales returns');
+      return;
+    }
+
+    const db = DB.getData();
+    const inv = (db.invoices || []).find(i => i.id === invId);
+    if (!inv) return;
+
+    const calc = this._calculateReturnTotals(inv);
+    if (!calc.lines.length || calc.totalRefund <= 0) {
+      this.toast('warning', 'Select Items', 'Enter return quantity greater than 0 for at least one item.');
+      return;
+    }
+
+    const refundMode = document.getElementById('return-refund-mode')?.value || 'Cash';
+    const reason = (document.getElementById('return-reason')?.value || '').trim();
+    const todayStr = DB.getLocalDateStr();
+
+    // 1. Restore Stock into db.products
+    let totalQtyRestored = 0;
+    calc.lines.forEach(line => {
+      const prod = (db.products || []).find(p => p.id === line.id);
+      if (prod) {
+        prod.stock = DB.roundQty((Number(prod.stock) || 0) + line.qty);
+      }
+      totalQtyRestored = DB.roundQty(totalQtyRestored + line.qty);
+      if (!Array.isArray(inv.returnedItems)) inv.returnedItems = [];
+      inv.returnedItems.push({
+        id: line.id,
+        name: line.name,
+        qty: line.qty,
+        refundValue: line.refundValue,
+        date: todayStr,
+        refundMode
+      });
+    });
+
+    // 2. Adjust Invoice Refund & Payment Balances
+    inv.refundAmount = DB.round2((Number(inv.refundAmount) || 0) + calc.totalRefund);
+    inv.lastReturnDate = todayStr;
+    inv.refundMode = refundMode;
+
+    if (inv.customerId) {
+      const cust = (db.customers || []).find(c => c.id === inv.customerId);
+      if (cust) {
+        cust.totalSpent = Math.max(0, DB.round2((Number(cust.totalSpent) || 0) - calc.totalRefund));
+        if (refundMode === 'Adjust Udhaar') {
+          const udhaarAdj = Math.min(Number(cust.balanceDue) || 0, calc.totalRefund);
+          cust.balanceDue = Math.max(0, DB.round2((Number(cust.balanceDue) || 0) - udhaarAdj));
+          inv.due = Math.max(0, DB.round2((Number(inv.due) || 0) - calc.totalRefund));
+        }
+        if (!Array.isArray(cust.transactions)) cust.transactions = [];
+        cust.transactions.unshift({
+          id: DB.uid('TX'),
+          date: todayStr,
+          type: refundMode === 'Adjust Udhaar' ? 'CreditNote' : 'Refund',
+          amount: calc.totalRefund,
+          desc: `Return #${inv.id} (${refundMode})${reason ? ' • ' + reason : ''}`
+        });
+      }
+    }
+
+    const retMapAfter = this._getReturnedMapForInvoice(inv);
+    const allItemsReturned = (inv.items || []).every(it => (retMapAfter[it.id] || 0) >= (Number(it.qty) || 0) - 0.001);
+    inv.status = (allItemsReturned || inv.refundAmount >= (Number(inv.total) || 0) - 0.5)
+      ? 'Refunded'
+      : 'Partial Return';
+
+    DB.saveData(db);
+    DB.playCashChime();
+    document.getElementById('return-invoice-modal')?.remove();
+    this.toast('success', 'Sales Return Complete', `${totalQtyRestored} qty restored to stock • Refund ₹${calc.totalRefund.toLocaleString('en-IN')} (${refundMode})`);
+    this.renderViewOnly(this.currentView);
+    if (window.POS) POS.renderCatalog();
   }
 
   // 6. EXPENSE MANAGEMENT VIEW (Requirement 5.E)
@@ -752,13 +1409,13 @@ class AppController {
               <tbody>
                 ${expenses.map(e => `
                   <tr>
-                    <td>${e.date}</td>
-                    <td style="font-weight: 600;">${e.desc}</td>
-                    <td class="hide-mobile-col"><span class="badge badge-muted">${e.cat}</span></td>
-                    <td style="font-weight: 700; color: var(--danger);" class="tnum">₹${e.amount.toLocaleString('en-IN')}</td>
-                    <td class="hide-mobile-col"><span class="badge ${e.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${e.status}</span></td>
+                    <td>${this.escapeHtml(e.date || '')}</td>
+                    <td style="font-weight: 600;">${this.escapeHtml(e.desc || '')}</td>
+                    <td class="hide-mobile-col"><span class="badge badge-muted">${this.escapeHtml(e.cat || '')}</span></td>
+                    <td style="font-weight: 700; color: var(--danger);" class="tnum">₹${(Number(e.amount) || 0).toLocaleString('en-IN')}</td>
+                    <td class="hide-mobile-col"><span class="badge ${e.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${this.escapeHtml(e.status || 'Paid')}</span></td>
                     <td>
-                      <button class="btn btn-danger btn-sm" onclick="App.deleteExpense('${e.id}')" title="Delete">
+                      <button class="btn btn-danger btn-sm" onclick="App.deleteExpense('${this.escapeHtml(e.id)}')" title="Delete">
                         ${Icons.trash(14)}
                       </button>
                     </td>
@@ -782,6 +1439,10 @@ class AppController {
 
   // Open Record Expense Modal
   openExpenseModal() {
+    if (this.isCashierMode()) {
+      this.requireOwner('record store expenses');
+      return;
+    }
     const modalHtml = `
       <div class="modal-backdrop" id="expense-modal" onclick="if(event.target === this) document.getElementById('expense-modal').remove()">
         <div class="modal-card">
@@ -810,13 +1471,13 @@ class AppController {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Amount (₹) *</label>
-                  <input type="number" id="exp-amount" class="form-input" required min="1" placeholder="e.g. 1500" />
+                  <input type="number" step="0.01" id="exp-amount" class="form-input" required min="0.01" placeholder="e.g. 1500" />
                 </div>
               </div>
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label">Date *</label>
-                  <input type="date" id="exp-date" class="form-input" value="${new Date().toISOString().split('T')[0]}" />
+                  <input type="date" id="exp-date" class="form-input" value="${DB.getLocalDateStr()}" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Payment Status</label>
@@ -839,10 +1500,14 @@ class AppController {
   }
 
   saveExpense() {
+    if (this.isCashierMode()) {
+      this.requireOwner('save expenses');
+      return;
+    }
     const desc = document.getElementById('exp-desc').value.trim();
     const cat = document.getElementById('exp-cat').value;
-    const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
-    const date = document.getElementById('exp-date').value;
+    const amount = DB.round2(parseFloat(document.getElementById('exp-amount').value) || 0);
+    const date = document.getElementById('exp-date').value || DB.getLocalDateStr();
     const status = document.getElementById('exp-status').value;
 
     if (!desc || amount <= 0) {
@@ -851,7 +1516,7 @@ class AppController {
     }
 
     const newExp = {
-      id: `E${Date.now().toString().slice(-5)}`,
+      id: DB.uid('E'),
       desc,
       cat,
       amount,
@@ -866,6 +1531,10 @@ class AppController {
   }
 
   deleteExpense(id) {
+    if (this.isCashierMode()) {
+      this.requireOwner('delete expenses');
+      return;
+    }
     if (confirm('Delete this expense entry?')) {
       DB.deleteItem('expenses', id);
       this.toast('info', 'Deleted', 'Expense entry removed');
@@ -897,18 +1566,93 @@ class AppController {
     container.innerHTML = `
       <div class="page-header-row">
         <div class="page-title-block">
-          <h1>Financial Reports & Profit/Loss (P&L)</h1>
-          <p>Real-time revenue, Cost of Goods Sold (COGS), operating expenses, and net profit margins</p>
+          <h1>Financial Reports, P&amp;L &amp; GSTR-1 Filing</h1>
+          <p>Live revenue net of returns, dynamic period trends, GSTR-1 tax slabs &amp; TallyPrime XML exports</p>
         </div>
         <div class="page-actions-row">
-          <button class="btn btn-secondary" onclick="window.print()">
-            ${Icons.print(14)} Print Report
+          <button type="button" class="btn btn-secondary" onclick="if(window.Analytics) Analytics.printGstReport()">
+            ${Icons.fileText(14)} Print GSTR-1
+          </button>
+          <button type="button" class="btn btn-primary" onclick="if(window.Analytics) Analytics.printPnLReport(); else window.print();">
+            ${Icons.print(14)} Print P&amp;L Report
           </button>
         </div>
       </div>
 
       <div id="analytics-content-view"></div>
     `;
+  }
+
+  getDailyRegisterSummary(dateStr = DB.getLocalDateStr()) {
+    const db = DB.getData();
+    const todayInvoices = (db.invoices || []).filter(i => i.date === dateStr);
+    const todayExpenses = (db.expenses || []).filter(e => e.date === dateStr && e.status !== 'Pending');
+
+    let cashSales = 0, upiSales = 0, cardSales = 0, udhaarSales = 0, grossSales = 0;
+    todayInvoices.forEach(inv => {
+      const amt = Number(inv.total) || 0;
+      const paidVal = inv.paid !== undefined ? (Number(inv.paid) || 0) : amt;
+      grossSales += amt;
+      if (inv.paymentMode === 'Cash') cashSales += paidVal;
+      else if (inv.paymentMode === 'UPI') upiSales += paidVal;
+      else if (inv.paymentMode === 'Card') cardSales += paidVal;
+      else if (inv.paymentMode === 'Udhaar') udhaarSales += (Number(inv.due) || amt);
+    });
+
+    // Deduct cash & UPI refunds issued on dateStr (supports per-return dates + legacy fallback)
+    let cashRefunds = 0, upiRefunds = 0;
+    (db.invoices || []).forEach(inv => {
+      const retList = Array.isArray(inv.returnedItems) ? inv.returnedItems : [];
+      const datedItems = retList.filter(r => r && r.date);
+      if (datedItems.length > 0) {
+        datedItems.forEach(r => {
+          if (r.date === dateStr) {
+            const mode = r.refundMode || inv.refundMode || 'Cash';
+            const val = Number(r.refundValue) || 0;
+            if (mode === 'Cash') cashRefunds += val;
+            else if (mode === 'UPI') upiRefunds += val;
+          }
+        });
+      } else if (inv.lastReturnDate === dateStr && Number(inv.refundAmount) > 0) {
+        if (inv.refundMode === 'Cash') cashRefunds += Number(inv.refundAmount) || 0;
+        else if (inv.refundMode === 'UPI') upiRefunds += Number(inv.refundAmount) || 0;
+      }
+    });
+
+    const totalExp = DB.round2(todayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
+    const netCashCollected = DB.round2(Math.max(0, cashSales - cashRefunds));
+    const netUpiCollected = DB.round2(Math.max(0, upiSales - upiRefunds));
+    const netCashInDrawer = DB.round2(Math.max(0, netCashCollected - totalExp));
+
+    return {
+      today: dateStr,
+      billCount: todayInvoices.length,
+      grossSales: DB.round2(grossSales),
+      cashSales: netCashCollected,
+      upiSales: netUpiCollected,
+      cardSales: DB.round2(cardSales),
+      udhaarSales: DB.round2(udhaarSales),
+      cashRefunds: DB.round2(cashRefunds),
+      upiRefunds: DB.round2(upiRefunds),
+      totalExp,
+      netCashInDrawer
+    };
+  }
+
+  printHtmlDocument(html, mode = 'wide') {
+    const printArea = document.getElementById('thermal-printable-area');
+    if (!printArea) {
+      window.print();
+      return;
+    }
+    printArea.className = mode === 'wide' ? 'print-wide' : '';
+    printArea.innerHTML = html;
+    const cleanup = () => {
+      printArea.className = '';
+    };
+    window.addEventListener('afterprint', cleanup, { once: true });
+    window.print();
+    setTimeout(cleanup, 1200);
   }
 
   // 9. SYSTEM SETTINGS VIEW (Zero manual Gemini keys in cloud - Dual Offline + Firebase Sync)
@@ -918,7 +1662,9 @@ class AppController {
     const theme = db.theme || 'dark';
     const accent = db.accent || 'blue';
     const isSound = db.soundEnabled !== false;
+    const hasOwnerPin = Boolean(db.ownerPinHash);
     const dbBytes = (JSON.stringify(db).length / 1024).toFixed(1);
+    const dailyReg = this.getDailyRegisterSummary();
     const cloudStatus = window.CloudSync
       ? CloudSync.getStatusSummary()
       : {
@@ -945,7 +1691,7 @@ class AppController {
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>Store Settings & Configurations</h1>
-          <p>Manage business identity, Firebase Cloud + Offline dual storage, receipts & themes</p>
+          <p>Manage business identity, Firebase Cloud + Offline dual storage, Owner PIN, receipts & themes</p>
         </div>
       </div>
 
@@ -1023,26 +1769,26 @@ class AppController {
             <form onsubmit="event.preventDefault(); App.saveShopSettings();">
               <div class="form-group">
                 <label class="form-label">Shop Name *</label>
-                <input type="text" id="set-shop-name" class="form-input" value="${shop.name || 'MyDukkan24 Mart'}" required />
+                <input type="text" id="set-shop-name" class="form-input" value="${this.escapeHtml(shop.name || 'MyDukkan24 Mart')}" required />
               </div>
               <div class="form-group">
                 <label class="form-label">Owner / Cashier Name</label>
-                <input type="text" id="set-shop-owner" class="form-input" value="${shop.owner || 'Mayur Singh'}" />
+                <input type="text" id="set-shop-owner" class="form-input" value="${this.escapeHtml(shop.owner || 'Mayur Singh')}" />
               </div>
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label">Phone Number *</label>
-                  <input type="text" id="set-shop-phone" class="form-input" value="${shop.phone || '+91 6306437348'}" required />
+                  <input type="text" id="set-shop-phone" class="form-input" value="${this.escapeHtml(shop.phone || '+91 6306437348')}" required />
                 </div>
                 <div class="form-group">
                   <label class="form-label">GSTIN Tax ID</label>
-                  <input type="text" id="set-shop-gstin" class="form-input" value="${shop.gstin || '09AAAAA0000A1Z5'}" placeholder="09AAAAA0000A1Z5" />
+                  <input type="text" id="set-shop-gstin" class="form-input" value="${this.escapeHtml(shop.gstin || '09AAAAA0000A1Z5')}" placeholder="09AAAAA0000A1Z5" />
                 </div>
               </div>
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label">UPI ID for Dynamic Payments *</label>
-                  <input type="text" id="set-shop-upi" class="form-input" value="${shop.upiId || '6306437348@upi'}" required placeholder="yourname@upi" />
+                  <input type="text" id="set-shop-upi" class="form-input" value="${this.escapeHtml(shop.upiId || '6306437348@upi')}" required placeholder="yourname@upi" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Default GST Tax Rate (%)</label>
@@ -1056,7 +1802,7 @@ class AppController {
               </div>
               <div class="form-group">
                 <label class="form-label">Store Address</label>
-                <textarea id="set-shop-address" class="form-textarea" rows="2">${shop.address || 'Hazratganj Market, Lucknow, Uttar Pradesh, India'}</textarea>
+                <textarea id="set-shop-address" class="form-textarea" rows="2">${this.escapeHtml(shop.address || 'Hazratganj Market, Lucknow, Uttar Pradesh, India')}</textarea>
               </div>
 
               <!-- Live Store UPI QR Preview -->
@@ -1064,7 +1810,7 @@ class AppController {
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(shop.upiId || '6306437348@upi')}&pn=${encodeURIComponent(shop.name || 'MyDukkan24')}" alt="Store UPI QR" style="width: 72px; height: 72px; border-radius: 8px; background: #fff; padding: 4px; display: block; flex-shrink: 0;" />
                 <div style="flex: 1; min-width: 170px;">
                   <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Active Dynamic UPI QR</div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow-wrap: anywhere;">VPA: <code style="color: var(--primary);">${shop.upiId || '6306437348@upi'}</code></div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow-wrap: anywhere;">VPA: <code style="color: var(--primary);">${this.escapeHtml(shop.upiId || '6306437348@upi')}</code></div>
                   <div style="font-size: 11px; color: var(--success); font-weight: 600; margin-top: 3px;">Accepts PhonePe, GPay, Paytm, BHIM</div>
                 </div>
               </div>
@@ -1086,11 +1832,11 @@ class AppController {
             <form onsubmit="event.preventDefault(); App.saveReceiptSettings();">
               <div class="form-group">
                 <label class="form-label">Receipt Header Tagline</label>
-                <input type="text" id="set-rcpt-header" class="form-input" value="${shop.rcptHeader || 'HAZRATGANJ, LUCKNOW • TAX INVOICE'}" placeholder="e.g. HAZRATGANJ MARKET • TAX INVOICE" />
+                <input type="text" id="set-rcpt-header" class="form-input" value="${this.escapeHtml(shop.rcptHeader || 'HAZRATGANJ, LUCKNOW • TAX INVOICE')}" placeholder="e.g. HAZRATGANJ MARKET • TAX INVOICE" />
               </div>
               <div class="form-group">
                 <label class="form-label">Receipt Footer Thank You Note</label>
-                <input type="text" id="set-rcpt-footer" class="form-input" value="${shop.rcptFooter || 'THANK YOU FOR SHOPPING! VISIT AGAIN'}" placeholder="e.g. THANK YOU FOR SHOPPING!" />
+                <input type="text" id="set-rcpt-footer" class="form-input" value="${this.escapeHtml(shop.rcptFooter || 'THANK YOU FOR SHOPPING! VISIT AGAIN')}" placeholder="e.g. THANK YOU FOR SHOPPING!" />
               </div>
               <div class="form-row-2">
                 <div class="form-group">
@@ -1112,36 +1858,67 @@ class AppController {
           <!-- Daily Cash Counter & Closing Register Card -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
-              <div class="card-title">${Icons.wallet(16)} Daily Cash Counter & Closing Register</div>
+              <div class="card-title">${Icons.wallet(16)} Daily Cash Counter (${dailyReg.today})</div>
               <span class="badge badge-success">Counter #1 Live</span>
             </div>
             <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
-              Monitor real-time cash drawer tally, digital UPI collections, and print day-end reconciliation reports.
+              Real-time today's cash drawer net of refunds &amp; expenses, plus today's UPI digital settlement.
             </p>
             <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px;">
               <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Today's Cash In Drawer</div>
                 <div style="font-size: 18px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-top: 2px;">
-                  ₹${(db.invoices || []).filter(i => i.paymentMode === 'Cash').reduce((sum, i) => sum + (Number(i.paid) || 0), 0).toLocaleString('en-IN')}
+                  ₹${dailyReg.netCashInDrawer.toLocaleString('en-IN')}
                 </div>
               </div>
               <div style="background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Today's UPI Collection</div>
                 <div style="font-size: 18px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 2px;">
-                  ₹${(db.invoices || []).filter(i => i.paymentMode === 'UPI').reduce((sum, i) => sum + (Number(i.paid) || 0), 0).toLocaleString('en-IN')}
+                  ₹${dailyReg.upiSales.toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="App.openCashDrawerModal()">
-                ${Icons.receipt(14)} View Closing Sheet & Print
+                ${Icons.receipt(14)} View Closing Sheet &amp; Print Z-Report
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Column 2: Theme Studio, Audio & Database Backups -->
+        <!-- Column 2: Security Role Lock, Theme Studio, Audio & Database Backups -->
         <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+          <!-- Counter Security & Owner PIN Card -->
+          <div class="card" style="margin-bottom: 0; border-color: rgba(245, 158, 11, 0.3);">
+            <div class="card-header">
+              <div class="card-title">${Icons.lock(16)} Counter Security &amp; Role Lock (Owner / Cashier)</div>
+              <span class="badge ${hasOwnerPin ? 'badge-success' : 'badge-warning'}">${hasOwnerPin ? 'PIN Active ✓' : 'PIN Not Set'}</span>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+              Lock the shop counter terminal into <strong>Cashier Mode</strong> (POS Billing + View-Only Stock). P&amp;L, Cost Margins, Deletes &amp; Settings stay protected behind your encrypted Owner PIN.
+            </p>
+            <form onsubmit="event.preventDefault(); App.saveOwnerPinSettings();" style="margin-bottom: 12px;">
+              <div class="form-row-2">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="form-label">${hasOwnerPin ? 'Change' : 'Set'} Owner PIN (4–6 Digits) *</label>
+                  <input type="password" id="set-owner-pin-new" class="form-input" required minlength="4" maxlength="6" inputmode="numeric" pattern="[0-9]{4,6}" placeholder="e.g. 2468" />
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="form-label">Confirm Owner PIN *</label>
+                  <input type="password" id="set-owner-pin-confirm" class="form-input" required minlength="4" maxlength="6" inputmode="numeric" pattern="[0-9]{4,6}" placeholder="Repeat PIN" />
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-secondary btn-sm" style="flex: 1 1 140px; justify-content: center;">
+                  ${Icons.check(13)} ${hasOwnerPin ? 'Update Owner PIN' : 'Save Owner PIN'}
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" style="flex: 1 1 160px; justify-content: center;" onclick="App.openSwitchToCashierModal()">
+                  ${Icons.lock(13)} Lock to Cashier Mode
+                </button>
+              </div>
+            </form>
+          </div>
+
           <!-- Dynamic Accent Theme Palette Studio -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
@@ -1176,7 +1953,7 @@ class AppController {
             <div style="margin-top: 10px; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
               <div style="flex: 1; min-width: 150px;">
                 <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">🌐 Display Language / भाषा</div>
-                <div style="font-size: 11px; color: var(--text-muted);">Dynamic localization across menus, bills & reports</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Dynamic localization across menus, bills &amp; reports</div>
               </div>
               <select class="form-select" style="width: auto; min-width: 130px; font-size: 12px; padding: 6px 10px;" onchange="I18n.setLanguage(this.value); App.renderSettingsView(document.getElementById('main-view-container'));">
                 <option value="en" ${I18n.getLanguage() === 'en' ? 'selected' : ''}>English</option>
@@ -1211,11 +1988,11 @@ class AppController {
           <!-- Complete Database Backups & Portability -->
           <div class="card" style="margin-bottom: 0;">
             <div class="card-header">
-              <div class="card-title">${Icons.download(16)} Data Backups & Migration</div>
-              <span class="badge badge-primary">Offline First</span>
+              <div class="card-title">${Icons.download(16)} Data Backups, JSON Restore &amp; Migration</div>
+              <span class="badge badge-primary">Cloud + Offline</span>
             </div>
             <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
-              Export full store database (products, bills, customers, khata balances, expenses) into an encrypted portable file.
+              Export full store database into portable JSON, restore any JSON backup (auto-syncs to Firebase if signed in), or download CSV sheets.
             </p>
             <div class="quick-actions-grid" style="margin-top: 14px;">
               <button class="btn btn-secondary btn-sm" onclick="App.exportFullBackup()">
@@ -1223,7 +2000,7 @@ class AppController {
               </button>
               <label class="btn btn-secondary btn-sm" style="cursor: pointer; margin: 0; justify-content: center;">
                 ${Icons.upload(14)} Restore Backup (.json)
-                <input type="file" accept=".json" style="display: none;" onchange="App.importFullBackup(event)" />
+                <input type="file" accept=".json,application/json" style="display: none;" onchange="App.importFullBackup(event)" />
               </label>
               <button class="btn btn-secondary btn-sm" onclick="DB.downloadFile(DB.exportCSV('products'), 'products.csv')">
                 ${Icons.package(14)} Export Products CSV
@@ -1406,6 +2183,10 @@ class AppController {
   }
 
   openCloudAuthSection() {
+    if (this.isCashierMode()) {
+      this.requireOwner('manage Cloud Sync');
+      return;
+    }
     if (typeof this.closeMobileSidebar === 'function') this.closeMobileSidebar();
     this.navigate('settings');
     setTimeout(() => {
@@ -1522,19 +2303,23 @@ class AppController {
   testPrintSampleSlip() {
     const sampleInv = {
       id: "INV-DEMO",
-      date: new Date().toISOString().split('T')[0],
+      date: DB.getLocalDateStr(),
       time: "12:00 PM",
       customerName: "Ramesh Sharma",
       customerPhone: "9876543210",
       items: [
-        { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", qty: 1, price: 235, mrp: 260, total: 235 },
-        { id: "P103", name: "Amul Butter 100g", qty: 2, price: 55, mrp: 58, total: 110 }
+        { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", qty: 1, price: 235, mrp: 260, gstRate: 0, unit: "bag", total: 235 },
+        { id: "P103", name: "Amul Butter 100g", qty: 2, price: 55, mrp: 58, gstRate: 12, unit: "pack", total: 110 }
       ],
       subtotal: 345,
-      tax: 17,
+      tax: 13.2,
+      gstBreakdown: {
+        "0": { rate: 0, taxable: 235, tax: 0 },
+        "12": { rate: 12, taxable: 110, tax: 13.2 }
+      },
       discount: 0,
-      total: 362,
-      paid: 362,
+      total: 358.2,
+      paid: 358.2,
       due: 0,
       paymentMode: "UPI",
       status: "Paid"
@@ -1690,55 +2475,87 @@ class AppController {
     const db = DB.getData();
     const products = db.products || [];
     const customers = db.customers || [];
-    const invoices = db.invoices || [];
+    const todayStr = DB.getLocalDateStr();
+    const isCashier = this.isCashierMode();
 
-    const lowStock = products.filter(p => p.stock <= p.minStock);
-    const debtors = customers.filter(c => (c.balanceDue || 0) > 0);
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayInvoices = invoices.filter(i => i.date === todayStr);
-    const todaySales = todayInvoices.reduce((s, i) => s + (i.paid || 0), 0);
+    const lowStock = products.filter(p => Number(p.stock || 0) <= Number(p.minStock || 0));
+    const expiringSoon = this.getExpiringProducts(products, 7);
+    const expiredCount = expiringSoon.filter(x => x.daysLeft < 0).length;
+    const debtors = customers.filter(c => (Number(c.balanceDue) || 0) > 0);
+    const reg = this.getDailyRegisterSummary(todayStr);
 
     const notifications = [];
 
-    if (lowStock.length) {
+    if (expiringSoon.length) {
+      const sampleNames = expiringSoon.slice(0, 2).map(x => `${this.escapeHtml(x.product.name)} (${x.daysLeft < 0 ? 'Expired' : `${x.daysLeft}d`})`).join(', ');
       notifications.push({
-        type: 'warning',
-        title: `${lowStock.length} Products Low in Stock`,
-        desc: `${lowStock.map(p => p.name).slice(0, 2).join(', ')}${lowStock.length > 2 ? '...' : ''} need reordering.`,
-        action: () => { App.navigate('inventory'); Inventory.filterStock = 'Low'; Inventory.render(); }
+        type: expiredCount > 0 ? 'danger' : 'warning',
+        title: `${expiringSoon.length} Items ${expiredCount > 0 ? 'Expired / Expiring Soon' : 'Expiring in 7 Days'}`,
+        desc: `${sampleNames}${expiringSoon.length > 2 ? '...' : ''}`,
+        action: () => {
+          App.navigate('inventory');
+          if (window.Inventory && typeof Inventory.setStockFilter === 'function') {
+            Inventory.setStockFilter(expiredCount > 0 && expiredCount === expiringSoon.length ? 'Expired' : 'Expiring7');
+          }
+        }
       });
     }
 
-    if (debtors.length) {
-      const totalDue = debtors.reduce((s, c) => s + c.balanceDue, 0);
+    if (lowStock.length) {
+      const lowNames = lowStock.slice(0, 2).map(p => this.escapeHtml(p.name)).join(', ');
+      notifications.push({
+        type: 'warning',
+        title: `${lowStock.length} Products Low in Stock`,
+        desc: `${lowNames}${lowStock.length > 2 ? '...' : ''} need reordering.`,
+        action: () => {
+          App.navigate('inventory');
+          if (window.Inventory && typeof Inventory.setStockFilter === 'function') {
+            Inventory.setStockFilter('Low');
+          }
+        }
+      });
+    }
+
+    if (!isCashier && debtors.length) {
+      const totalDue = DB.round2(debtors.reduce((s, c) => s + (Number(c.balanceDue) || 0), 0));
       notifications.push({
         type: 'danger',
         title: `₹${totalDue.toLocaleString('en-IN')} Udhaar Pending`,
-        desc: `${debtors.length} customer debts waiting for collection.`,
+        desc: `${debtors.length} customer accounts waiting for collection.`,
         action: () => App.navigate('udhaar')
       });
     }
 
-    notifications.push({
-      type: 'info',
-      title: "Today's Register Status",
-      desc: `₹${todaySales.toLocaleString('en-IN')} billed across ${todayInvoices.length} sales receipts.`,
-      action: () => App.navigate('dashboard')
-    });
+    if (!isCashier) {
+      const netToday = DB.round2((reg.cashSales || 0) + (reg.upiSales || 0) + (reg.cardSales || 0));
+      notifications.push({
+        type: 'info',
+        title: "Today's Register Status",
+        desc: `₹${netToday.toLocaleString('en-IN')} net collected across ${reg.billCount} bills today.`,
+        action: () => App.navigate('dashboard')
+      });
+    } else if (!notifications.length) {
+      notifications.push({
+        type: 'info',
+        title: 'Counter Ready (Cashier Mode)',
+        desc: 'All items in healthy stock with zero upcoming expiries.',
+        action: () => App.navigate('pos')
+      });
+    }
 
     container.innerHTML = `
       <div class="notification-popover">
         <div class="notification-header">
-          <span>Notifications & Alerts</span>
+          <span>Notifications &amp; Alerts</span>
           <span class="badge badge-muted">${notifications.length}</span>
         </div>
         <div class="notification-list">
           ${notifications.map((n, idx) => `
             <div class="notification-item" onclick="App.handleNotifClick(${idx})">
-              <span style="color: ${n.type === 'danger' ? 'var(--danger)' : n.type === 'warning' ? 'var(--warning)' : 'var(--primary)'};">
+              <span style="color: ${n.type === 'danger' ? 'var(--danger)' : n.type === 'warning' ? 'var(--warning)' : 'var(--primary)'}; flex-shrink: 0;">
                 ${Icons.alert(16)}
               </span>
-              <div>
+              <div style="min-width: 0;">
                 <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary);">${n.title}</div>
                 <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${n.desc}</div>
               </div>
@@ -1768,11 +2585,13 @@ class AppController {
   updateNotificationBadge() {
     const db = DB.getData();
     const products = db.products || [];
-    const lowStock = products.filter(p => p.stock <= p.minStock);
+    const lowStock = products.filter(p => Number(p.stock || 0) <= Number(p.minStock || 0));
+    const expiringSoon = this.getExpiringProducts(products, 7);
+    const alertCount = lowStock.length + expiringSoon.length;
     const badge = document.getElementById('notification-badge-count');
     if (badge) {
-      if (lowStock.length > 0) {
-        badge.textContent = lowStock.length;
+      if (alertCount > 0) {
+        badge.textContent = alertCount > 99 ? '99+' : String(alertCount);
         badge.style.display = 'inline-flex';
       } else {
         badge.style.display = 'none';
@@ -1782,34 +2601,89 @@ class AppController {
 
   // Backup Utilities
   exportFullBackup() {
+    if (this.isCashierMode()) {
+      this.requireOwner('export store backup');
+      return;
+    }
     const db = DB.getData();
     const jsonStr = JSON.stringify(db, null, 2);
-    DB.downloadFile(jsonStr, `mydukkan24_backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+    DB.downloadFile(jsonStr, `mydukkan24_backup_${DB.getLocalDateStr()}.json`, 'application/json');
     this.toast('success', 'Backup Exported', 'Full database downloaded securely');
   }
 
-  importFullBackup(event) {
-    const file = event.target.files[0];
+  async importFullBackup(event) {
+    if (this.isCashierMode()) {
+      if (event && event.target) event.target.value = '';
+      this.requireOwner('restore JSON backup');
+      return;
+    }
+    const input = event && event.target;
+    const file = input && input.files ? input.files[0] : null;
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        if (parsed.products && parsed.customers) {
-          DB.saveData(parsed);
-          this.toast('success', 'Restored', 'Database restored successfully');
-          setTimeout(() => location.reload(), 1000);
-        } else {
-          throw new Error('Invalid schema');
-        }
-      } catch (err) {
-        this.toast('danger', 'Error', 'Invalid backup file format');
+    if (input) input.value = '';
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || !Array.isArray(parsed.products) || !Array.isArray(parsed.customers)) {
+        throw new Error('Backup JSON missing valid products or customers arrays.');
       }
-    };
-    reader.readAsText(file);
+
+      const currentDb = DB.getData();
+      const normalized = {
+        ...currentDb,
+        ...parsed,
+        products: parsed.products.map(p => ({
+          ...p,
+          id: String(p.id || DB.uid('P')),
+          stock: DB.roundQty(p.stock || 0),
+          minStock: DB.roundQty(p.minStock || 0),
+          price: DB.round2(p.price || 0),
+          mrp: DB.round2(p.mrp || p.price || 0),
+          cost: DB.round2(p.cost || 0),
+          gstRate: [0, 5, 12, 18].includes(Number(p.gstRate))
+            ? Number(p.gstRate)
+            : DB.inferDefaultGstRate(p.cat, p.name)
+        })),
+        customers: parsed.customers.map(c => ({
+          ...c,
+          id: String(c.id || DB.uid('C')),
+          balanceDue: DB.round2(c.balanceDue || 0),
+          totalSpent: DB.round2(c.totalSpent || 0)
+        })),
+        suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : [],
+        purchases: Array.isArray(parsed.purchases) ? parsed.purchases : [],
+        invoices: Array.isArray(parsed.invoices) ? parsed.invoices : [],
+        expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+        staff: Array.isArray(parsed.staff) ? parsed.staff : [],
+        parkedCarts: Array.isArray(parsed.parkedCarts) ? parsed.parkedCarts.slice(0, 25) : [],
+        attendance: (parsed.attendance && typeof parsed.attendance === 'object' && !Array.isArray(parsed.attendance)) ? parsed.attendance : {},
+        ownerPinHash: typeof parsed.ownerPinHash === 'string' ? parsed.ownerPinHash : (currentDb.ownerPinHash || '')
+      };
+
+      DB.saveData(normalized);
+      this.applyTheme();
+      this.updateHeaderStoreName();
+      this.updateNotificationBadge();
+
+      if (window.CloudSync && CloudSync.user && CloudSync.isOnline()) {
+        this.toast('info', 'Syncing Restore...', 'Uploading restored JSON database to Firebase Cloud...');
+        await CloudSync.forceUploadAll();
+      } else {
+        this.toast('success', 'Backup Restored', `${normalized.products.length} products & ${normalized.invoices.length} invoices loaded.`);
+      }
+
+      setTimeout(() => location.reload(), 900);
+    } catch (err) {
+      this.toast('danger', 'Restore Failed', err && err.message ? err.message : 'Invalid backup JSON file format');
+    }
   }
 
   resetToFactoryDefaults() {
+    if (this.isCashierMode()) {
+      this.requireOwner('reset demo data');
+      return;
+    }
     const isSignedInCloud = Boolean(window.CloudSync && CloudSync.user);
     const msg = isSignedInCloud
       ? `Reset local offline database on this device?\n\nNote: You are signed in to Firebase (${CloudSync.user.email || 'Cloud Account'}). Cloud data stays safe in Firebase and will re-sync unless you Sign Out or Disconnect Firebase first.`
@@ -1833,6 +2707,10 @@ class AppController {
         this.navigate('pos');
       } else if (e.key === 'F4') {
         e.preventDefault();
+        if (this.isCashierMode()) {
+          this.requireOwner('open Day-End Cash Register');
+          return;
+        }
         this.openCashDrawerModal();
       }
     });
@@ -1917,7 +2795,7 @@ class AppController {
                 Official POS Billing, Barcode Scanner & Digital Khata Platform
               </div>
               <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); margin-top: 6px;">
-                Version 4.2.0 • Size: 4.8 MB • Android 8.0+ / PWA Universal
+                Version 9.0.0 • Size: 4.8 MB • Android 8.0+ / PWA Universal
               </div>
             </div>
           </div>
@@ -2022,59 +2900,49 @@ class AppController {
 
   // Day-End Cash Register & Closing Z-Report Modal
   openCashDrawerModal() {
+    if (this.isCashierMode()) {
+      this.requireOwner('view Day-End Cash Register');
+      return;
+    }
     const db = DB.getData();
-    const today = new Date().toISOString().split('T')[0];
-    const invoices = (db.invoices || []).filter(i => i.date === today);
-    const expenses = (db.expenses || []).filter(e => e.date === today);
-
-    let cashSales = 0, upiSales = 0, cardSales = 0, udhaarSales = 0, totalSales = 0;
-    invoices.forEach(inv => {
-      const amt = Number(inv.total) || 0;
-      totalSales += amt;
-      if (inv.paymentMode === 'Cash') cashSales += (Number(inv.paid) || amt);
-      else if (inv.paymentMode === 'UPI') upiSales += (Number(inv.paid) || amt);
-      else if (inv.paymentMode === 'Card') cardSales += (Number(inv.paid) || amt);
-      else if (inv.paymentMode === 'Udhaar') udhaarSales += (Number(inv.due) || amt);
-    });
-
-    const totalExp = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const netCashInDrawer = Math.max(0, cashSales - totalExp);
+    const reg = this.getDailyRegisterSummary();
+    const hasRefunds = reg.cashRefunds > 0 || reg.upiRefunds > 0;
 
     const modalHtml = `
       <div class="modal-backdrop" id="cash-drawer-modal" onclick="if(event.target===this) App.closeCashDrawerModal()">
-        <div class="modal-card" style="max-width: 440px;">
+        <div class="modal-card" style="max-width: 460px;">
           <div class="modal-header">
             <div class="modal-title">💰 Day-End Cash Register (Counter #1)</div>
             <button class="topbar-icon-btn" onclick="App.closeCashDrawerModal()">✕</button>
           </div>
           <div class="modal-body" style="padding: 16px;">
             <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 14px; font-family: var(--font-mono);">
-              Date: ${today} • Store: ${db.shop?.name || 'MyDukkan24 Mart'}
+              Date: ${this.escapeHtml(reg.today)} • Store: ${this.escapeHtml((db.shop && db.shop.name) || 'MyDukkan24 Mart')}
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px;">
               <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
-                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Cash Sales</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Net Cash Collected</div>
                 <div style="font-size: 17px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-top: 2px;">
-                  ₹${cashSales.toLocaleString('en-IN')}
+                  ₹${reg.cashSales.toLocaleString('en-IN')}
                 </div>
               </div>
               <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
-                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">UPI Digital</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Net UPI Digital</div>
                 <div style="font-size: 17px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 2px;">
-                  ₹${upiSales.toLocaleString('en-IN')}
+                  ₹${reg.upiSales.toLocaleString('en-IN')}
                 </div>
               </div>
               <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Card POS</div>
                 <div style="font-size: 17px; font-weight: 800; color: #A78BFA; font-family: var(--font-mono); margin-top: 2px;">
-                  ₹${cardSales.toLocaleString('en-IN')}
+                  ₹${reg.cardSales.toLocaleString('en-IN')}
                 </div>
               </div>
               <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
                 <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Udhaar Issued</div>
                 <div style="font-size: 17px; font-weight: 800; color: #F43F5E; font-family: var(--font-mono); margin-top: 2px;">
-                  ₹${udhaarSales.toLocaleString('en-IN')}
+                  ₹${reg.udhaarSales.toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
@@ -2082,24 +2950,30 @@ class AppController {
             <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
                 <span>Total Bills Issued:</span>
-                <span style="font-weight: 700; font-family: var(--font-mono);">${invoices.length} Bills</span>
+                <span style="font-weight: 700; font-family: var(--font-mono);">${reg.billCount} Bills</span>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
                 <span>Total Gross Sales:</span>
-                <span style="font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);">₹${totalSales.toLocaleString('en-IN')}</span>
+                <span style="font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);">₹${reg.grossSales.toLocaleString('en-IN')}</span>
               </div>
+              ${hasRefunds ? `
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--warning); margin-bottom: 4px;">
+                  <span>Today's Sales Refunds (Cash / UPI):</span>
+                  <span style="font-weight: 700; font-family: var(--font-mono);">-₹${(reg.cashRefunds + reg.upiRefunds).toLocaleString('en-IN')}</span>
+                </div>
+              ` : ''}
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #F87171; margin-bottom: 4px;">
                 <span>Today's Cash Expenses:</span>
-                <span style="font-weight: 700; font-family: var(--font-mono);">-₹${totalExp.toLocaleString('en-IN')}</span>
+                <span style="font-weight: 700; font-family: var(--font-mono);">-₹${reg.totalExp.toLocaleString('en-IN')}</span>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; border-top: 1px dashed var(--border-medium); padding-top: 8px; margin-top: 6px;">
-                <span style="color: #fff;">Net Cash in Counter Drawer:</span>
-                <span style="color: #10B981; font-family: var(--font-mono); font-size: 17px;">₹${netCashInDrawer.toLocaleString('en-IN')}</span>
+                <span style="color: var(--text-primary);">Net Cash in Counter Drawer:</span>
+                <span style="color: #10B981; font-family: var(--font-mono); font-size: 17px;">₹${reg.netCashInDrawer.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button class="btn btn-primary" style="flex: 1 1 170px; justify-content: center;" onclick="window.print()">
+              <button class="btn btn-primary" style="flex: 1 1 170px; justify-content: center;" onclick="App.printDailyZReport()">
                 ${Icons.print(14)} Print Day-End Z-Report
               </button>
               <button class="btn btn-secondary" onclick="App.closeCashDrawerModal()">
@@ -2114,6 +2988,37 @@ class AppController {
     const existing = document.getElementById('cash-drawer-modal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  printDailyZReport() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const reg = this.getDailyRegisterSummary();
+    const netCollected = DB.round2(reg.cashSales + reg.upiSales + reg.cardSales);
+    const zHtml = `
+      <div style="font-family: Arial, sans-serif; color: #111; max-width: 680px; margin: 0 auto;">
+        <h2 style="margin: 0 0 4px;">${this.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Day-End Z-Report</h2>
+        <div style="font-size: 12px; color: #555; margin-bottom: 16px;">
+          Date: ${this.escapeHtml(reg.today)} • Generated: ${new Date().toLocaleTimeString('en-IN')} • GSTIN: ${this.escapeHtml(shop.gstin || 'N/A')}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+          <tbody>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Bills Issued</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: 700;">${reg.billCount}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Gross Sales Billed</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: 700;">₹${reg.grossSales.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Net Cash Collected</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: 700;">₹${reg.cashSales.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Net UPI Digital Collected</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: 700;">₹${reg.upiSales.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Card POS Collected</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: 700;">₹${reg.cardSales.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Udhaar Credit Issued</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: 700;">₹${reg.udhaarSales.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Cash / UPI Refunds Issued</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; color: #b91c1c;">-₹${(reg.cashRefunds + reg.upiRefunds).toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">Paid Cash Expenses</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right; color: #b91c1c;">-₹${reg.totalExp.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 10px 8px; font-weight: 800; font-size: 14px; border-top: 2px solid #111;">Total Net Digital + Cash Collected</td><td style="padding: 10px 8px; text-align: right; font-weight: 800; font-size: 14px; border-top: 2px solid #111;">₹${netCollected.toLocaleString('en-IN')}</td></tr>
+            <tr><td style="padding: 10px 8px; font-weight: 800; font-size: 15px; background: #f3f4f6;">Net Cash Expected in Drawer</td><td style="padding: 10px 8px; text-align: right; font-weight: 800; font-size: 15px; background: #f3f4f6;">₹${reg.netCashInDrawer.toLocaleString('en-IN')}</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size: 11px; color: #666;">Verified by Store Owner • MyDukkan24 Retail OS v9.0</div>
+      </div>
+    `;
+    this.printHtmlDocument(zHtml, 'wide');
   }
 
   closeCashDrawerModal() {
@@ -2152,12 +3057,12 @@ class AppController {
     toastEl.style.borderLeft = `3px solid ${type === 'success' ? 'var(--success)' : type === 'danger' ? 'var(--danger)' : type === 'warning' ? 'var(--warning)' : 'var(--primary)'}`;
 
     toastEl.innerHTML = `
-      <div style="color: ${type === 'success' ? 'var(--success)' : type === 'danger' ? 'var(--danger)' : type === 'warning' ? 'var(--warning)' : 'var(--primary)'};">
+      <div style="color: ${type === 'success' ? 'var(--success)' : type === 'danger' ? 'var(--danger)' : type === 'warning' ? 'var(--warning)' : 'var(--primary)'}; flex-shrink: 0;">
         ${Icons.check(16)}
       </div>
-      <div>
-        <div class="toast-title">${title}</div>
-        ${desc ? `<div class="toast-desc">${desc}</div>` : ''}
+      <div style="min-width: 0;">
+        <div class="toast-title">${this.escapeHtml(title)}</div>
+        ${desc ? `<div class="toast-desc">${this.escapeHtml(desc)}</div>` : ''}
       </div>
     `;
 

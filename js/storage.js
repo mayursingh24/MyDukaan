@@ -6,8 +6,19 @@
 const STORAGE_KEY = 'mydukaan24_prod_db';
 const SYNC_META_KEY = 'mydukaan24_sync_meta';
 const PENDING_SHOP_PROFILE_KEY = 'mydukaan24_pending_shop_profile';
+const DEVICE_ROLE_KEY = 'mydukaan24_device_role';
+const DEVICE_CASHIER_KEY = 'mydukaan24_device_cashier';
 const SYNC_CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
-const META_FIELDS = ['shop', 'shops', 'activeShopId', 'attendance', 'theme', 'accent', 'language', 'soundEnabled'];
+const META_FIELDS = ['shop', 'shops', 'activeShopId', 'attendance', 'theme', 'accent', 'language', 'soundEnabled', 'ownerPinHash', 'parkedCarts'];
+
+function localDateOffsetStr(daysOffset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysOffset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 const DEFAULT_SHOP = {
   name: "MyDukkan24 Mart",
@@ -21,19 +32,19 @@ const DEFAULT_SHOP = {
 };
 
 const DEFAULT_PRODUCTS = [
-  { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", cat: "Grocery", barcode: "8901725131235", mrp: 260, price: 235, cost: 198, stock: 28, unit: "bag", minStock: 8, emoji: "🌾" },
-  { id: "P102", name: "Fortune Sunflower Oil 1L", cat: "Oils", barcode: "8906007280145", mrp: 175, price: 155, cost: 130, stock: 34, unit: "pouch", minStock: 10, emoji: "🫙" },
-  { id: "P103", name: "Amul Butter 100g", cat: "Dairy", barcode: "8901262010053", mrp: 58, price: 55, cost: 48, stock: 45, unit: "pack", minStock: 12, emoji: "🧈" },
-  { id: "P104", name: "Tata Tea Gold 250g", cat: "Beverages", barcode: "8901052003888", mrp: 160, price: 140, cost: 115, stock: 19, unit: "box", minStock: 6, emoji: "☕" },
-  { id: "P105", name: "Maggi 2-Minute Noodles 70g", cat: "Snacks", barcode: "8901058852336", mrp: 14, price: 14, cost: 11.5, stock: 95, unit: "pack", minStock: 25, emoji: "🍜" },
-  { id: "P106", name: "Colgate Total Toothpaste 120g", cat: "Personal Care", barcode: "8901314010529", mrp: 110, price: 95, cost: 75, stock: 22, unit: "tube", minStock: 8, emoji: "🪥" },
-  { id: "P107", name: "Parle-G Glucose Biscuits 80g", cat: "Snacks", barcode: "8901719101015", mrp: 10, price: 10, cost: 8.5, stock: 120, unit: "pack", minStock: 30, emoji: "🍪" },
-  { id: "P108", name: "Surf Excel Quick Wash 1kg", cat: "Household", barcode: "8901030015520", mrp: 165, price: 148, cost: 125, stock: 16, unit: "pack", minStock: 5, emoji: "🧼" },
-  { id: "P109", name: "Dettol Antiseptic Liquid 250ml", cat: "Healthcare", barcode: "8901396112104", mrp: 145, price: 130, cost: 105, stock: 4, unit: "bottle", minStock: 6, emoji: "🧴" }, // Low stock
-  { id: "P110", name: "Cadbury Dairy Milk Silk 60g", cat: "Chocolates", barcode: "7622201738210", mrp: 85, price: 80, cost: 68, stock: 30, unit: "bar", minStock: 10, emoji: "🍫" },
-  { id: "P111", name: "Basmati Rice India Gate 1kg", cat: "Grocery", barcode: "8901030383841", mrp: 140, price: 120, cost: 95, stock: 40, unit: "kg", minStock: 10, emoji: "🍚" },
-  { id: "P112", name: "Toor Dal Premium 1kg", cat: "Grocery", barcode: "8901030383858", mrp: 200, price: 175, cost: 145, stock: 0, unit: "kg", minStock: 10, emoji: "🫘" }, // Out of stock
-  { id: "P113", name: "Indian Retail FMCG Pack", cat: "Grocery", barcode: "8904258116198", mrp: 30, price: 25, cost: 20, stock: 45, unit: "pack", minStock: 10, emoji: "🍿" }
+  { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", cat: "Grocery", barcode: "8901725131235", mrp: 260, price: 235, cost: 198, stock: 28, unit: "bag", minStock: 8, gstRate: 0, expiryDate: localDateOffsetStr(90), emoji: "🌾" },
+  { id: "P102", name: "Fortune Sunflower Oil 1L", cat: "Oils", barcode: "8906007280145", mrp: 175, price: 155, cost: 130, stock: 34, unit: "litre", minStock: 10, gstRate: 5, expiryDate: localDateOffsetStr(150), emoji: "🫙" },
+  { id: "P103", name: "Amul Butter 100g", cat: "Dairy", barcode: "8901262010053", mrp: 58, price: 55, cost: 48, stock: 45, unit: "pack", minStock: 12, gstRate: 12, expiryDate: localDateOffsetStr(4), emoji: "🧈" },
+  { id: "P104", name: "Tata Tea Gold 250g", cat: "Beverages", barcode: "8901052003888", mrp: 160, price: 140, cost: 115, stock: 19, unit: "box", minStock: 6, gstRate: 5, expiryDate: localDateOffsetStr(180), emoji: "☕" },
+  { id: "P105", name: "Maggi 2-Minute Noodles 70g", cat: "Snacks", barcode: "8901058852336", mrp: 14, price: 14, cost: 11.5, stock: 95, unit: "pack", minStock: 25, gstRate: 12, expiryDate: localDateOffsetStr(6), emoji: "🍜" },
+  { id: "P106", name: "Colgate Total Toothpaste 120g", cat: "Personal Care", barcode: "8901314010529", mrp: 110, price: 95, cost: 75, stock: 22, unit: "tube", minStock: 8, gstRate: 18, expiryDate: localDateOffsetStr(240), emoji: "🪥" },
+  { id: "P107", name: "Parle-G Glucose Biscuits 80g", cat: "Snacks", barcode: "8901719101015", mrp: 10, price: 10, cost: 8.5, stock: 120, unit: "pack", minStock: 30, gstRate: 5, expiryDate: localDateOffsetStr(65), emoji: "🍪" },
+  { id: "P108", name: "Surf Excel Quick Wash 1kg", cat: "Household", barcode: "8901030015520", mrp: 165, price: 148, cost: 125, stock: 16, unit: "pack", minStock: 5, gstRate: 18, expiryDate: "", emoji: "🧼" },
+  { id: "P109", name: "Dettol Antiseptic Liquid 250ml", cat: "Healthcare", barcode: "8901396112104", mrp: 145, price: 130, cost: 105, stock: 4, unit: "bottle", minStock: 6, gstRate: 12, expiryDate: localDateOffsetStr(300), emoji: "🧴" }, // Low stock
+  { id: "P110", name: "Cadbury Dairy Milk Silk 60g", cat: "Chocolates", barcode: "7622201738210", mrp: 85, price: 80, cost: 68, stock: 30, unit: "bar", minStock: 10, gstRate: 18, expiryDate: localDateOffsetStr(45), emoji: "🍫" },
+  { id: "P111", name: "Basmati Rice India Gate 1kg", cat: "Grocery", barcode: "8901030383841", mrp: 140, price: 120, cost: 95, stock: 40, unit: "kg", minStock: 10, gstRate: 5, expiryDate: "", emoji: "🍚" },
+  { id: "P112", name: "Toor Dal Premium 1kg", cat: "Grocery", barcode: "8901030383858", mrp: 200, price: 175, cost: 145, stock: 0, unit: "kg", minStock: 10, gstRate: 0, expiryDate: "", emoji: "🫘" }, // Out of stock
+  { id: "P113", name: "Indian Retail FMCG Pack", cat: "Grocery", barcode: "8904258116198", mrp: 30, price: 25, cost: 20, stock: 45, unit: "pack", minStock: 10, gstRate: 5, expiryDate: "", emoji: "🍿" }
 ];
 
 const DEFAULT_CUSTOMERS = [
@@ -155,6 +166,8 @@ class StorageEngine {
           expenses: DEFAULT_EXPENSES,
           staff: DEFAULT_STAFF,
           attendance: {},
+          parkedCarts: [],
+          ownerPinHash: "",
           geminiKey: "",
           theme: "dark",
           accent: "blue",
@@ -187,6 +200,86 @@ class StorageEngine {
     } catch (e) {
       console.error("[Storage] Database init error:", e);
     }
+  }
+
+  getLocalDateStr(dateInput = new Date()) {
+    const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    if (Number.isNaN(d.getTime())) return localDateOffsetStr(0);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  getOffsetDateStr(daysOffset = 0) {
+    return localDateOffsetStr(daysOffset);
+  }
+
+  round2(val) {
+    const n = Number(val);
+    if (!Number.isFinite(n)) return 0;
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+  }
+
+  roundQty(val) {
+    const n = Number(val);
+    if (!Number.isFinite(n)) return 0;
+    return Math.round((n + Number.EPSILON) * 1000) / 1000;
+  }
+
+  escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, m => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]
+    ));
+  }
+
+  uid(prefix = 'ID') {
+    const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}${ts}${rand}`;
+  }
+
+  async hashPin(pin) {
+    const clean = `MYDUKAAN24_PIN_${String(pin || '').trim()}`;
+    if (window.crypto && window.crypto.subtle && typeof TextEncoder !== 'undefined') {
+      try {
+        const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(clean));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) {}
+    }
+    let h = 5381;
+    for (let i = 0; i < clean.length; i++) {
+      h = ((h << 5) + h) ^ clean.charCodeAt(i);
+    }
+    return `fnv_${(h >>> 0).toString(16)}`;
+  }
+
+  getDeviceRole() {
+    const r = localStorage.getItem(DEVICE_ROLE_KEY);
+    return r === 'cashier' ? 'cashier' : 'owner';
+  }
+
+  setDeviceRole(role = 'owner', cashierName = '') {
+    const safeRole = role === 'cashier' ? 'cashier' : 'owner';
+    localStorage.setItem(DEVICE_ROLE_KEY, safeRole);
+    if (cashierName) {
+      localStorage.setItem(DEVICE_CASHIER_KEY, String(cashierName).trim());
+    }
+    return safeRole;
+  }
+
+  getDeviceCashierName() {
+    return localStorage.getItem(DEVICE_CASHIER_KEY) || 'Counter Cashier';
+  }
+
+  inferDefaultGstRate(cat = '', name = '') {
+    const c = String(cat || '').toLowerCase();
+    const n = String(name || '').toLowerCase();
+    if (c === 'grocery' && (n.includes('dal') || n.includes('rice') || n.includes('atta') || n.includes('salt'))) return 0;
+    if (c === 'oils' || c === 'spices' || c === 'dairy') return 5;
+    if (c === 'snacks' || c === 'healthcare') return 12;
+    if (c === 'household' || c === 'personal care' || c === 'chocolates') return 18;
+    return 5;
   }
 
   applyPendingShopProfile() {
@@ -243,7 +336,10 @@ class StorageEngine {
   }
 
   generateInitialInvoices() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateOffsetStr(0);
+    const yesterday = localDateOffsetStr(-1);
+    const twoDaysAgo = localDateOffsetStr(-2);
+    const fourDaysAgo = localDateOffsetStr(-4);
     return [
       {
         id: "INV-1001",
@@ -253,17 +349,23 @@ class StorageEngine {
         customerName: "Ramesh Sharma",
         customerPhone: "9876543210",
         items: [
-          { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", qty: 2, mrp: 260, price: 235, total: 470 },
-          { id: "P103", name: "Amul Butter 100g", qty: 2, mrp: 58, price: 55, total: 110 }
+          { id: "P101", name: "Aashirvaad Shudh Chakki Atta 5kg", qty: 2, mrp: 260, price: 235, cost: 198, gstRate: 0, total: 470 },
+          { id: "P103", name: "Amul Butter 100g", qty: 2, mrp: 58, price: 55, cost: 48, gstRate: 12, total: 110 }
         ],
         subtotal: 580,
-        tax: 29,
+        tax: 13.2,
         discount: 0,
-        total: 609,
-        paid: 609,
+        total: 593.2,
+        paid: 593.2,
         due: 0,
         paymentMode: "UPI",
-        status: "Paid"
+        status: "Paid",
+        gstBreakdown: {
+          "0": { rate: 0, taxable: 470, tax: 0 },
+          "12": { rate: 12, taxable: 110, tax: 13.2 }
+        },
+        refundAmount: 0,
+        returnedItems: []
       },
       {
         id: "INV-1002",
@@ -273,17 +375,100 @@ class StorageEngine {
         customerName: "Anil Gupta",
         customerPhone: "9899001122",
         items: [
-          { id: "P102", name: "Fortune Sunflower Oil 1L", qty: 3, mrp: 175, price: 155, total: 465 },
-          { id: "P104", name: "Tata Tea Gold 250g", qty: 2, mrp: 160, price: 140, total: 280 }
+          { id: "P102", name: "Fortune Sunflower Oil 1L", qty: 3, mrp: 175, price: 155, cost: 130, gstRate: 5, total: 465 },
+          { id: "P104", name: "Tata Tea Gold 250g", qty: 2, mrp: 160, price: 140, cost: 115, gstRate: 5, total: 280 }
         ],
         subtotal: 745,
-        tax: 37,
+        tax: 37.25,
         discount: 20,
-        total: 762,
+        total: 762.25,
         paid: 0,
-        due: 762,
+        due: 762.25,
         paymentMode: "Udhaar",
-        status: "Due"
+        status: "Due",
+        gstBreakdown: {
+          "5": { rate: 5, taxable: 745, tax: 37.25 }
+        },
+        refundAmount: 0,
+        returnedItems: []
+      },
+      {
+        id: "INV-1000",
+        date: yesterday,
+        time: "06:15 PM",
+        customerId: "C102",
+        customerName: "Pooja Verma",
+        customerPhone: "9811223344",
+        items: [
+          { id: "P108", name: "Surf Excel Quick Wash 1kg", qty: 2, mrp: 165, price: 148, cost: 125, gstRate: 18, total: 296 },
+          { id: "P111", name: "Basmati Rice India Gate 1kg", qty: 4, mrp: 140, price: 120, cost: 95, gstRate: 5, total: 480 }
+        ],
+        subtotal: 776,
+        tax: 77.28,
+        discount: 0,
+        total: 853.28,
+        paid: 853.28,
+        due: 0,
+        paymentMode: "Cash",
+        status: "Paid",
+        gstBreakdown: {
+          "5": { rate: 5, taxable: 480, tax: 24 },
+          "18": { rate: 18, taxable: 296, tax: 53.28 }
+        },
+        refundAmount: 0,
+        returnedItems: []
+      },
+      {
+        id: "INV-999",
+        date: twoDaysAgo,
+        time: "05:05 PM",
+        customerId: null,
+        customerName: "Walking Customer",
+        customerPhone: "",
+        items: [
+          { id: "P105", name: "Maggi 2-Minute Noodles 70g", qty: 12, mrp: 14, price: 14, cost: 11.5, gstRate: 12, total: 168 },
+          { id: "P110", name: "Cadbury Dairy Milk Silk 60g", qty: 3, mrp: 85, price: 80, cost: 68, gstRate: 18, total: 240 }
+        ],
+        subtotal: 408,
+        tax: 63.36,
+        discount: 0,
+        total: 471.36,
+        paid: 471.36,
+        due: 0,
+        paymentMode: "Cash",
+        status: "Paid",
+        gstBreakdown: {
+          "12": { rate: 12, taxable: 168, tax: 20.16 },
+          "18": { rate: 18, taxable: 240, tax: 43.2 }
+        },
+        refundAmount: 0,
+        returnedItems: []
+      },
+      {
+        id: "INV-998",
+        date: fourDaysAgo,
+        time: "01:20 PM",
+        customerId: "C104",
+        customerName: "Sunita Devi",
+        customerPhone: "9711556677",
+        items: [
+          { id: "P106", name: "Colgate Total Toothpaste 120g", qty: 2, mrp: 110, price: 95, cost: 75, gstRate: 18, total: 190 },
+          { id: "P107", name: "Parle-G Glucose Biscuits 80g", qty: 10, mrp: 10, price: 10, cost: 8.5, gstRate: 5, total: 100 }
+        ],
+        subtotal: 290,
+        tax: 39.2,
+        discount: 0,
+        total: 329.2,
+        paid: 329.2,
+        due: 0,
+        paymentMode: "UPI",
+        status: "Paid",
+        gstBreakdown: {
+          "5": { rate: 5, taxable: 100, tax: 5 },
+          "18": { rate: 18, taxable: 190, tax: 34.2 }
+        },
+        refundAmount: 0,
+        returnedItems: []
       }
     ];
   }
@@ -317,6 +502,15 @@ class StorageEngine {
         if (!parsed.shops) parsed.shops = DEFAULT_SHOPS;
         if (!parsed.activeShopId) parsed.activeShopId = "SHOP-1";
         if (!parsed.language) parsed.language = "en";
+        if (!Array.isArray(parsed.parkedCarts)) parsed.parkedCarts = [];
+        if (typeof parsed.ownerPinHash !== 'string') parsed.ownerPinHash = "";
+        if (Array.isArray(parsed.products)) {
+          parsed.products.forEach(p => {
+            if (p && p.gstRate === undefined) {
+              p.gstRate = this.inferDefaultGstRate(p.cat, p.name);
+            }
+          });
+        }
         return parsed;
       }
     } catch (e) {
@@ -334,6 +528,8 @@ class StorageEngine {
       expenses: DEFAULT_EXPENSES,
       staff: DEFAULT_STAFF,
       attendance: {},
+      parkedCarts: [],
+      ownerPinHash: "",
       geminiKey: "",
       theme: "dark",
       accent: "blue",

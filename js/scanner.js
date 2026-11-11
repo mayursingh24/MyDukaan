@@ -355,12 +355,14 @@ class BarcodeScannerEngine {
             ${discount > 0 ? `<span style="color: var(--success); font-weight: 600;">Save ₹${discount}</span>` : ''}
           </div>
           <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-            <button class="btn btn-primary" style="flex: 1 1 180px;" onclick="BarcodeScanner.addToCartFromScanner('${product.id}')">
+            <button class="btn btn-primary" style="flex: 1 1 180px;" onclick="BarcodeScanner.addToCartFromScanner('${this.escapeHtml(product.id)}')">
               ${Icons.plus(14)} Add to Bill Cart (₹${product.price})
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.closeScannerModal(); App.navigate('inventory'); Inventory.openEditProductModal('${product.id}')">
-              ${Icons.edit(13)} Edit
-            </button>
+            ${(window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) ? '' : `
+              <button class="btn btn-secondary btn-sm" onclick="BarcodeScanner.closeScannerModal(); App.navigate('inventory'); Inventory.openEditProductModal('${this.escapeHtml(product.id)}')">
+                ${Icons.edit(13)} Edit
+              </button>
+            `}
           </div>
         </div>
       `;
@@ -817,6 +819,10 @@ class BarcodeScannerEngine {
   }
 
   confirmAndSaveProduct(barcode, cat = 'Grocery', estimatedCost = null) {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('register new catalog SKUs');
+      return;
+    }
     const nameIn = document.getElementById('google-edit-name');
     const priceIn = document.getElementById('google-edit-price');
     const mrpIn = document.getElementById('google-edit-mrp');
@@ -827,7 +833,7 @@ class BarcodeScannerEngine {
     const cost = Number(estimatedCost) > 0 ? Number(estimatedCost) : Math.round(price * 0.85);
 
     const newProduct = {
-      id: `P${Date.now().toString().slice(-4)}`,
+      id: DB.uid('P'),
       name,
       cat,
       barcode,
@@ -836,7 +842,9 @@ class BarcodeScannerEngine {
       cost,
       stock: 25,
       unit: 'pack',
-      minStock: 5
+      minStock: 5,
+      gstRate: DB.inferDefaultGstRate(cat, name),
+      expiryDate: ''
     };
 
     DB.updateItem('products', newProduct);
@@ -848,6 +856,10 @@ class BarcodeScannerEngine {
   }
 
   quickRegisterAndAddToCart(barcode) {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('register new catalog SKUs');
+      return;
+    }
     const nameInput = document.getElementById('quick-add-name');
     const priceInput = document.getElementById('quick-add-price');
     const catInput = document.getElementById('quick-add-cat');
@@ -859,7 +871,7 @@ class BarcodeScannerEngine {
     const cost = Math.round(price * 0.85);
 
     const newProduct = {
-      id: `P${Date.now().toString().slice(-4)}`,
+      id: DB.uid('P'),
       name,
       cat,
       barcode,
@@ -868,7 +880,9 @@ class BarcodeScannerEngine {
       cost,
       stock: 25,
       unit: "pack",
-      minStock: 5
+      minStock: 5,
+      gstRate: DB.inferDefaultGstRate(cat, name),
+      expiryDate: ''
     };
 
     DB.updateItem('products', newProduct);

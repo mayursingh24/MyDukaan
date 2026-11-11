@@ -335,18 +335,25 @@
   max-height: 250px;
 }
 
-.cart-item-row {
+.cart-item-block {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: 7px 9px;
   background: var(--bg-card);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
 }
 
+.cart-item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .cart-item-info {
-  flex: 1;
+  flex: 1 1 85px;
   min-width: 0;
 }
 
@@ -367,11 +374,12 @@
 .cart-qty-ctrl {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: var(--bg-input);
-  padding: 2px 4px;
+  padding: 2px 3px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .cart-qty-btn {
@@ -397,6 +405,94 @@
   min-width: 18px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+.cart-qty-input {
+  width: 44px;
+  height: 22px;
+  padding: 0 3px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.cart-qty-input::-webkit-outer-spin-button,
+.cart-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cart-qty-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-surface);
+}
+
+.cart-weight-toggle {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  transition: all 0.12s ease;
+}
+
+.cart-weight-toggle:hover,
+.cart-weight-toggle.active {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.weight-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.weight-chip-btn {
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition: all 0.12s ease;
+}
+
+.weight-chip-btn:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.weight-chip-btn.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.voice-pulse-active {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.28);
+  animation: voicePulseRing 1.3s ease-in-out infinite;
+}
+
+@keyframes voicePulseRing {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25); }
+  50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.45); }
 }
 
 .cart-item-total {
@@ -976,13 +1072,24 @@
   }
 }
 
+@media (max-width: 440px) {
+  .cart-item-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .cart-item-info {
+    flex: 1 1 calc(100% - 30px);
+  }
+}
+
 @media (max-width: 350px) {
   .pos-products-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Print Rules for 80mm Receipts */
+/* Print Rules for 80mm Receipts & Wide A4 Reports */
 @media print {
   body * {
     visibility: hidden;
@@ -991,6 +1098,7 @@
     visibility: visible;
   }
   #thermal-printable-area {
+    display: block !important;
     position: absolute;
     left: 0;
     top: 0;
@@ -999,5 +1107,10 @@
     padding: 10px;
     background: #FFF;
     color: #000;
+  }
+  #thermal-printable-area.print-wide {
+    width: 100% !important;
+    max-width: 210mm !important;
+    padding: 16px !important;
   }
 }

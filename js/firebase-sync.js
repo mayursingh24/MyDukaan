@@ -1,5 +1,5 @@
 /**
- * MyDukaan24 — Hybrid Offline-First + Firebase Cloud Sync Engine (v8.2)
+ * MyDukaan24 — Hybrid Offline-First + Firebase Cloud Sync Engine (v9.0)
  * Architecture:
  *  - Instant 0ms LocalStorage writes (works 100% offline, never blocks POS)
  *  - Persistent Firestore IndexedDB Cache + Offline Mutation Queue (Standard Edition)
@@ -709,6 +709,45 @@
       }
     }
 
+    sanitizeParkedCarts(rawCarts) {
+      if (!Array.isArray(rawCarts)) return [];
+      return rawCarts.slice(0, 25).filter(c => c && c.id).map((c) => ({
+        id: safeStr(c.id, 60),
+        label: safeStr(c.label, 120) || 'Parked Bill',
+        customerId: c.customerId ? safeStr(c.customerId, 100) : null,
+        discountType: ['flat', 'pct'].includes(c.discountType) ? c.discountType : 'flat',
+        discountValue: safeNum(c.discountValue, 0),
+        paymentMode: safeStr(c.paymentMode, 40) || 'Cash',
+        parkedAt: safeNum(c.parkedAt, Date.now()),
+        items: Array.isArray(c.items) ? c.items.slice(0, 200).map((it) => ({
+          productId: safeStr(it.productId || it.id, 100),
+          name: safeStr(it.name, 220),
+          price: safeNum(it.price, 0),
+          cost: safeNum(it.cost, 0),
+          mrp: safeNum(it.mrp, 0),
+          unit: safeStr(it.unit, 40) || 'pack',
+          gstRate: [0, 5, 12, 18].includes(Number(it.gstRate)) ? Number(it.gstRate) : 5,
+          emoji: safeStr(it.emoji, 20),
+          qty: safeNum(it.qty, 1)
+        })) : []
+      }));
+    }
+
+    sanitizeGstBreakdown(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+      const out = {};
+      ['0', '5', '12', '18', '28'].forEach((k) => {
+        if (raw[k] && typeof raw[k] === 'object') {
+          out[k] = {
+            rate: safeNum(raw[k].rate, Number(k)),
+            taxable: safeNum(raw[k].taxable, 0),
+            tax: safeNum(raw[k].tax, 0)
+          };
+        }
+      });
+      return out;
+    }
+
     // Sanitize documents strictly to match firestore.rules schema
     sanitizeMeta(db, user) {
       const shop = db.shop || {};
@@ -739,6 +778,8 @@
         shops: Array.isArray(db.shops) ? db.shops.slice(0, 50) : [],
         activeShopId: safeStr(db.activeShopId, 100) || 'SHOP-1',
         attendance: cleanAtt,
+        parkedCarts: this.sanitizeParkedCarts(db.parkedCarts),
+        ownerPinHash: safeStr(db.ownerPinHash, 128),
         theme,
         accent: safeStr(db.accent, 40) || 'blue',
         language,
@@ -754,6 +795,9 @@
       const id = safeStr(raw.id, 100);
       if (!id) return null;
       const updatedAt = safeNum(raw.updatedAt, Date.now());
+      const localToday = (typeof window !== 'undefined' && window.DB && typeof DB.getLocalDateStr === 'function')
+        ? DB.getLocalDateStr()
+        : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
       switch (cat) {
         case 'products':
@@ -768,6 +812,8 @@
             stock: safeNum(raw.stock, 0),
             unit: safeStr(raw.unit, 40) || 'pack',
             minStock: safeNum(raw.minStock, 0),
+            gstRate: [0, 5, 12, 18].includes(Number(raw.gstRate)) ? Number(raw.gstRate) : 5,
+            expiryDate: safeStr(raw.expiryDate, 40),
             emoji: safeStr(raw.emoji, 20),
             shopId: safeStr(raw.shopId, 100),
             updatedAt
@@ -788,20 +834,28 @@
         case 'invoices':
           return {
             id,
-            date: safeStr(raw.date, 40) || new Date().toISOString().split('T')[0],
+            date: safeStr(raw.date, 40) || localToday,
             time: safeStr(raw.time, 40),
             customerId: raw.customerId === null ? null : safeStr(raw.customerId, 100, 'WALKIN'),
             customerName: safeStr(raw.customerName, 180) || 'Walk-in Customer',
             customerPhone: safeStr(raw.customerPhone, 40),
+            cashierName: safeStr(raw.cashierName, 140),
             items: Array.isArray(raw.items) ? raw.items.slice(0, 500) : [],
             subtotal: safeNum(raw.subtotal, 0),
             tax: safeNum(raw.tax, 0),
+            gstBreakdown: this.sanitizeGstBreakdown(raw.gstBreakdown),
+            discountType: ['flat', 'pct'].includes(raw.discountType) ? raw.discountType : 'flat',
+            discountValue: safeNum(raw.discountValue, 0),
             discount: safeNum(raw.discount, 0),
             total: safeNum(raw.total, 0),
             paid: safeNum(raw.paid, 0),
             due: safeNum(raw.due, 0),
             paymentMode: safeStr(raw.paymentMode, 40) || 'Cash',
             status: safeStr(raw.status, 40) || 'Paid',
+            refundAmount: safeNum(raw.refundAmount, 0),
+            returnedItems: Array.isArray(raw.returnedItems) ? raw.returnedItems.slice(0, 500) : [],
+            lastReturnDate: safeStr(raw.lastReturnDate, 40),
+            refundMode: safeStr(raw.refundMode, 40),
             shopId: safeStr(raw.shopId, 100),
             updatedAt
           };
@@ -822,7 +876,7 @@
           return {
             id,
             billNo: safeStr(raw.billNo, 100),
-            date: safeStr(raw.date, 40) || new Date().toISOString().split('T')[0],
+            date: safeStr(raw.date, 40) || localToday,
             supplierId: safeStr(raw.supplierId, 100),
             supplierName: safeStr(raw.supplierName, 180),
             items: Array.isArray(raw.items) ? raw.items.slice(0, 500) : [],
@@ -839,7 +893,7 @@
             desc: safeStr(raw.desc, 300) || 'Store Expense',
             cat: safeStr(raw.cat, 80) || 'Other',
             amount: safeNum(raw.amount, 0),
-            date: safeStr(raw.date, 40) || new Date().toISOString().split('T')[0],
+            date: safeStr(raw.date, 40) || localToday,
             status: safeStr(raw.status, 40) || 'Paid',
             updatedAt
           };
@@ -906,6 +960,8 @@
           if (cloud.meta.shop) adopted.shop = { ...cloud.meta.shop };
           if (Array.isArray(cloud.meta.shops) && cloud.meta.shops.length) adopted.shops = cloud.meta.shops;
           if (cloud.meta.activeShopId) adopted.activeShopId = cloud.meta.activeShopId;
+          if (Array.isArray(cloud.meta.parkedCarts)) adopted.parkedCarts = cloud.meta.parkedCarts;
+          if (typeof cloud.meta.ownerPinHash === 'string') adopted.ownerPinHash = cloud.meta.ownerPinHash;
           if (cloud.meta.theme) adopted.theme = cloud.meta.theme;
           if (cloud.meta.accent) adopted.accent = cloud.meta.accent;
           if (cloud.meta.language) adopted.language = cloud.meta.language;
@@ -947,6 +1003,8 @@
         if (Array.isArray(cloud.meta.shops)) merged.shops = cloud.meta.shops;
         if (cloud.meta.activeShopId) merged.activeShopId = cloud.meta.activeShopId;
         if (cloud.meta.attendance) merged.attendance = cloud.meta.attendance;
+        if (Array.isArray(cloud.meta.parkedCarts)) merged.parkedCarts = cloud.meta.parkedCarts;
+        if (typeof cloud.meta.ownerPinHash === 'string') merged.ownerPinHash = cloud.meta.ownerPinHash;
         if (cloud.meta.theme) merged.theme = cloud.meta.theme;
         if (cloud.meta.accent) merged.accent = cloud.meta.accent;
         if (cloud.meta.language) merged.language = cloud.meta.language;
@@ -983,7 +1041,7 @@
         });
 
         // Apply pending offline/local upserts, non-demo pre-existing items, or newer local items
-        const defaultDemoPattern = /^(P10\d|P11[0-3]|C10[1-4]|E10[1-4]|S10[12]|SUP-10[1-3]|PUR-20[12]|INV-100[12])$/;
+        const defaultDemoPattern = /^(P10\d|P11[0-3]|C10[1-4]|E10[1-4]|S10[12]|SUP-10[1-3]|PUR-20[12]|INV-100[012]|INV-99[89])$/;
         localMap.forEach((lItem, id) => {
           const cItem = cloudMap.get(id);
           const lTime = safeNum(lItem.updatedAt, 0);
@@ -1065,6 +1123,14 @@
         }
         if (remote.attendance && JSON.stringify(localDb.attendance) !== JSON.stringify(remote.attendance)) {
           localDb.attendance = remote.attendance;
+          changed = true;
+        }
+        if (Array.isArray(remote.parkedCarts) && JSON.stringify(localDb.parkedCarts) !== JSON.stringify(remote.parkedCarts)) {
+          localDb.parkedCarts = remote.parkedCarts;
+          changed = true;
+        }
+        if (typeof remote.ownerPinHash === 'string' && localDb.ownerPinHash !== remote.ownerPinHash) {
+          localDb.ownerPinHash = remote.ownerPinHash;
           changed = true;
         }
         if (remote.theme && localDb.theme !== remote.theme) {
