@@ -11,6 +11,7 @@
 (function () {
   const FIREBASE_CFG_KEY = 'mydukaan24_firebase_config';
   const DEVICE_ID_KEY = 'mydukaan24_device_id';
+  const PROFILE_KEY = 'mydukaan24_pending_shop_profile';
   const SDK_VERSION = '11.6.0';
   const CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
 
@@ -82,7 +83,124 @@
       this._authListenerAttached = false;
       this._authUnsubscribe = null;
       this._initStarted = false;
+      this.authResolved = false;
+      this._authWaiters = [];
       this.deviceId = getDeviceId();
+    }
+
+    resolveAuthState() {
+      this.authResolved = true;
+      if (this._authWaiters.length) {
+        const waiters = this._authWaiters.splice(0, this._authWaiters.length);
+        waiters.forEach((resolve) => {
+          try { resolve(this.user); } catch (e) {}
+        });
+      }
+    }
+
+    waitForAuthReady(timeoutMs = 1800) {
+      if (this.authResolved || this.user) {
+        return Promise.resolve(this.user || null);
+      }
+      if (!this.getSavedConfig()) {
+        this.resolveAuthState();
+        return Promise.resolve(null);
+      }
+      return new Promise((resolve) => {
+        let timer;
+        const done = (val) => {
+          clearTimeout(timer);
+          resolve(val || null);
+        };
+        this._authWaiters.push(done);
+        timer = setTimeout(() => {
+          this._authWaiters = this._authWaiters.filter(fn => fn !== done);
+          resolve(this.user || null);
+        }, timeoutMs);
+        this.init().catch(() => done(null));
+      });
+    }
+
+    normalizeShopProfile(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+      const name = safeStr(raw.shopName || raw.name, 180);
+      const owner = safeStr(raw.ownerName || raw.owner, 140);
+      const phone = safeStr(raw.phone, 40);
+      const address = safeStr(raw.address, 300);
+      const upiId = safeStr(raw.upiId, 120);
+      const gstin = safeStr(raw.gstin, 40);
+      if (!name && !owner && !phone && !address && !upiId && !gstin) return null;
+      return { name, owner, phone, address, upiId, gstin };
+    }
+
+    savePendingProfile(raw) {
+      const clean = this.normalizeShopProfile(raw);
+      if (!clean) return null;
+      try {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(clean));
+      } catch (e) {}
+      if (typeof window !== 'undefined' && window.DB && typeof window.DB.applyPendingShopProfile === 'function') {
+        window.DB.applyPendingShopProfile();
+        if (window.App && typeof window.App.updateHeaderStoreName === 'function') {
+          window.App.updateHeaderStoreName();
+        }
+      }
+      return clean;
+    }
+
+    clearPendingProfile() {
+      try { localStorage.removeItem(PROFILE_KEY); } catch (e) {}
+    }
+
+    async syncProfileFromLanding(user, profile, isNewAccount = false) {
+      const clean = this.normalizeShopProfile(profile);
+      if (!user || !clean) return false;
+      let shouldWrite = Boolean(isNewAccount);
+      try {
+        if (this.db && this.sdk && this.isOnline()) {
+          const { doc, getDoc, setDoc } = this.sdk;
+          const metaRef = doc(this.db, 'users', user.uid, 'meta', 'store');
+          if (!shouldWrite) {
+            const snap = await withTimeout(getDoc(metaRef), 8000, 'Timed out checking store profile').catch(() => null);
+            if (!snap || !snap.exists()) shouldWrite = true;
+          }
+          if (shouldWrite) {
+            if (this.sdk.updateProfile && (clean.owner || clean.name)) {
+              const disp = clean.owner ? (clean.name ? `${clean.owner} (${clean.name})` : clean.owner) : clean.name;
+              await this.sdk.updateProfile(user, { displayName: disp.slice(0, 120) }).catch(() => {});
+            }
+            const shopName = clean.name || 'MyDukkan24 Mart';
+            const payload = this.sanitizeMeta({
+              shop: {
+                name: shopName,
+                owner: clean.owner || user.displayName || '',
+                phone: clean.phone || '',
+                address: clean.address || '',
+                gstin: clean.gstin || '',
+                upiId: clean.upiId || '6306437348@upi',
+                rcptHeader: `${shopName.toUpperCase()} • TAX INVOICE`
+              },
+              shops: [{
+                id: 'SHOP-1',
+                name: `${shopName} (Main Branch)`,
+                owner: clean.owner || user.displayName || '',
+                phone: clean.phone || '',
+                address: clean.address || '',
+                gstin: clean.gstin || '',
+                upiId: clean.upiId || '6306437348@upi'
+              }],
+              activeShopId: 'SHOP-1'
+            }, user);
+            await withTimeout(setDoc(metaRef, payload), 10000, 'Timed out saving initial store profile');
+          }
+        } else if (shouldWrite && this.sdk && this.sdk.updateProfile && (clean.owner || clean.name)) {
+          const disp = clean.owner ? (clean.name ? `${clean.owner} (${clean.name})` : clean.owner) : clean.name;
+          await this.sdk.updateProfile(user, { displayName: disp.slice(0, 120) }).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('[CloudSync] Landing profile sync notice:', err.message);
+      }
+      return shouldWrite;
     }
 
     getDefaultConfig() {
@@ -260,6 +378,7 @@
       const cfg = this.getSavedConfig();
       if (!cfg) {
         this.syncState = 'unconfigured';
+        this.resolveAuthState();
         this.notifyUI();
         return false;
       }
@@ -303,6 +422,7 @@
           this._authListenerAttached = true;
           this._authUnsubscribe = sdk.onAuthStateChanged(this.auth, async (user) => {
             this.user = user || null;
+            this.resolveAuthState();
             if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
               window.dispatchEvent(new CustomEvent('mydukaan:auth-changed', { detail: { user: this.user } }));
             }
@@ -319,12 +439,35 @@
         // Complete pending OAuth redirect login if any
         if (sdk.getRedirectResult) {
           sdk.getRedirectResult(this.auth)
-            .then((res) => {
+            .then(async (res) => {
               if (res && res.user) {
+                try {
+                  const raw = localStorage.getItem(PROFILE_KEY);
+                  if (raw) {
+                    const parsed = JSON.parse(raw);
+                    const extra = sdk.getAdditionalUserInfo ? sdk.getAdditionalUserInfo(res) : null;
+                    const isNewUser = Boolean(extra && extra.isNewUser);
+                    const applied = await this.syncProfileFromLanding(res.user, parsed, isNewUser);
+                    if (!applied) {
+                      this.clearPendingProfile();
+                    } else if (typeof window !== 'undefined' && window.DB && typeof window.DB.applyPendingShopProfile === 'function') {
+                      window.DB.applyPendingShopProfile();
+                      if (window.App && typeof window.App.updateHeaderStoreName === 'function') {
+                        window.App.updateHeaderStoreName();
+                      }
+                      await this.flushPending(true).catch(() => {});
+                    }
+                  }
+                } catch (e) {}
+                this.user = res.user;
                 this.showNotice('success', 'Signed In', 'Google account linked for live cloud sync.');
+                if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+                  window.dispatchEvent(new CustomEvent('mydukaan:redirect-complete', { detail: { user: res.user } }));
+                }
               }
             })
             .catch((redirErr) => {
+              this.clearPendingProfile();
               if (redirErr && redirErr.code) {
                 this.lastError = this.humanizeAuthError(redirErr);
                 this.showNotice('danger', 'Google Sign-In Error', this.lastError);
@@ -338,12 +481,13 @@
         this._initStarted = false;
         this.lastError = err.message || 'Firebase initialization error';
         this.syncState = this.isOnline() ? 'error' : 'offline-queued';
+        this.resolveAuthState();
         this.notifyUI();
         return false;
       }
     }
 
-    async signInWithGoogle() {
+    async signInWithGoogle(profile = null) {
       const ok = await this.init();
       if (!ok || !this.auth || !this.sdk) {
         const msg = this.lastError || 'Connect Firebase Web Config first to enable Google Sign-In.';
@@ -355,16 +499,33 @@
         this.showNotice('warning', 'System Offline', msg);
         return { ok: false, error: msg };
       }
+      const cleanProfile = this.normalizeShopProfile(profile);
       try {
         const provider = new this.sdk.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         const cred = await this.sdk.signInWithPopup(this.auth, provider);
+        if (cred && cred.user && cleanProfile) {
+          const extra = this.sdk.getAdditionalUserInfo ? this.sdk.getAdditionalUserInfo(cred) : null;
+          const isNewUser = Boolean(extra && extra.isNewUser);
+          const applied = await this.syncProfileFromLanding(cred.user, cleanProfile, isNewUser);
+          if (applied) {
+            this.savePendingProfile(cleanProfile);
+            if (typeof window !== 'undefined' && window.DB) {
+              await this.flushPending(true).catch(() => {});
+            }
+          } else {
+            this.clearPendingProfile();
+          }
+        }
         this.showNotice('success', 'Signed In', 'Google account linked for live cloud sync.');
         return { ok: true, user: cred && cred.user };
       } catch (err) {
         const code = err.code || '';
         if (code === 'auth/popup-blocked') {
           try {
+            if (cleanProfile) {
+              try { localStorage.setItem(PROFILE_KEY, JSON.stringify(cleanProfile)); } catch (e) {}
+            }
             const provider = new this.sdk.GoogleAuthProvider();
             await this.sdk.signInWithRedirect(this.auth, provider);
             return { ok: true, redirect: true };
@@ -372,6 +533,7 @@
             err = redirErr;
           }
         }
+        if (cleanProfile) this.clearPendingProfile();
         const host = window.location.hostname || 'localhost';
         let msg = err.message || 'Google Sign-In failed.';
         if (code === 'auth/unauthorized-domain') {
@@ -411,7 +573,7 @@
       }
     }
 
-    async signUpEmail(email, password) {
+    async signUpEmail(email, password, profile = null) {
       const ok = await this.init();
       if (!ok || !this.auth || !this.sdk) {
         const msg = this.lastError || 'Connect Firebase Web Config first to create a store account.';
@@ -423,12 +585,31 @@
         this.showNotice('warning', 'System Offline', msg);
         return { ok: false, error: msg };
       }
+      const cleanProfile = this.normalizeShopProfile(profile);
       try {
+        if (cleanProfile) {
+          try { localStorage.setItem(PROFILE_KEY, JSON.stringify(cleanProfile)); } catch (e) {}
+        }
         const cred = await this.sdk.createUserWithEmailAndPassword(this.auth, email.trim(), password);
+        if (cred && cred.user && cleanProfile) {
+          if (typeof window === 'undefined' || !window.DB) {
+            await this.syncProfileFromLanding(cred.user, cleanProfile, true);
+          } else {
+            let pendingLeft = false;
+            try { pendingLeft = Boolean(localStorage.getItem(PROFILE_KEY)); } catch (e) {}
+            if (pendingLeft) this.savePendingProfile(cleanProfile);
+            if (this.sdk && this.sdk.updateProfile && (cleanProfile.owner || cleanProfile.name)) {
+              const disp = cleanProfile.owner ? (cleanProfile.name ? `${cleanProfile.owner} (${cleanProfile.name})` : cleanProfile.owner) : cleanProfile.name;
+              await this.sdk.updateProfile(cred.user, { displayName: disp.slice(0, 120) }).catch(() => {});
+            }
+            if (this.user) await this.flushPending(true).catch(() => {});
+          }
+        }
         this.lastError = '';
         this.showNotice('success', 'Account Created', 'Your store will now sync online & offline.');
         return { ok: true, user: cred && cred.user };
       } catch (err) {
+        if (cleanProfile) this.clearPendingProfile();
         this.lastError = this.humanizeAuthError(err);
         this.showNotice('danger', 'Signup Failed', this.lastError);
         this.notifyUI();
@@ -507,6 +688,10 @@
         this.lastError = '';
         this.notifyUI();
         return;
+      }
+
+      if (typeof window.DB.applyPendingShopProfile === 'function') {
+        window.DB.applyPendingShopProfile();
       }
 
       this.syncState = 'syncing';
@@ -712,17 +897,34 @@
       }
 
       const cloud = await this.fetchCloudStore(uid);
+      const cloudHasCollections = CATEGORIES.some((cat) => (cloud.collections[cat] || []).length > 0);
 
-      // CASE A: First time setting up Firebase cloud for this account -> Upload local store
-      if (!cloud.exists) {
+      // CASE A: First time setting up Firebase cloud (or landing-created meta with empty collections on fresh device) -> Upload local store & seed starter collections
+      if (!cloud.exists || (!cloudHasCollections && syncMeta.lastSyncedAt === 0)) {
+        if (cloud.exists && cloud.meta && !syncMeta.metaDirty) {
+          const adopted = { ...localDb };
+          if (cloud.meta.shop) adopted.shop = { ...cloud.meta.shop };
+          if (Array.isArray(cloud.meta.shops) && cloud.meta.shops.length) adopted.shops = cloud.meta.shops;
+          if (cloud.meta.activeShopId) adopted.activeShopId = cloud.meta.activeShopId;
+          if (cloud.meta.theme) adopted.theme = cloud.meta.theme;
+          if (cloud.meta.accent) adopted.accent = cloud.meta.accent;
+          if (cloud.meta.language) adopted.language = cloud.meta.language;
+          DB.saveData(adopted, { fromCloud: true });
+        }
         const fullMeta = DB.getSyncMeta();
-        fullMeta.metaDirty = true;
+        if (!cloud.exists || syncMeta.metaDirty) {
+          fullMeta.metaDirty = true;
+        }
         CATEGORIES.forEach((cat) => {
           fullMeta.pendingUpserts[cat] = (localDb[cat] || []).filter(i => i && i.id).map(i => String(i.id));
           fullMeta.pendingDeletes[cat] = [];
         });
         DB.saveSyncMeta(fullMeta);
         await this.flushPending();
+        if (window.App) {
+          App.updateHeaderStoreName && App.updateHeaderStoreName();
+          App.refreshActiveViewFromCloud && App.refreshActiveViewFromCloud();
+        }
         this.showNotice('success', 'Cloud Initialized', 'Your store data has been backed up to Firebase.');
         return;
       }

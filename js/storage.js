@@ -5,6 +5,7 @@
 
 const STORAGE_KEY = 'mydukaan24_prod_db';
 const SYNC_META_KEY = 'mydukaan24_sync_meta';
+const PENDING_SHOP_PROFILE_KEY = 'mydukaan24_pending_shop_profile';
 const SYNC_CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
 const META_FIELDS = ['shop', 'shops', 'activeShopId', 'attendance', 'theme', 'accent', 'language', 'soundEnabled'];
 
@@ -182,8 +183,62 @@ class StorageEngine {
           });
         }
       }
+      this.applyPendingShopProfile();
     } catch (e) {
       console.error("[Storage] Database init error:", e);
+    }
+  }
+
+  applyPendingShopProfile() {
+    try {
+      const raw = localStorage.getItem(PENDING_SHOP_PROFILE_KEY);
+      if (!raw) return false;
+      const profile = JSON.parse(raw);
+      if (!profile || typeof profile !== 'object') {
+        localStorage.removeItem(PENDING_SHOP_PROFILE_KEY);
+        return false;
+      }
+
+      const str = localStorage.getItem(STORAGE_KEY);
+      if (!str) return false;
+      const db = JSON.parse(str);
+      if (!db.shop) db.shop = { ...DEFAULT_SHOP };
+
+      let applied = false;
+      if (profile.name) {
+        db.shop.name = String(profile.name).trim();
+        db.shop.rcptHeader = `${db.shop.name.toUpperCase()} • TAX INVOICE`;
+        applied = true;
+      }
+      if (profile.owner) { db.shop.owner = String(profile.owner).trim(); applied = true; }
+      if (profile.phone) { db.shop.phone = String(profile.phone).trim(); applied = true; }
+      if (profile.address) { db.shop.address = String(profile.address).trim(); applied = true; }
+      if (profile.upiId) { db.shop.upiId = String(profile.upiId).trim(); applied = true; }
+      if (profile.gstin) { db.shop.gstin = String(profile.gstin).trim(); applied = true; }
+
+      if (applied) {
+        if (!Array.isArray(db.shops) || !db.shops.length) {
+          db.shops = DEFAULT_SHOPS.map(s => ({ ...s }));
+        }
+        db.shops[0] = {
+          ...db.shops[0],
+          name: profile.name ? `${String(profile.name).trim()} (Main Branch)` : db.shops[0].name,
+          owner: profile.owner ? String(profile.owner).trim() : db.shops[0].owner,
+          phone: profile.phone ? String(profile.phone).trim() : db.shops[0].phone,
+          address: profile.address ? String(profile.address).trim() : db.shops[0].address,
+          upiId: profile.upiId ? String(profile.upiId).trim() : db.shops[0].upiId,
+          gstin: profile.gstin ? String(profile.gstin).trim() : db.shops[0].gstin
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        const meta = this.getSyncMeta();
+        meta.metaDirty = true;
+        this.saveSyncMeta(meta);
+      }
+
+      localStorage.removeItem(PENDING_SHOP_PROFILE_KEY);
+      return applied;
+    } catch (e) {
+      return false;
     }
   }
 

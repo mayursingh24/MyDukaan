@@ -619,6 +619,84 @@
 
             <div class="lp-engine-stage" id="lp-engine-stage"></div>
           </div>
+
+          <!-- Detailed All-5 Engines Architecture Breakdown -->
+          <div class="lp-features-deep-grid" id="lp-features-deep-grid">
+            <article class="lp-feature-deep-card active" data-engine-card="billing" onclick="EngineExplorer.select('billing')">
+              <div class="lp-feature-deep-top">
+                <span class="lp-feature-deep-num">01 • POS &amp; UPI QR</span>
+                <span style="font-size: 20px;">⚡</span>
+              </div>
+              <h3 class="lp-feature-deep-title">5-Second Billing &amp; Dynamic UPI QR</h3>
+              <p class="lp-feature-deep-desc">Built for peak evening rush at Indian retail counters with keyboard shortcuts, cart hold/resume, and automatic discount math.</p>
+              <ul class="lp-feature-deep-list">
+                <li>Hotkeys: F2 Quick Billing, F8 Cash, F9 UPI QR, F10 Udhaar</li>
+                <li>Amount-locked UPI QR (PhonePe, GPay, Paytm, BHIM)</li>
+                <li>Auto MRP savings &amp; GST slab billing (0%, 5%, 12%, 18%)</li>
+                <li>80mm / 58mm thermal slip print + 1-tap WhatsApp bill</li>
+              </ul>
+            </article>
+
+            <article class="lp-feature-deep-card" data-engine-card="vision" onclick="EngineExplorer.select('vision')">
+              <div class="lp-feature-deep-top">
+                <span class="lp-feature-deep-num">02 • BARCODE + AI VISION</span>
+                <span style="font-size: 20px;">📷</span>
+              </div>
+              <h3 class="lp-feature-deep-title">3-Tier Optical Barcode &amp; Gemini 3.8 AI</h3>
+              <p class="lp-feature-deep-desc">Zero manual typing — scan packs using your phone camera or hardware laser gun with live online product enrichment.</p>
+              <ul class="lp-feature-deep-list">
+                <li>Built-in rear camera EAN-13 / UPC scanner with beep feedback</li>
+                <li>Plug-and-play USB &amp; Bluetooth barcode gun support</li>
+                <li>GS1 India (890) &amp; Open Food Facts auto name/category fill</li>
+                <li>Live Gemini 3.8 Copilot for pricing &amp; high-margin combos</li>
+              </ul>
+            </article>
+
+            <article class="lp-feature-deep-card" data-engine-card="khata" onclick="EngineExplorer.select('khata')">
+              <div class="lp-feature-deep-top">
+                <span class="lp-feature-deep-num">03 • UDHAAR KHATA CRM</span>
+                <span style="font-size: 20px;">📒</span>
+              </div>
+              <h3 class="lp-feature-deep-title">Smart Udhaar Ledger &amp; WhatsApp Recovery</h3>
+              <p class="lp-feature-deep-desc">Every credit bill stays linked to its exact invoice and customer profile so zero balance is ever forgotten.</p>
+              <ul class="lp-feature-deep-list">
+                <li>Customer-wise credit history &amp; live pending balance</li>
+                <li>Partial or full settlement via Cash drawer or UPI</li>
+                <li>1-click WhatsApp dues reminder with pre-filled UPI link</li>
+                <li>Gold / Silver / Bronze loyalty tiers &amp; CSV export</li>
+              </ul>
+            </article>
+
+            <article class="lp-feature-deep-card" data-engine-card="pnl" onclick="EngineExplorer.select('pnl')">
+              <div class="lp-feature-deep-top">
+                <span class="lp-feature-deep-num">04 • PURCHASES &amp; NET P&amp;L</span>
+                <span style="font-size: 20px;">📈</span>
+              </div>
+              <h3 class="lp-feature-deep-title">Wholesale Stock Inward, Expenses &amp; Net Profit</h3>
+              <p class="lp-feature-deep-desc">Manage suppliers, distributor GST bills, daily shop overheads, and actual take-home margin across any time window.</p>
+              <ul class="lp-feature-deep-list">
+                <li>Distributor GRN stock-in with instant inventory auto-restock</li>
+                <li>Supplier directory &amp; pending wholesale payable tracking</li>
+                <li>Expense ledger for rent, electricity, freight &amp; staff advances</li>
+                <li>Day-end Cash Drawer Z-Report (F4) &amp; 7D/30D profit telemetry</li>
+              </ul>
+            </article>
+
+            <article class="lp-feature-deep-card" data-engine-card="cloud" onclick="EngineExplorer.select('cloud')">
+              <div class="lp-feature-deep-top">
+                <span class="lp-feature-deep-num">05 • CLOUD SYNC &amp; STAFF</span>
+                <span style="font-size: 20px;">☁️</span>
+              </div>
+              <h3 class="lp-feature-deep-title">Offline-First + Firebase Cloud &amp; Staff Attendance</h3>
+              <p class="lp-feature-deep-desc">0ms local billing even without internet, syncing securely to per-owner Firebase Firestore with team attendance &amp; payroll.</p>
+              <ul class="lp-feature-deep-list">
+                <li>Google &amp; Email Auth with strict UID-isolated cloud storage</li>
+                <li>IndexedDB offline persistence queue + automatic reconnect sync</li>
+                <li>31-day staff muster roll, half-day/leave tracking &amp; salary calc</li>
+                <li>Multi-branch shop switcher, EN/HI/Hinglish UI &amp; JSON backup</li>
+              </ul>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -711,56 +789,38 @@
       </section>
 
       <!-- ================================================================
-           7. DIRECT MERCHANT CONNECT & CREATOR SIGNATURE
+           7. COMPACT INQUIRY STRIP & DEVELOPER ATTRIBUTION
            ================================================================ -->
-      <section class="lp-section lp-reveal" id="connect">
+      <section class="lp-section lp-section-compact lp-reveal" id="connect">
         <div class="lp-container">
           <div class="lp-contact-grid">
             <div class="lp-surface-card">
-              <div class="lp-section-tag" style="color: #34D399;">💬 DIRECT WHATSAPP DESK</div>
-              <h2 style="font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: #FFFFFF; margin-bottom: 14px;">Connect With Mayur Singh</h2>
-              <form onsubmit="event.preventDefault(); LandingContact.submitQuery();" style="display: flex; flex-direction: column; gap: 11px;">
-                <input type="text" id="contact-name" class="lp-input" placeholder="Your Full Name *" required />
-                <input type="text" id="contact-shop" class="lp-input" placeholder="Store / Business Name *" required />
-                <input type="tel" id="contact-phone" class="lp-input" placeholder="Phone / WhatsApp Number *" required />
-                <textarea id="contact-message" class="lp-input" rows="3" style="min-height: 86px; resize: vertical;" placeholder="Requirement or store feedback..."></textarea>
-                <button type="submit" class="lp-btn btn-cta-emerald btn-sheen" style="width: 100%; margin-top: 4px;">
-                  💬 Send Inquiry on WhatsApp →
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                <span class="lp-section-tag" style="margin-bottom: 0; color: #34D399;">💬 QUICK WHATSAPP INQUIRY</span>
+                <span style="font-size: 11.5px; color: var(--lp-text-muted);">Setup help or store onboarding</span>
+              </div>
+              <form class="lp-quick-inquiry-form" onsubmit="event.preventDefault(); LandingContact.submitQuery();">
+                <input type="text" id="contact-name" class="lp-input" placeholder="Your Name &amp; Shop *" required />
+                <input type="text" id="contact-phone" class="lp-input" placeholder="WhatsApp / Question *" required />
+                <button type="submit" class="lp-btn btn-cta-emerald btn-sheen" style="min-height: 40px; padding: 8px 16px; font-size: 13px;">
+                  💬 Send →
                 </button>
               </form>
             </div>
 
-            <div class="lp-surface-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
-              <div>
-                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 18px;">
-                  <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 56px; height: 56px; border-radius: 15px; border: 1.5px solid rgba(59,130,246,0.5);" alt="MyDukaan24 Brand Seal" />
-                  <div>
-                    <div style="font-size: 18px; font-weight: 800; color: #FFFFFF;">Mayur Singh</div>
-                    <div style="font-size: 13px; color: #93C5FD; font-weight: 600;">Creator &amp; Lead Architect • Lucknow, India</div>
-                  </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  <a href="https://wa.me/916306437348?text=Namaste%20Mayur,%20I%20checked%20MyDukaan24%20live!" target="_blank" class="lp-channel-btn" style="border-color: rgba(16,185,129,0.5);">
-                    <span>💬 WhatsApp Support: +91 6306437348</span>
-                    <span style="color: #34D399;">Chat →</span>
-                  </a>
-                  <a href="tel:+916306437348" class="lp-channel-btn" style="border-color: rgba(59,130,246,0.5);">
-                    <span>📞 Direct Phone: +91 6306437348</span>
-                    <span style="color: #60A5FA;">Call →</span>
-                  </a>
-                  <a href="mailto:mayur4singhhh@gmail.com" class="lp-channel-btn" style="border-color: rgba(249,115,22,0.5);">
-                    <span>📧 mayur4singhhh@gmail.com</span>
-                    <span style="color: #FB923C;">Mail →</span>
-                  </a>
+            <div class="lp-surface-card lp-dev-compact">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 34px; height: 34px; border-radius: 9px; border: 1px solid rgba(59,130,246,0.45);" alt="MyDukaan24" />
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 800; color: #FFFFFF;">Built by Mayur Singh</div>
+                  <div style="font-size: 11.5px; color: var(--lp-text-muted);">Lucknow, India • Support &amp; Feedback</div>
                 </div>
               </div>
-
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                <a href="https://github.com/mayursingh24/MyDukaan" target="_blank" class="lp-btn btn-cta-glass" style="min-height: 40px; padding: 8px 14px; font-size: 12.5px;">GitHub</a>
-                <a href="https://linkedin.com/in/mayursingh24" target="_blank" class="lp-btn btn-cta-glass" style="min-height: 40px; padding: 8px 14px; font-size: 12.5px;">LinkedIn</a>
-                <a href="https://instagram.com/_mayur.x24" target="_blank" class="lp-btn btn-cta-glass" style="min-height: 40px; padding: 8px 14px; font-size: 12.5px;">Instagram</a>
-                <a href="app.html" class="lp-btn btn-cta-primary" style="min-height: 40px; padding: 8px 16px; font-size: 12.5px; margin-left: auto;">Launch App →</a>
+              <div class="lp-dev-pills">
+                <a href="https://wa.me/916306437348?text=Namaste%20Mayur,%20I%20checked%20MyDukaan24%20live!" target="_blank" class="lp-channel-btn">💬 WhatsApp</a>
+                <a href="mailto:mayur4singhhh@gmail.com" class="lp-channel-btn">📧 Email</a>
+                <a href="https://github.com/mayursingh24/MyDukaan" target="_blank" class="lp-channel-btn">GitHub</a>
+                <a href="https://linkedin.com/in/mayursingh24" target="_blank" class="lp-channel-btn">LinkedIn</a>
               </div>
             </div>
           </div>
@@ -770,19 +830,18 @@
 
     <!-- Footer Brand Lockup -->
     <footer class="lp-footer">
-      <div class="lp-container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 44px; height: 44px; border-radius: 12px;" alt="MyDukaan24 Footer Logo" />
-          <img src="assets/logo.svg" style="width: 30px; height: 30px; border-radius: 8px;" alt="MD24 Vector Logo" />
+      <div class="lp-container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 34px; height: 34px; border-radius: 9px;" alt="MyDukaan24 Footer Logo" />
           <div>
-            <div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px; color: #FFFFFF;">MyDukaan24 — Live Cloud Retail OS</div>
-            <div style="font-size: 12px; color: var(--lp-text-muted);">© 2026 Mayur Singh (Lucknow, India). All rights reserved.</div>
+            <div style="font-family: var(--font-heading); font-weight: 800; font-size: 14px; color: #FFFFFF;">MyDukaan24 — Live Cloud Retail OS</div>
+            <div style="font-size: 11.5px; color: var(--lp-text-muted);">© 2026 MyDukaan24 • Built by Mayur Singh</div>
           </div>
         </div>
 
-        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-          <button type="button" class="lp-btn btn-cta-emerald" style="min-height: 40px; padding: 8px 16px; font-size: 13px;" onclick="LandingAuth.openModal('signin')">🔐 Sign In / Join</button>
-          <a href="app.html" class="lp-btn btn-cta-primary" style="min-height: 40px; padding: 8px 16px; font-size: 13px;">⚡ Open Live POS →</a>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <button type="button" class="lp-btn btn-cta-emerald" style="min-height: 36px; padding: 7px 14px; font-size: 12.5px;" onclick="LandingAuth.openModal('signin')">🔐 Sign In / Join</button>
+          <a href="app.html" class="lp-btn btn-cta-primary" style="min-height: 36px; padding: 7px 14px; font-size: 12.5px;">⚡ Open Live POS →</a>
         </div>
       </div>
     </footer>
@@ -1193,6 +1252,12 @@
           tag: '⚡ ENGINE 01 • INSTANT POS',
           title: '5-Second Counter Checkout with Dynamic UPI QR',
           desc: 'Auto-calculates MRP discounts, GST slabs, cash change, and generates amount-locked UPI QR codes plus 80mm/58mm thermal bills and WhatsApp shares.',
+          highlights: [
+            'F2 Quick POS, F8 Cash, F9 UPI QR & F10 Udhaar hotkeys',
+            'Hold / resume multiple active customer carts cleanly',
+            'Auto GST slab breakup (0–18%) + MRP direct savings math',
+            '80mm / 58mm thermal bill print + 1-tap WhatsApp slip'
+          ],
           m1: ['3.2s', 'Avg Bill Speed'],
           m2: ['UPI + Cash', 'Multi-Tender'],
           m3: ['80mm / 58mm', 'Thermal Ready']
@@ -1201,6 +1266,12 @@
           tag: '📷 ENGINE 02 • OPTICAL BARCODE AI',
           title: 'Camera Vision, Gun Scanner & Gemini Lookup',
           desc: 'Instant EAN/UPC detection via mobile camera or USB laser scanner gun, enriched live with Open Food Facts and Gemini Google Search product identification.',
+          highlights: [
+            'Rear camera live EAN-13 / UPC scanner with crisp beep audio',
+            'Plug-and-play USB & Bluetooth barcode gun compatible',
+            'GS1 India (890 prefix) & Open Food Facts instant autofill',
+            'Live Gemini 3.8 Copilot for combo pricing & margin tips'
+          ],
           m1: ['0.28s', 'Frame Lock'],
           m2: ['890 GS1', 'India Registry'],
           m3: ['USB + Cam', 'Dual Input']
@@ -1209,14 +1280,26 @@
           tag: '📒 ENGINE 03 • CREDIT CRM',
           title: 'Automated Udhaar Khata & 1-Click WhatsApp Collection',
           desc: 'Track customer balances with exact invoice lineage, accept partial settlements, and dispatch branded UPI payment reminders on WhatsApp in one tap.',
+          highlights: [
+            'Every credit invoice linked directly to customer balance due',
+            'Accept full or partial recovery via Cash drawer or UPI',
+            '1-tap WhatsApp reminder with pre-filled UPI pay link',
+            'Gold / Silver / Bronze tiers, history & CSV export'
+          ],
           m1: ['Zero', 'Missed Entries'],
           m2: ['1-Tap', 'UPI Reminder'],
           m3: ['100%', 'Audit History']
         },
         pnl: {
           tag: '📈 ENGINE 04 • PROFIT INTELLIGENCE',
-          title: 'Wholesale Stock Inward, Margins & Net P&L',
+          title: 'Wholesale Stock Inward, Expenses & Net P&L',
           desc: 'Record distributor GST bills, track supplier payouts, log daily store rent & overheads, and measure real net profit live across any period.',
+          highlights: [
+            'Distributor GRN purchase inward with instant stock restock',
+            'Supplier directory & pending wholesale payable tracking',
+            'Expense ledger for rent, electricity, freight & advances',
+            'Day-end Z-Report (F4) & live 7D / 30D profit curves'
+          ],
           m1: ['Real-Time', 'COGS Tracking'],
           m2: ['Supplier', 'Payable CRM'],
           m3: ['SVG', 'Revenue Curve']
@@ -1225,6 +1308,12 @@
           tag: '☁️ ENGINE 05 • CLOUD & TEAM',
           title: 'Live Multi-Device Sync, Attendance & Multi-Shop Control',
           desc: 'Secure per-owner Google & Email authentication powered by Firebase Firestore alongside 31-day staff attendance and payroll calculation.',
+          highlights: [
+            'Per-owner Google & Email Auth with UID-isolated Firestore',
+            'IndexedDB offline persistence + automatic reconnect sync',
+            '31-day staff muster roll, leave marks & prorated payroll',
+            'Multi-branch shop switcher, EN/HI/Hinglish & JSON backups'
+          ],
           m1: ['Per-Owner', 'UID Isolation'],
           m2: ['Multi-Shop', 'Cloud Sync'],
           m3: ['31-Day', 'Staff Register']
@@ -1233,8 +1322,15 @@
       select(key) {
         const d = this.data[key] || this.data.billing;
         document.querySelectorAll('.lp-engine-tab').forEach(b => b.classList.toggle('active', b.dataset.engine === key));
+        document.querySelectorAll('[data-engine-card]').forEach(c => c.classList.toggle('active', c.dataset.engineCard === key));
         const mount = document.getElementById('lp-engine-stage');
         if (!mount) return;
+        const bulletsHtml = (d.highlights || []).map(item => `
+          <div class="lp-engine-bullet">
+            <span class="lp-engine-bullet-check">✓</span>
+            <span>${item}</span>
+          </div>
+        `).join('');
         mount.innerHTML = `
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
@@ -1243,6 +1339,7 @@
             </div>
             <h3 style="font-family:var(--font-heading);font-size:clamp(20px,3vw,26px);font-weight:800;color:#FFFFFF;margin-bottom:10px;">${d.title}</h3>
             <p style="font-size:14.5px;color:var(--lp-text-secondary);line-height:1.65;">${d.desc}</p>
+            <div class="lp-engine-highlights">${bulletsHtml}</div>
           </div>
           <div class="lp-engine-metrics">
             <div class="lp-engine-metric"><div style="font-family:var(--font-mono);font-size:17px;font-weight:800;color:#60A5FA;">${d.m1[0]}</div><div style="font-size:11px;color:var(--lp-text-muted);margin-top:2px;">${d.m1[1]}</div></div>
@@ -1271,26 +1368,26 @@
     }
     window.updateRoiCalc = updateRoiCalc;
 
-    // Direct WhatsApp Contact
+    // Direct WhatsApp Inquiry
     const LandingContact = {
       submitQuery() {
         const name = (document.getElementById('contact-name')?.value || '').trim();
-        const shop = (document.getElementById('contact-shop')?.value || '').trim();
         const phone = (document.getElementById('contact-phone')?.value || '').trim();
-        const msg = (document.getElementById('contact-message')?.value || '').trim();
-        if (!name || !shop || !phone) return;
-        const text = `Namaste Mayur ji! My name is ${name} from "${shop}" (${phone}). ${msg || 'Interested in MyDukaan24 Live Retail OS.'}`;
+        if (!name || !phone) return;
+        const text = `Namaste Mayur ji! Inquiry from ${name} (${phone}) regarding MyDukaan24 Live Retail OS.`;
         window.open(`https://wa.me/916306437348?text=${encodeURIComponent(text)}`, '_blank');
       }
     };
     window.LandingContact = LandingContact;
 
-    // Zero-Guide Clean SaaS Auth Modal Controller
+    // Zero-Guide Clean SaaS Auth & Mandatory Gate Controller
     const LandingAuth = {
       isOpen: false,
       tab: 'signin',
       busy: false,
       notice: null,
+      pendingNav: null,
+      _draft: { shop: '', owner: '', phone: '', upi: '', address: '', email: '' },
 
       escapeHtml(val) {
         return String(val ?? '')
@@ -1301,20 +1398,160 @@
           .replace(/'/g, '&#39;');
       },
 
-      openModal(preferredTab = 'signin') {
+      isGatedHref(href, anchor) {
+        if (!href) return false;
+        const clean = href.trim();
+        if (!clean || clean.startsWith('#') || clean.startsWith('javascript:')) return false;
+        if (/^(mailto:|tel:)/i.test(clean)) return false;
+        if (/wa\.me|github\.com|linkedin\.com/i.test(clean)) return false;
+        if (/app\.html(\?|#|$)/i.test(clean) || /^\/app(\?|#|$)/i.test(clean)) return true;
+        if (/\.apk(\?|#|$)/i.test(clean) || (anchor && anchor.hasAttribute('download'))) return true;
+        return false;
+      },
+
+      captureTarget(anchor) {
+        const rawHref = (anchor && anchor.getAttribute('href')) || 'app.html';
+        const downloadName = anchor && anchor.hasAttribute('download')
+          ? (anchor.getAttribute('download') || 'MyDukkan24-v4.apk')
+          : null;
+        const label = ((anchor && anchor.textContent) || '').replace(/\s+/g, ' ').trim() || (downloadName ? 'Android APK' : 'Live POS');
+        return {
+          href: rawHref,
+          download: downloadName,
+          label,
+          ts: Date.now()
+        };
+      },
+
+      executeNavigation(target) {
+        if (!target || !target.href) return;
+        this.pendingNav = null;
+        try { sessionStorage.removeItem('md24_pending_nav'); } catch (e) {}
+        if (target.download !== null && target.download !== undefined) {
+          const a = document.createElement('a');
+          a.href = target.href;
+          a.download = target.download || 'MyDukkan24-v4.apk';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => a.remove(), 1200);
+          return;
+        }
+        window.location.href = target.href;
+      },
+
+      async handleProtectedNavigation(anchor) {
+        const drawer = document.getElementById('lp-mobile-drawer');
+        if (drawer && drawer.classList.contains('active')) {
+          drawer.classList.remove('active');
+        }
+        const target = this.captureTarget(anchor);
+        const cloud = window.CloudSync;
+        if (cloud && cloud.user) {
+          this.executeNavigation(target);
+          return;
+        }
+        if (cloud && !cloud.authResolved && typeof cloud.waitForAuthReady === 'function') {
+          const user = await cloud.waitForAuthReady(1800);
+          if (user) {
+            this.executeNavigation(target);
+            return;
+          }
+        }
+        this.pendingNav = target;
+        try {
+          sessionStorage.setItem('md24_pending_nav', JSON.stringify(target));
+        } catch (e) {}
+        const actionDesc = target.download ? 'download Android APK' : 'enter Live POS';
+        this.openModal('signin', {
+          type: 'info',
+          text: `Login required: Sign in or Create Account to ${actionDesc}.`
+        });
+      },
+
+      resumeRedirectNavigationIfAny() {
+        if (this.busy) return false;
+        const cloud = window.CloudSync;
+        if (!cloud || !cloud.user) return false;
+        try {
+          const raw = sessionStorage.getItem('md24_pending_nav');
+          if (!raw) return false;
+          const saved = JSON.parse(raw);
+          if (!saved || !saved.viaRedirect || !saved.ts || (Date.now() - saved.ts) > 90000) {
+            return false;
+          }
+          this.executeNavigation(saved);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      },
+
+      captureDraft() {
+        const pairs = [
+          ['shop', 'lp-auth-shop'],
+          ['owner', 'lp-auth-owner'],
+          ['phone', 'lp-auth-phone'],
+          ['upi', 'lp-auth-upi'],
+          ['address', 'lp-auth-address'],
+          ['email', 'lp-auth-email']
+        ];
+        pairs.forEach(([key, id]) => {
+          const el = document.getElementById(id);
+          if (el) this._draft[key] = el.value || '';
+        });
+      },
+
+      restoreDraft() {
+        const pairs = [
+          ['shop', 'lp-auth-shop'],
+          ['owner', 'lp-auth-owner'],
+          ['phone', 'lp-auth-phone'],
+          ['upi', 'lp-auth-upi'],
+          ['address', 'lp-auth-address'],
+          ['email', 'lp-auth-email']
+        ];
+        pairs.forEach(([key, id]) => {
+          const el = document.getElementById(id);
+          if (el && this._draft[key]) el.value = this._draft[key];
+        });
+      },
+
+      getSignupProfile(strict = true) {
+        const shopName = (document.getElementById('lp-auth-shop')?.value || this._draft.shop || '').trim();
+        const ownerName = (document.getElementById('lp-auth-owner')?.value || this._draft.owner || '').trim();
+        const phone = (document.getElementById('lp-auth-phone')?.value || this._draft.phone || '').trim();
+        const upiId = (document.getElementById('lp-auth-upi')?.value || this._draft.upi || '').trim();
+        const address = (document.getElementById('lp-auth-address')?.value || this._draft.address || '').trim();
+        if (!strict && !shopName && !ownerName && !phone && !upiId && !address) return null;
+        return { shopName, ownerName, phone, upiId, address };
+      },
+
+      openModal(preferredTab = 'signin', customNotice = null) {
         this.tab = preferredTab === 'signup' ? 'signup' : 'signin';
-        this.notice = null;
+        if (window.CloudSync) window.CloudSync.authTab = this.tab;
+        if (customNotice) {
+          this.notice = customNotice;
+        } else {
+          this.notice = null;
+          this.pendingNav = null;
+          try { sessionStorage.removeItem('md24_pending_nav'); } catch (e) {}
+        }
         this.isOpen = true;
         document.getElementById('lp-auth-modal')?.classList.add('active');
         this.renderModal();
       },
 
       closeModal() {
+        this.captureDraft();
         this.isOpen = false;
+        this.pendingNav = null;
+        try { sessionStorage.removeItem('md24_pending_nav'); } catch (e) {}
         document.getElementById('lp-auth-modal')?.classList.remove('active');
       },
 
       setTab(tab) {
+        this.captureDraft();
         this.tab = tab === 'signup' ? 'signup' : 'signin';
         if (window.CloudSync) window.CloudSync.authTab = this.tab;
         this.notice = null;
@@ -1322,6 +1559,7 @@
       },
 
       setNotice(type, text) {
+        this.captureDraft();
         this.notice = text ? { type, text } : null;
         this.renderModal();
       },
@@ -1387,7 +1625,7 @@
         if (this.isOpen) {
           const card = document.getElementById('lp-auth-modal-card');
           const active = document.activeElement;
-          const isTyping = active && card && card.contains(active) && ['INPUT', 'TEXTAREA'].includes(active.tagName);
+          const isTyping = active && card && card.contains(active) && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
           if (!isTyping) this.renderModal();
         }
       },
@@ -1404,6 +1642,7 @@
           : '';
 
         if (user) {
+          card.classList.remove('is-signup');
           const email = this.escapeHtml(user.email || user.displayName || 'Connected Store Owner');
           const pid = this.escapeHtml((cfg && cfg.projectId) || 'cloud-live');
           const uidShort = this.escapeHtml((user.uid || '').slice(0, 12));
@@ -1448,6 +1687,49 @@
         }
 
         const isSignup = this.tab === 'signup';
+        card.classList.toggle('is-signup', isSignup);
+        const signupFieldsHtml = isSignup ? `
+          <div class="lp-auth-form-grid">
+            <div>
+              <label for="lp-auth-shop" class="lp-auth-lbl">Shop / Store Name *</label>
+              <input type="text" id="lp-auth-shop" class="lp-input lp-input-sm" required placeholder="e.g. Sharma Kirana Mart" />
+            </div>
+            <div>
+              <label for="lp-auth-owner" class="lp-auth-lbl">Owner Full Name *</label>
+              <input type="text" id="lp-auth-owner" class="lp-input lp-input-sm" required placeholder="e.g. Rajesh Sharma" />
+            </div>
+            <div>
+              <label for="lp-auth-phone" class="lp-auth-lbl">Mobile / WhatsApp *</label>
+              <input type="tel" id="lp-auth-phone" class="lp-input lp-input-sm" required placeholder="+91 98765 43210" />
+            </div>
+            <div>
+              <label for="lp-auth-upi" class="lp-auth-lbl">Business UPI ID (Optional)</label>
+              <input type="text" id="lp-auth-upi" class="lp-input lp-input-sm" placeholder="shopname@upi" />
+            </div>
+            <div class="lp-auth-col-full">
+              <label for="lp-auth-address" class="lp-auth-lbl">Shop Address / City *</label>
+              <input type="text" id="lp-auth-address" class="lp-input lp-input-sm" required placeholder="Main Market, City, State" />
+            </div>
+            <div>
+              <label for="lp-auth-email" class="lp-auth-lbl">Store Email *</label>
+              <input type="email" id="lp-auth-email" class="lp-input lp-input-sm" required placeholder="owner@mydukkan24.com" />
+            </div>
+            <div>
+              <label for="lp-auth-password" class="lp-auth-lbl">Password (6+ chars) *</label>
+              <input type="password" id="lp-auth-password" class="lp-input lp-input-sm" required minlength="6" placeholder="••••••" />
+            </div>
+          </div>
+        ` : `
+          <div>
+            <label for="lp-auth-email" class="lp-auth-lbl">Store Email *</label>
+            <input type="email" id="lp-auth-email" class="lp-input lp-input-sm" required placeholder="owner@mydukkan24.com" />
+          </div>
+          <div>
+            <label for="lp-auth-password" class="lp-auth-lbl">Password *</label>
+            <input type="password" id="lp-auth-password" class="lp-input lp-input-sm" required minlength="6" placeholder="••••••" />
+          </div>
+        `;
+
         card.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
             <div style="display:flex;align-items:center;gap:10px;">
@@ -1477,17 +1759,10 @@
             <span>Continue with Google</span>
           </button>
 
-          <div class="lp-auth-divider">or with store email</div>
+          <div class="lp-auth-divider">or ${isSignup ? 'register shop with email' : 'sign in with store email'}</div>
 
           <form onsubmit="event.preventDefault(); LandingAuth.submitEmailAuth();" style="display:flex;flex-direction:column;gap:10px;">
-            <div>
-              <label for="lp-auth-email" style="display:block;font-size:12px;font-weight:700;color:#CBD5E1;margin-bottom:5px;">Store Email *</label>
-              <input type="email" id="lp-auth-email" class="lp-input" style="width:100%;" required placeholder="owner@mydukkan24.com" />
-            </div>
-            <div>
-              <label for="lp-auth-password" style="display:block;font-size:12px;font-weight:700;color:#CBD5E1;margin-bottom:5px;">Password *</label>
-              <input type="password" id="lp-auth-password" class="lp-input" style="width:100%;" required minlength="6" placeholder="••••••" />
-            </div>
+            ${signupFieldsHtml}
             <button type="submit" class="lp-btn btn-cta-primary btn-sheen" ${this.busy ? 'disabled' : ''} style="width:100%;margin-top:4px;">
               ${this.busy ? 'Connecting...' : (isSignup ? '🔐 Create Store Account →' : '🔐 Sign In to Store →')}
             </button>
@@ -1495,24 +1770,39 @@
 
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,0.2);">
             ${!isSignup
-              ? `<button type="button" class="lp-inline-action" onclick="LandingAuth.sendReset()">Forgot Password?</button>`
-              : `<span style="font-size:11.5px;color:#94A3B8;">Instant encrypted store workspace</span>`}
-            <a href="app.html" class="lp-inline-action" style="background:rgba(16,185,129,0.2);border-color:rgba(52,211,153,0.5);">Open Live POS →</a>
+              ? `<button type="button" class="lp-inline-action" onclick="LandingAuth.sendReset()">Forgot Password?</button>
+                 <span style="font-size:11.5px;color:#94A3B8;">Sign in required to enter POS or download APK</span>`
+              : `<span style="font-size:11.5px;color:#94A3B8;">Instant encrypted cloud store &amp; backup</span>
+                 <button type="button" class="lp-inline-action" onclick="LandingAuth.setTab('signin')">Already registered?</button>`}
           </div>
         `;
+        this.restoreDraft();
       },
 
       async signInGoogle() {
         if (!window.CloudSync) return;
-        if (!window.CloudSync.getSavedConfig()) {
-          this.setNotice('info', 'Cloud login activation is pending backend Firebase credentials. Open Live POS to start billing right now.');
-          return;
-        }
+        this.captureDraft();
+        const profile = this.tab === 'signup' ? this.getSignupProfile(false) : null;
         this.busy = true;
         this.renderModal();
-        const res = await window.CloudSync.signInWithGoogle();
+        const res = await window.CloudSync.signInWithGoogle(profile);
         this.busy = false;
+        if (res && res.redirect) {
+          if (this.pendingNav) {
+            try {
+              sessionStorage.setItem('md24_pending_nav', JSON.stringify({ ...this.pendingNav, viaRedirect: true }));
+            } catch (e) {}
+          }
+          return;
+        }
         if (res && res.ok) {
+          const nav = this.pendingNav;
+          if (nav) {
+            this.setNotice('success', `✅ Signed in! Opening ${nav.download ? 'APK download' : 'Live POS'}...`);
+            this.syncPageUI();
+            setTimeout(() => this.executeNavigation(nav), 320);
+            return;
+          }
           this.setNotice('success', 'Signed in with Google! Launch your Live POS Terminal below.');
         } else if (res && res.error) {
           this.setNotice('danger', res.error);
@@ -1522,23 +1812,36 @@
 
       async submitEmailAuth() {
         if (!window.CloudSync) return;
-        if (!window.CloudSync.getSavedConfig()) {
-          this.setNotice('info', 'Cloud login activation is pending backend Firebase credentials. Open Live POS to start billing right now.');
-          return;
-        }
+        this.captureDraft();
         const email = (document.getElementById('lp-auth-email')?.value || '').trim();
         const password = document.getElementById('lp-auth-password')?.value || '';
+        const isSignup = this.tab === 'signup';
+        let profile = null;
+        if (isSignup) {
+          profile = this.getSignupProfile(true);
+          if (!profile.shopName || !profile.ownerName || !profile.phone || !profile.address) {
+            this.setNotice('warning', 'Please fill Shop Name, Owner Name, Mobile Number, and Address.');
+            return;
+          }
+        }
         if (!email || password.length < 6) {
           this.setNotice('warning', 'Enter a valid email and at least a 6-character password.');
           return;
         }
         this.busy = true;
         this.renderModal();
-        const res = this.tab === 'signup'
-          ? await window.CloudSync.signUpEmail(email, password)
+        const res = isSignup
+          ? await window.CloudSync.signUpEmail(email, password, profile)
           : await window.CloudSync.signInEmail(email, password);
         this.busy = false;
         if (res && res.ok) {
+          const nav = this.pendingNav;
+          if (nav) {
+            this.setNotice('success', `✅ Store connected! Opening ${nav.download ? 'APK download' : 'Live POS'}...`);
+            this.syncPageUI();
+            setTimeout(() => this.executeNavigation(nav), 320);
+            return;
+          }
           this.setNotice('success', 'Store account connected cleanly! Launch Live POS below.');
         } else if (res && res.error) {
           this.setNotice('danger', res.error);
@@ -1548,11 +1851,8 @@
 
       async sendReset() {
         if (!window.CloudSync) return;
-        if (!window.CloudSync.getSavedConfig()) {
-          this.setNotice('info', 'Password reset unlocks automatically as soon as Firebase project config is active.');
-          return;
-        }
-        const email = (document.getElementById('lp-auth-email')?.value || '').trim();
+        this.captureDraft();
+        const email = (document.getElementById('lp-auth-email')?.value || this._draft.email || '').trim();
         if (!email) {
           this.setNotice('warning', 'Enter your registered Store Email first.');
           return;
@@ -1571,8 +1871,22 @@
     };
     window.LandingAuth = LandingAuth;
 
+    // Mandatory Login Gate on All Landing Page App / APK Exits
+    document.addEventListener('click', (e) => {
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+      const rawHref = anchor.getAttribute('href') || '';
+      if (!LandingAuth.isGatedHref(rawHref, anchor)) return;
+      if (window.CloudSync && window.CloudSync.authResolved && window.CloudSync.user) {
+        return;
+      }
+      e.preventDefault();
+      LandingAuth.handleProtectedNavigation(anchor);
+    });
+
     window.addEventListener('mydukaan:cloud-status', () => LandingAuth.syncPageUI());
     window.addEventListener('mydukaan:auth-changed', () => LandingAuth.syncPageUI());
+    window.addEventListener('mydukaan:redirect-complete', () => LandingAuth.resumeRedirectNavigationIfAny());
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (LandingAuth.isOpen) LandingAuth.closeModal();

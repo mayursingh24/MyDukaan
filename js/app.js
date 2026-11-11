@@ -1286,7 +1286,7 @@ class AppController {
             ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px; overflow-wrap: anywhere;">${escErr}</div>` : ''}
             ${!status.online ? `<div style="background: var(--warning-light); border: 1px solid var(--warning-border); color: var(--warning); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px;">Internet connection required to sign in and sync.</div>` : ''}
 
-            <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="CloudSync.signInWithGoogle()">
+            <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="CloudSync.signInWithGoogle(App.getFirebaseSignupProfile(false))">
               <span style="font-weight: 900; font-size: 14px;">G</span> Continue with Google
             </button>
           </div>
@@ -1297,6 +1297,32 @@ class AppController {
               <button type="button" class="btn btn-sm ${activeTab === 'signup' ? 'btn-primary' : 'btn-secondary'}" style="flex: 1; justify-content: center;" onclick="App.setFirebaseAuthTab('signup')">Create Account</button>
             </div>
             <form onsubmit="event.preventDefault(); App.submitFirebaseAuth();">
+              ${activeTab === 'signup' ? `
+                <div class="form-row-2">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label">Shop / Store Name *</label>
+                    <input type="text" id="fb-auth-shop" class="form-input" required placeholder="e.g. Sharma Kirana Mart" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label">Owner Full Name *</label>
+                    <input type="text" id="fb-auth-owner" class="form-input" required placeholder="e.g. Rajesh Sharma" />
+                  </div>
+                </div>
+                <div class="form-row-2">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label">Mobile / WhatsApp *</label>
+                    <input type="tel" id="fb-auth-phone" class="form-input" required placeholder="+91 98765 43210" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label">Business UPI ID (Optional)</label>
+                    <input type="text" id="fb-auth-upi" class="form-input" placeholder="yourname@upi" />
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="form-label">City / Store Address *</label>
+                  <input type="text" id="fb-auth-address" class="form-input" required placeholder="Main Market, City, State" />
+                </div>
+              ` : ''}
               <div class="form-group" style="margin-bottom: 10px;">
                 <label class="form-label">Store Owner Email *</label>
                 <input type="email" id="fb-auth-email" class="form-input" required placeholder="owner@mydukkan24.com" />
@@ -1416,6 +1442,16 @@ class AppController {
     }
   }
 
+  getFirebaseSignupProfile(strict = true) {
+    const shopName = (document.getElementById('fb-auth-shop')?.value || '').trim();
+    const ownerName = (document.getElementById('fb-auth-owner')?.value || '').trim();
+    const phone = (document.getElementById('fb-auth-phone')?.value || '').trim();
+    const address = (document.getElementById('fb-auth-address')?.value || '').trim();
+    const upiId = (document.getElementById('fb-auth-upi')?.value || '').trim();
+    if (!strict && !shopName && !ownerName && !phone && !address && !upiId) return null;
+    return { shopName, ownerName, phone, address, upiId };
+  }
+
   async submitFirebaseAuth() {
     if (!window.CloudSync) return;
     const email = (document.getElementById('fb-auth-email')?.value || '').trim();
@@ -1424,10 +1460,23 @@ class AppController {
       this.toast('warning', 'Check Details', 'Enter a valid email and password (minimum 6 characters).');
       return;
     }
+    let res;
     if (CloudSync.authTab === 'signup') {
-      await CloudSync.signUpEmail(email, password);
+      const profile = this.getFirebaseSignupProfile(true);
+      if (!profile.shopName || !profile.ownerName || !profile.phone || !profile.address) {
+        this.toast('warning', 'Store Details Needed', 'Enter Shop Name, Owner Name, Mobile Number, and Address.');
+        return;
+      }
+      res = await CloudSync.signUpEmail(email, password, profile);
     } else {
-      await CloudSync.signInEmail(email, password);
+      res = await CloudSync.signInEmail(email, password);
+    }
+    if (res && res.ok) {
+      this.updateHeaderStoreName();
+      if (this.currentView === 'settings') {
+        const container = document.getElementById('main-view-container');
+        if (container) this.renderSettingsView(container);
+      }
     }
   }
 

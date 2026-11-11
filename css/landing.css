@@ -1380,6 +1380,125 @@ button {
   min-width: 0;
 }
 
+.lp-engine-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.lp-engine-bullet {
+  background: rgba(15, 23, 45, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 8px 11px;
+  font-size: 12.5px;
+  color: #E2E8F0;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  line-height: 1.4;
+}
+
+.lp-engine-bullet-check {
+  color: #34D399;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* 5-Card All Engines Deep Architecture Breakdown (Balanced 3 + 2 desktop) */
+.lp-features-deep-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.lp-feature-deep-card {
+  grid-column: span 2;
+  background: #0B1326;
+  border: 1.5px solid rgba(148, 163, 184, 0.24);
+  border-radius: var(--lp-r-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  min-width: 0;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lp-feature-deep-card:nth-child(4),
+.lp-feature-deep-card:nth-child(5) {
+  grid-column: span 3;
+}
+
+.lp-feature-deep-card:hover,
+.lp-feature-deep-card.active {
+  transform: translateY(-2px);
+  border-color: #60A5FA;
+  background: #101C36;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.22);
+}
+
+.lp-feature-deep-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lp-feature-deep-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #93C5FD;
+  background: rgba(37, 99, 235, 0.22);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  border-radius: var(--lp-r-full);
+  padding: 3px 9px;
+}
+
+.lp-feature-deep-title {
+  font-family: var(--font-heading);
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.3;
+}
+
+.lp-feature-deep-desc {
+  font-size: 13px;
+  color: var(--lp-text-secondary);
+  line-height: 1.55;
+}
+
+.lp-feature-deep-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+}
+
+.lp-feature-deep-list li {
+  font-size: 12px;
+  color: #CBD5E1;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  line-height: 1.45;
+}
+
+.lp-feature-deep-list li::before {
+  content: '✓';
+  color: #34D399;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
 /* ==========================================================================
    IMPACT SIMULATOR, DOWNLOAD SHOWCASE & DIRECT CONNECT
    ========================================================================== */
@@ -1436,45 +1555,79 @@ button {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
 }
 
+.lp-section-compact {
+  padding: 26px 0 30px;
+}
+
 .lp-contact-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+  gap: 14px;
+  align-items: stretch;
 }
 
 .lp-surface-card {
-  background: #0E162B;
-  border: 1.5px solid rgba(148, 163, 184, 0.28);
-  border-radius: var(--lp-r-xl);
-  padding: 26px;
+  background: #0C1324;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--lp-r-lg);
+  padding: 16px 18px;
   min-width: 0;
 }
 
-.lp-channel-btn {
+.lp-quick-inquiry-form {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lp-quick-inquiry-form .lp-input {
+  flex: 1 1 150px;
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 12px;
+}
+
+.lp-dev-compact {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  padding: 15px 16px;
-  border-radius: var(--lp-r-md);
+  gap: 10px;
+}
+
+.lp-dev-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.lp-channel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: var(--lp-r-full);
   background: #14203B;
-  border: 1.5px solid rgba(148, 163, 184, 0.32);
-  color: #FFFFFF;
-  font-weight: 700;
-  font-size: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: #E2E8F0;
+  font-weight: 600;
+  font-size: 12px;
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
 .lp-channel-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: #60A5FA;
   background: #1C2B4E;
+  color: #FFFFFF;
 }
 
 .lp-footer {
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-  padding: 34px 0 46px;
-  margin-top: 24px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 20px 0 26px;
+  margin-top: 10px;
   background: #03050D;
 }
 
@@ -1509,8 +1662,38 @@ button {
   padding: 22px;
   color: #FFFFFF;
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.88), 0 0 42px rgba(59, 130, 246, 0.2);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100vh - 28px);
   overflow-y: auto;
+}
+
+.lp-auth-modal.is-signup {
+  max-width: 520px;
+}
+
+.lp-auth-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.lp-auth-col-full {
+  grid-column: 1 / -1;
+}
+
+.lp-auth-lbl {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #CBD5E1;
+  margin-bottom: 4px;
+}
+
+.lp-input-sm {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 11px;
+  font-size: 13px;
+  border-radius: 10px;
 }
 
 .lp-auth-close {
@@ -1667,6 +1850,19 @@ button {
   .lp-impact-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .lp-features-deep-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lp-feature-deep-card,
+  .lp-feature-deep-card:nth-child(4) {
+    grid-column: span 1;
+  }
+
+  .lp-feature-deep-card:nth-child(5) {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1720,8 +1916,19 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .lp-engine-metrics {
+  .lp-engine-metrics,
+  .lp-engine-highlights {
     grid-template-columns: 1fr;
+  }
+
+  .lp-features-deep-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-feature-deep-card,
+  .lp-feature-deep-card:nth-child(4),
+  .lp-feature-deep-card:nth-child(5) {
+    grid-column: span 1;
   }
 
   .lp-section {
@@ -1788,7 +1995,8 @@ button {
     padding: 4px 8px;
   }
 
-  .lp-auth-status-grid {
+  .lp-auth-status-grid,
+  .lp-auth-form-grid {
     grid-template-columns: 1fr;
   }
 }
