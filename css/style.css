@@ -454,7 +454,9 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .mobile-menu-btn {
@@ -483,10 +485,20 @@ a {
   border-radius: var(--radius-md);
   padding: 6px 12px;
   width: 260px;
+  max-width: 100%;
+  min-width: 0;
   color: var(--text-muted);
   font-size: 12.5px;
   cursor: pointer;
   transition: all 0.15s;
+}
+
+.search-command-bar > span:nth-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-command-bar:hover {
@@ -497,6 +509,8 @@ a {
 
 .search-shortcut-kbd {
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
   font-size: 10px;
   font-family: var(--font-mono);
   background: var(--bg-card);
@@ -508,6 +522,7 @@ a {
 
 .search-icon-span {
   display: inline-block;
+  flex-shrink: 0;
   width: 14px;
   height: 14px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
@@ -529,6 +544,8 @@ a {
 .lang-selector-chip, .shop-branch-switcher {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -551,6 +568,7 @@ a {
   cursor: pointer;
   transition: border-color 0.15s ease;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .counter-status-chip:hover {
@@ -659,6 +677,8 @@ body:not([data-role="cashier"]) [data-cashier-only="1"] {
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   transition: all 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .btn-topbar-action:hover {
@@ -700,6 +720,8 @@ body:not([data-role="cashier"]) [data-cashier-only="1"] {
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .shop-chip:hover {
@@ -1219,6 +1241,86 @@ body:not([data-role="cashier"]) [data-cashier-only="1"] {
    ========================================================================== */
 .mobile-bottom-nav {
   display: none;
+}
+
+@media (max-width: 1520px) and (min-width: 901px) {
+  .app-topbar {
+    padding: 0 14px;
+    gap: 8px;
+  }
+
+  .search-command-bar {
+    width: auto;
+    flex: 1 1 auto;
+    max-width: 245px;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .topbar-right {
+    gap: 6px;
+  }
+
+  .lang-selector-chip {
+    padding: 4px 6px;
+  }
+
+  .role-mode-chip,
+  .counter-status-chip {
+    padding: 5px 8px;
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .btn-topbar-action {
+    padding: 5px 9px;
+    font-size: 12px;
+    gap: 5px;
+  }
+
+  .shop-chip {
+    padding: 5px 9px;
+    gap: 6px;
+    max-width: 150px;
+  }
+
+  .shop-chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1360px) and (min-width: 901px) {
+  .btn-topbar-action .btn-text-desktop {
+    display: none;
+  }
+
+  .btn-topbar-action {
+    padding: 6px 8px;
+  }
+
+  .counter-status-chip > span:last-child {
+    display: none;
+  }
+
+  .shop-chip {
+    max-width: 126px;
+  }
+}
+
+@media (max-width: 1140px) and (min-width: 901px) {
+  .search-shortcut-kbd {
+    display: none;
+  }
+
+  .counter-status-chip {
+    display: none;
+  }
+
+  .shop-chip {
+    max-width: 105px;
+  }
 }
 
 @media (max-width: 1024px) {
