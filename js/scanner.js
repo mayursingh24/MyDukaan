@@ -758,7 +758,6 @@ class BarcodeScannerEngine {
             <strong style="color: var(--danger);">Live Gemini Lookup Failed:</strong> ${this.escapeHtml(onlineApiError)}
             <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
               <button class="btn btn-primary btn-sm" data-barcode="${this.escapeHtml(barcode)}" onclick="BarcodeScanner.fetchAndRenderGoogleBarcode(this.dataset.barcode)">↻ Retry Online</button>
-              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()">🔑 Set Key</button>
             </div>
           </div>
         ` : `

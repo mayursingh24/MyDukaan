@@ -1,5 +1,5 @@
 /**
- * MyDukaan24 — Hybrid Offline-First + Firebase Cloud Sync Engine (v8.1)
+ * MyDukaan24 — Hybrid Offline-First + Firebase Cloud Sync Engine (v8.2)
  * Architecture:
  *  - Instant 0ms LocalStorage writes (works 100% offline, never blocks POS)
  *  - Persistent Firestore IndexedDB Cache + Offline Mutation Queue (Standard Edition)

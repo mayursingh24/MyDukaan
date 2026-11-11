@@ -20,7 +20,7 @@ class DukaanAIEngine {
       window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1'
     ) {
-      return 'https://mydukaan24.netlify.app/api/gemini';
+      return 'https://mydukaan-eta.vercel.app/api/gemini';
     }
     return '/api/gemini';
   }
@@ -102,7 +102,6 @@ Customer Udhaar Ledger:
               </div>
             </div>
             <div class="ai-header-actions">
-              <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()" title="Configure Gemini API Key">🔑 Key</button>
               <button class="btn btn-secondary btn-sm" onclick="DukaanAI.clearHistory()" title="Clear Chat History">Clear</button>
               <button class="topbar-icon-btn" onclick="DukaanAI.closeModal()" aria-label="Close">✕</button>
             </div>
@@ -371,7 +370,7 @@ Customer Udhaar Ledger:
         `• **Network Status:** ${onlineNow ? '🟢 Online (API Mode Preferred)' : '🟠 Offline Mode'}\n` +
         `• **Store Local DB:** 🟢 Active (${products.length} SKUs, ₹${invoices.reduce((s, i) => s + (i.paid || 0), 0).toLocaleString('en-IN')} Sales)\n` +
         `• **Live Gemini Models:** \`gemini-3.8-flash\` / \`gemini-3.6-flash\` (Interactions API)\n\n` +
-        `💡 **API Key Note:** Modern AI Studio keys (\`AQ....\` and \`AIza...\`) are both supported via Vercel / Netlify Environment Variables or **🔑 Key**.`;
+        `💡 **Server Status:** Online queries connect directly via the built-in \`/api/gemini\` endpoint.`;
     }
 
     if (
@@ -544,7 +543,7 @@ Customer Udhaar Ledger:
           ` : ''}
           ${isAuthFail ? `
             <div style="margin-top: 6px; font-size: 11px; color: var(--warning); line-height: 1.45;">
-              Note: Online mode does not fake replies with local data when API auth fails. Configure an active Gemini key in Vercel / Netlify or click <strong>🔑 Set Key</strong>.
+              Note: Online mode does not substitute fake local replies when live server authentication needs attention.
             </div>
           ` : ''}
           <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
@@ -552,11 +551,6 @@ Customer Udhaar Ledger:
               <button class="btn btn-primary btn-sm" onclick="DukaanAI.retryLastPrompt()">
                 ${Icons.refresh(13)} Retry API
               </button>
-            ` : ''}
-            <button class="btn btn-secondary btn-sm" onclick="DukaanAI.promptSetApiKey()">
-              🔑 Set Key
-            </button>
-            ${this.lastFailedPrompt ? `
               <button class="btn btn-secondary btn-sm" onclick="DukaanAI.runOfflineFallbackForLastPrompt()">
                 🛡️ Use Offline Advisor Once
               </button>

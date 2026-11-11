@@ -3,66 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <title>MyDukkan24 — Enterprise Retail OS & Smart POS</title>
-  <meta name="description" content="AI-Powered POS, Barcode Vision, Customer Udhaar Ledger, and Real-time Retail Intelligence for Indian Kirana & Local Businesses." />
+  <title>MyDukaan24 — Live Cloud Retail OS, Smart POS & Gemini AI</title>
+  <meta name="description" content="MyDukaan24 by Mayur Singh — Live Cloud Retail OS featuring high-speed POS billing, dynamic UPI QR, barcode vision, Udhaar Khata, and live Gemini 3.8 AI Copilot." />
   <link rel="icon" type="image/jpeg" href="assets/LOGO.jpeg" />
   <link rel="alternate icon" type="image/svg+xml" href="assets/logo.svg" />
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="css/landing.css?v=8.1" />
+  <link rel="apple-touch-icon" href="assets/LOGO.jpeg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/landing.css?v=8.2" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
-  <div class="lp-bg-ambient"></div>
+  <div class="lp-scroll-progress" id="lp-scroll-progress" aria-hidden="true"></div>
 
-  <div class="lp-content-wrapper">
-    <!-- Top Live Status Banner -->
-    <div class="lp-top-announcement">
-      <span>⚡ <strong>MyDukkan24 v4.0 is Live:</strong> Next-Gen Retail OS & POS Billing with Barcode Scanner & Digital Khata</span>
-      <a href="app.html" class="lp-announcement-link">Open Full App Terminal →</a>
-    </div>
+  <!-- Ambient Perspective Grid & Orbital Aurora -->
+  <div class="lp-bg-ambient" aria-hidden="true">
+    <div class="lp-bg-grid"></div>
+    <div class="lp-aura lp-aura-1"></div>
+    <div class="lp-aura lp-aura-2"></div>
+    <div class="lp-aura lp-aura-3"></div>
+  </div>
 
-    <!-- Floating Frosted Pill Navbar -->
+  <div class="lp-shell">
+    <!-- Floating Frosted Navbar -->
     <div class="lp-navbar-wrapper">
       <header class="lp-navbar">
         <div class="lp-brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'; this.onerror=function(){this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';};" class="brand-logo-img" alt="MyDukkan24 Logo" />
-          <div class="lp-brand-mark" style="display: none;">M</div>
+          <div class="lp-brand-visual">
+            <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" class="brand-logo-img" alt="MyDukaan24 Store Logo" />
+            <img src="assets/logo.svg" class="brand-svg-mini" alt="MD24 Vector Emblem" />
+          </div>
           <div class="lp-brand-name">
-            MyDukkan24 <span class="lp-brand-tag">v4.0</span>
+            <span>MyDukaan24</span>
+            <span class="lp-brand-tag"><span class="lp-pulse-dot" style="width:6px;height:6px;"></span> LIVE</span>
           </div>
         </div>
 
-        <nav class="lp-nav-links">
-          <a href="#why" class="lp-nav-link">Why Us</a>
-          <a href="#features" class="lp-nav-link">Features</a>
-          <a href="#preview" class="lp-nav-link">POS Simulator</a>
-          <a href="#roi" class="lp-nav-link" style="color: #A5B4FC;">ROI Calc</a>
-          <a href="#download" class="lp-nav-link" style="color: #10B981; font-weight: 700;">Download APK</a>
-          <a href="#testimonials" class="lp-nav-link">Reviews</a>
-          <a href="#faq" class="lp-nav-link">FAQs</a>
-          <a href="#contact" class="lp-nav-link">Contact</a>
+        <nav class="lp-nav-links" aria-label="Primary Navigation">
+          <a href="#showcase" class="lp-nav-link">Live Terminal</a>
+          <a href="#engines" class="lp-nav-link">Engines</a>
+          <a href="#impact" class="lp-nav-link">ROI Impact</a>
+          <a href="#download" class="lp-nav-link">Mobile &amp; APK</a>
+          <a href="#connect" class="lp-nav-link">Connect</a>
         </nav>
 
         <div class="lp-nav-actions">
-          <a href="#download" class="lp-btn-secondary lp-nav-hide-mobile" style="padding: 7px 14px; font-size: 12px; border-radius: var(--lp-radius-full);">
-            📱 Download APK
-          </a>
-          <button type="button" id="lp-nav-auth-btn" class="lp-nav-auth-btn" onclick="LandingAuth.openModal('signin')">
-            <span class="lp-auth-text-full">🔐 Login / Sign Up</span>
+          <button type="button" id="lp-nav-auth-btn" class="lp-nav-auth-btn btn-sheen" onclick="LandingAuth.openModal('signin')">
+            <span class="lp-auth-text-full">🔐 Sign In / Join</span>
             <span class="lp-auth-text-short">🔐 Login</span>
           </button>
-          <a href="app.html" class="lp-nav-cta">
-            <span class="lp-cta-text-full">⚡ Launch App →</span>
-            <span class="lp-cta-text-short">⚡ App</span>
+          <a href="app.html" class="lp-nav-cta btn-sheen">
+            <span class="lp-cta-text-full">⚡ Open Live POS →</span>
+            <span class="lp-cta-text-short">⚡ Open POS</span>
           </a>
-          <button class="lp-mobile-menu-toggle" id="lp-mobile-toggle" onclick="toggleLandingMobileNav()" aria-label="Toggle Navigation">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
+          <button type="button" class="lp-mobile-menu-toggle" id="lp-mobile-toggle" onclick="toggleLandingMobileNav()" aria-label="Open Navigation Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
@@ -71,985 +71,809 @@
     </div>
 
     <!-- Mobile Navigation Drawer -->
-    <div class="lp-mobile-drawer" id="lp-mobile-drawer">
+    <div class="lp-mobile-drawer" id="lp-mobile-drawer" aria-label="Mobile Navigation">
       <div class="lp-mobile-drawer-header">
         <div class="lp-brand">
-          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" class="brand-logo-img" alt="Logo" style="width: 32px; height: 32px;" />
-          <div class="lp-brand-name">MyDukkan24 <span class="lp-brand-tag">v4.0</span></div>
+          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" class="brand-logo-img" alt="MyDukaan24" />
+          <div class="lp-brand-name">MyDukaan24 <span class="lp-brand-tag">LIVE</span></div>
         </div>
-        <button onclick="toggleLandingMobileNav()" style="color: #94A3B8; font-size: 24px; padding: 4px;">✕</button>
+        <button type="button" onclick="toggleLandingMobileNav()" class="lp-auth-close" aria-label="Close Menu">✕</button>
       </div>
+
       <div class="lp-mobile-drawer-links">
-        <a href="#why" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Why MyDukaan24 <span>→</span></a>
-        <a href="#features" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Platform Features <span>→</span></a>
-        <a href="#preview" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Interactive POS Simulator <span>→</span></a>
-        <a href="#roi" class="lp-mobile-drawer-link" style="color: #A5B4FC;" onclick="toggleLandingMobileNav()">💰 Kirana ROI Calculator <span>→</span></a>
-        <a href="#download" class="lp-mobile-drawer-link" style="color: #10B981;" onclick="toggleLandingMobileNav()">📱 Download Android APK <span>↓</span></a>
-        <a href="#testimonials" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Customer Stories <span>→</span></a>
-        <a href="#faq" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Frequently Asked Questions <span>→</span></a>
-        <a href="#contact" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()">Contact & Support <span>→</span></a>
+        <a href="#showcase" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()"><span>⚡ Live Online POS &amp; Gemini AI</span><span>→</span></a>
+        <a href="#engines" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()"><span>🧩 Five Core Retail Engines</span><span>→</span></a>
+        <a href="#impact" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()"><span>📈 Interactive Store Profit Simulator</span><span>→</span></a>
+        <a href="#download" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()"><span>📱 Web Cloud &amp; Android APK</span><span>↓</span></a>
+        <a href="#connect" class="lp-mobile-drawer-link" onclick="toggleLandingMobileNav()"><span>💬 Direct WhatsApp Connect</span><span>→</span></a>
       </div>
-      <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--lp-border); display: flex; flex-direction: column; gap: 10px;">
-        <button type="button" id="lp-drawer-auth-btn" class="lp-btn-secondary" style="justify-content: center; padding: 13px; font-size: 14.5px; border-radius: var(--lp-radius-md); border-color: rgba(99, 102, 241, 0.45); color: #C7D2FE;" onclick="toggleLandingMobileNav(); LandingAuth.openModal('signin');">
-          🔐 Login / Create Store Account
+
+      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 16px; border-top: 1px solid var(--lp-border);">
+        <button type="button" id="lp-drawer-auth-btn" class="lp-btn btn-cta-emerald btn-sheen" style="width: 100%;" onclick="toggleLandingMobileNav(); LandingAuth.openModal('signin');">
+          🔐 Sign In / Create Store Account
         </button>
-        <a href="app.html" class="lp-btn-primary" style="justify-content: center; padding: 14px; font-size: 15px; border-radius: var(--lp-radius-md);">
-          🚀 Launch Full POS Terminal →
+        <a href="app.html" class="lp-btn btn-cta-primary btn-sheen" style="width: 100%;">
+          🚀 Open Live Web POS Terminal →
         </a>
-        <a href="assets/MyDukkan24-v4.apk" download="MyDukkan24-v4.apk" class="lp-btn-secondary" style="justify-content: center; padding: 12px; font-size: 14px; border-radius: var(--lp-radius-md); color: #10B981; border-color: rgba(16, 185, 129, 0.4);">
-          📱 Download APK Package (Direct)
+        <a href="assets/MyDukkan24-v4.apk" download="MyDukkan24-v4.apk" class="lp-btn btn-cta-amber" style="width: 100%;">
+          🤖 Download Android APK
         </a>
       </div>
     </div>
 
-    <!-- Main Content -->
     <main>
-      <!-- Hero Section -->
+      <!-- ================================================================
+           1. SPLIT KINETIC HERO STAGE WITH FLAGSHIP 3D LOGO COCKPIT
+           ================================================================ -->
       <section class="lp-hero">
-        <div class="lp-hero-badge">
-          <span>⚡ Built for Modern Indian Retailers & Kirana Stores</span>
-          <span style="color: var(--lp-text-muted);">•</span>
-          <span style="color: var(--lp-success); font-weight: 700;">100% Inbuilt Zero-Latency Database</span>
-        </div>
+        <div class="lp-container">
+          <div class="lp-hero-grid">
+            <div class="lp-hero-copy">
+              <div class="lp-live-pill">
+                <span class="lp-pulse-dot"></span>
+                <span>ONLINE RETAIL OS • GEMINI 3.8 FLASH + LIVE CLOUD SYNC</span>
+              </div>
 
-        <h1 class="lp-hero-h1">
-          The Smart Operating System for <span>Modern Indian Retailers</span>
-        </h1>
+              <h1 class="lp-hero-h1">
+                One Live Operating System for <span class="lp-gradient-word">High-Velocity Retail</span>
+              </h1>
 
-        <p class="lp-hero-p">
-          Replace manual paper diaries and long billing lines. Sub-second barcode camera scanning, automated customer Udhaar ledger, instant WhatsApp receipts, and live profit-loss analytics.
-        </p>
+              <p class="lp-hero-sub">
+                Sub-second barcode billing, instant Dynamic UPI QR settlement, automated WhatsApp Khata recovery, and live Gemini 3.8 store intelligence — crafted by <strong>Mayur Singh</strong> for modern Indian commerce.
+              </p>
 
-        <div class="lp-hero-cta-group">
-          <button type="button" id="lp-hero-auth-btn" class="lp-btn-primary" style="padding: 14px 26px; font-size: 15px;" onclick="LandingAuth.openModal('signin')">
-            🔐 Login / Create Store Account
-          </button>
-          <a href="app.html" id="lp-hero-launch-btn" class="lp-btn-secondary" style="padding: 14px 22px; font-size: 15px;">
-            🚀 Open POS Terminal (Offline) →
-          </a>
-          <a href="#download" class="lp-btn-secondary" style="padding: 14px 20px; font-size: 15px; border-color: rgba(16, 185, 129, 0.4); color: #10B981;">
-            📱 Download APK ↓
-          </a>
-        </div>
+              <div class="lp-hero-actions">
+                <a href="app.html" id="lp-hero-launch-btn" class="lp-btn btn-cta-primary btn-sheen">
+                  ⚡ Launch Live Web POS →
+                </a>
+                <button type="button" id="lp-hero-auth-btn" class="lp-btn btn-cta-emerald btn-sheen" onclick="LandingAuth.openModal('signin')">
+                  🔐 Sign In / Create Store
+                </button>
+                <a href="#showcase" class="lp-btn btn-cta-glass">
+                  ✨ Try Live Terminal ↓
+                </a>
+                <a href="assets/MyDukkan24-v4.apk" download="MyDukkan24-v4.apk" class="lp-btn btn-cta-amber btn-sheen">
+                  🤖 Download APK
+                </a>
+              </div>
 
-        <div class="lp-hero-account-bar" id="lp-hero-account-bar">
-          <span>☁️ Dual Offline + Firebase Cloud Sync:</span>
-          <button type="button" class="lp-auth-link-btn" onclick="LandingAuth.openModal('signin')">Sign In</button>
-          <span style="color: var(--lp-text-muted);">•</span>
-          <button type="button" class="lp-auth-link-btn" onclick="LandingAuth.openModal('signup')">Create Account</button>
-          <span style="color: var(--lp-text-muted);">•</span>
-          <a href="#preview" class="lp-auth-link-btn" style="color: #A7F3D0;">Try Simulator ↓</a>
-        </div>
+              <div class="lp-hero-account-bar" id="lp-hero-account-bar">
+                <span class="lp-pulse-dot" style="width:7px;height:7px;"></span>
+                <span><strong>Live Cloud Store:</strong></span>
+                <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signin')">Sign In</button>
+                <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signup')">Create Account</button>
+                <a href="#showcase" class="lp-inline-action" style="background: rgba(16,185,129,0.2); border-color: rgba(52,211,153,0.5);">Live AI Demo ↓</a>
+              </div>
 
-        <div class="creator-pill">
-          <span class="creator-pill-dot"></span>
-          <span>Created & Deployed by <strong>Mayur Singh</strong> (Lucknow, India)</span>
-          <span style="color: var(--lp-text-muted);">|</span>
-          <span style="color: #818CF8; font-family: var(--font-mono);">Verified Production SaaS</span>
-        </div>
-
-        <!-- 3 Floating Live Feature Badges -->
-        <div class="lp-hero-float-strip">
-          <div class="lp-hero-float-badge" style="border-color: rgba(6, 182, 212, 0.45);">
-            <span style="color: #06B6D4; font-size: 20px;">⚡</span>
-            <div style="text-align: left;">
-              <div style="color: #FFFFFF; font-size: 13px;">0.28s Barcode Vision</div>
-              <div style="color: #94A3B8; font-size: 11px; font-weight: 500;">Camera & Laser Gun Instant Scan</div>
+              <div class="lp-hero-stats-row">
+                <div class="lp-hero-stat">
+                  <div class="lp-hero-stat-val tabular-nums" style="color: #34D399;" data-count="0.28" data-suffix="s">0.28s</div>
+                  <div class="lp-hero-stat-lbl">Barcode Scan Lock</div>
+                </div>
+                <div class="lp-hero-stat">
+                  <div class="lp-hero-stat-val tabular-nums" style="color: #60A5FA;">LIVE API</div>
+                  <div class="lp-hero-stat-lbl">Gemini 3.8 Copilot</div>
+                </div>
+                <div class="lp-hero-stat">
+                  <div class="lp-hero-stat-val tabular-nums" style="color: #FB923C;">24×7</div>
+                  <div class="lp-hero-stat-lbl">Cloud + UPI Ready</div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="lp-hero-float-badge" style="border-color: rgba(16, 185, 129, 0.45);">
-            <span style="color: #10B981; font-size: 20px;">📶</span>
-            <div style="text-align: left;">
-              <div style="color: #FFFFFF; font-size: 13px;">100% Offline Database</div>
-              <div style="color: #94A3B8; font-size: 11px; font-weight: 500;">Zero Latency Local Storage</div>
-            </div>
-          </div>
-          <div class="lp-hero-float-badge" style="border-color: rgba(99, 102, 241, 0.45);">
-            <span style="color: #818CF8; font-size: 20px;">📲</span>
-            <div style="text-align: left;">
-              <div style="color: #FFFFFF; font-size: 13px;">1-Click WhatsApp Invoices</div>
-              <div style="color: #94A3B8; font-size: 11px; font-weight: 500;">Auto Customer Credit Reminders</div>
+
+            <!-- Right Showcase: Animated 3D Storefront Crest & Vector Logo Cockpit -->
+            <div class="lp-crest-stage">
+              <div class="lp-crest-card" id="lp-hero-crest-card">
+                <div class="lp-crest-topbar">
+                  <div class="lp-svg-badge-lockup">
+                    <img src="assets/logo.svg" alt="MD24 Vector Core" />
+                    <span>MD24 Cloud Core</span>
+                  </div>
+                  <span class="lp-brand-tag"><span class="lp-pulse-dot" style="width:6px;height:6px;"></span> ONLINE ACTIVE</span>
+                </div>
+
+                <div class="lp-crest-emblem-wrap">
+                  <div class="lp-orbit-chip lp-orbit-tl">📷 Vision 890</div>
+                  <div class="lp-orbit-chip lp-orbit-tr">💳 Instant UPI</div>
+                  <div class="lp-orbit-chip lp-orbit-bl">☁️ Cloud Sync</div>
+                  <div class="lp-orbit-chip lp-orbit-br">✨ Gemini 3.8</div>
+
+                  <div class="lp-crest-ring">
+                    <div class="lp-crest-ring-inner">
+                      <img src="assets/LOGO.jpeg" alt="MyDukaan24 Flagship Brand Emblem" class="lp-crest-main-logo" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lp-crest-telemetry">
+                  <div style="min-width: 0;">
+                    <div style="font-size: 11px; color: var(--lp-text-muted); font-family: var(--font-mono);">PRODUCTION STREAM</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #FFFFFF;">MyDukaan24 • Lucknow HQ</div>
+                    <div style="font-size: 11.5px; color: #34D399; font-weight: 600;">Engineered by Mayur Singh</div>
+                  </div>
+                  <svg class="lp-crest-spark" viewBox="0 0 110 34" fill="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="sparkLine" x1="0" y1="0" x2="110" y2="0">
+                        <stop offset="0%" stop-color="#3B82F6" />
+                        <stop offset="50%" stop-color="#10B981" />
+                        <stop offset="100%" stop-color="#F97316" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M2 28 L20 22 L34 25 L52 13 L68 17 L88 6 L108 9" stroke="url(#sparkLine)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="108" cy="9" r="4" fill="#F97316" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Authentic Product Terminal Simulator -->
-      <section class="lp-preview-container" id="preview">
-        <div class="lp-mockup-frame">
-          <div class="lp-mockup-inner">
-            <div class="lp-mockup-bar">
-              <div class="mockup-dots">
-                <div class="mockup-dot" style="background: #EF4444;"></div>
-                <div class="mockup-dot" style="background: #F59E0B;"></div>
-                <div class="mockup-dot" style="background: #10B981;"></div>
+      <!-- ================================================================
+           2. OFFICIAL BRAND & ECOSYSTEM INFINITE MARQUEE
+           ================================================================ -->
+      <section class="lp-marquee-section" aria-label="Ecosystem Integrations">
+        <div class="lp-marquee-label">Native Brand Crest, Payment Rails &amp; Live Cloud Stack</div>
+        <div class="lp-marquee-viewport">
+          <div class="lp-marquee-track">
+            <!-- Set 1 -->
+            <div class="lp-logo-pill" style="border-color: rgba(249,115,22,0.55);">
+              <img src="assets/LOGO.jpeg" alt="MyDukaan24" />
+              <span>MyDukaan 24 OS</span>
+            </div>
+            <div class="lp-logo-pill" style="border-color: rgba(59,130,246,0.55);">
+              <img src="assets/logo.svg" alt="MD24 Vector" />
+              <span>MD24 Brand Emblem</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#5F259F"/><path d="M9 7h4.2c1.8 0 2.8.9 2.8 2.4 0 1.6-1 2.5-2.8 2.5H11v4.8H9V7zm2 3.3h2c.8 0 1.2-.3 1.2-.9s-.4-.9-1.2-.9h-2v1.8z" fill="#fff"/></svg>
+              <span>PhonePe UPI</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.6h3.7c-.2.9-.7 1.6-1.4 2.1v1.7h2.3c1.3-1.2 2-3 2-5.1z" fill="#4285F4"/><path d="M12 19c1.9 0 3.4-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8C7 17.6 9.3 19 12 19z" fill="#34A853"/><path d="M8.2 13.5c-.1-.4-.2-.9-.2-1.5s.1-1.1.2-1.5V8.7H5.8C5.3 9.7 5 10.8 5 12s.3 2.3.8 3.3l2.4-1.8z" fill="#FBBC05"/><path d="M12 7.7c1 0 1.9.3 2.6 1l2-2C15.4 5.6 13.9 5 12 5 9.3 5 7 6.4 5.8 8.7l2.4 1.8c.5-1.6 2-2.8 3.8-2.8z" fill="#EA4335"/></svg>
+              <span>Google Pay</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#002970"/><path d="M5 10h14v2.3H5V10zm0 3.5h14v2.3H5v-2.3z" fill="#00BAF2"/></svg>
+              <span>Paytm QR</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#0F172A"/><polygon points="8,5 15,12 8,19" fill="#FF7722"/><polygon points="12,5 19,12 12,19" fill="#138808"/></svg>
+              <span>BHIM UPI</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#25D366"/><path d="M12 5.5a6.4 6.4 0 0 0-5.5 9.7L5.6 18.5l3.4-.9A6.4 6.4 0 1 0 12 5.5z" fill="#fff"/></svg>
+              <span>WhatsApp Receipts</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#111C38"/><path d="M12 4l2.1 5.9L20 12l-5.9 2.1L12 20l-2.1-5.9L4 12l5.9-2.1L12 4z" fill="#60A5FA"/></svg>
+              <span>Gemini 3.8 Live API</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#1B1F36"/><path d="M6 17L9 6l3 5 3-3 3 9-6 3-6-3z" fill="#FFCA28"/><path d="M12 11l3-3 3 9-6 3v-9z" fill="#FFA000"/></svg>
+              <span>Firebase Cloud Sync</span>
+            </div>
+            <div class="lp-logo-pill">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#16213A"/><path d="M4 7v10M7 7v10M9 7v10M12 7v10M14 7v10M17 7v10M20 7v10" stroke="#34D399" stroke-width="1.6"/></svg>
+              <span>GS1 India Barcode</span>
+            </div>
+
+            <!-- Set 2 (Seamless Loop Duplicate) -->
+            <div class="lp-logo-pill" style="border-color: rgba(249,115,22,0.55);" aria-hidden="true">
+              <img src="assets/LOGO.jpeg" alt="" />
+              <span>MyDukaan 24 OS</span>
+            </div>
+            <div class="lp-logo-pill" style="border-color: rgba(59,130,246,0.55);" aria-hidden="true">
+              <img src="assets/logo.svg" alt="" />
+              <span>MD24 Brand Emblem</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#5F259F"/><path d="M9 7h4.2c1.8 0 2.8.9 2.8 2.4 0 1.6-1 2.5-2.8 2.5H11v4.8H9V7zm2 3.3h2c.8 0 1.2-.3 1.2-.9s-.4-.9-1.2-.9h-2v1.8z" fill="#fff"/></svg>
+              <span>PhonePe UPI</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.6h3.7c-.2.9-.7 1.6-1.4 2.1v1.7h2.3c1.3-1.2 2-3 2-5.1z" fill="#4285F4"/><path d="M12 19c1.9 0 3.4-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8C7 17.6 9.3 19 12 19z" fill="#34A853"/><path d="M8.2 13.5c-.1-.4-.2-.9-.2-1.5s.1-1.1.2-1.5V8.7H5.8C5.3 9.7 5 10.8 5 12s.3 2.3.8 3.3l2.4-1.8z" fill="#FBBC05"/><path d="M12 7.7c1 0 1.9.3 2.6 1l2-2C15.4 5.6 13.9 5 12 5 9.3 5 7 6.4 5.8 8.7l2.4 1.8c.5-1.6 2-2.8 3.8-2.8z" fill="#EA4335"/></svg>
+              <span>Google Pay</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#002970"/><path d="M5 10h14v2.3H5V10zm0 3.5h14v2.3H5v-2.3z" fill="#00BAF2"/></svg>
+              <span>Paytm QR</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#0F172A"/><polygon points="8,5 15,12 8,19" fill="#FF7722"/><polygon points="12,5 19,12 12,19" fill="#138808"/></svg>
+              <span>BHIM UPI</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#25D366"/><path d="M12 5.5a6.4 6.4 0 0 0-5.5 9.7L5.6 18.5l3.4-.9A6.4 6.4 0 1 0 12 5.5z" fill="#fff"/></svg>
+              <span>WhatsApp Receipts</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#111C38"/><path d="M12 4l2.1 5.9L20 12l-5.9 2.1L12 20l-2.1-5.9L4 12l5.9-2.1L12 4z" fill="#60A5FA"/></svg>
+              <span>Gemini 3.8 Live API</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#1B1F36"/><path d="M6 17L9 6l3 5 3-3 3 9-6 3-6-3z" fill="#FFCA28"/><path d="M12 11l3-3 3 9-6 3v-9z" fill="#FFA000"/></svg>
+              <span>Firebase Cloud Sync</span>
+            </div>
+            <div class="lp-logo-pill" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#16213A"/><path d="M4 7v10M7 7v10M9 7v10M12 7v10M14 7v10M17 7v10M20 7v10" stroke="#34D399" stroke-width="1.6"/></svg>
+              <span>GS1 India Barcode</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           3. LIVE ONLINE COMMAND CENTER (POS + LIVE GEMINI API + ANALYTICS)
+           ================================================================ -->
+      <section class="lp-section lp-reveal" id="showcase">
+        <div class="lp-container">
+          <div class="lp-section-head">
+            <div>
+              <div class="lp-section-tag">⚡ LIVE INTERACTIVE SANDBOX</div>
+              <h2 class="lp-section-h2">Test Billing, Live Gemini AI &amp; Analytics Online</h2>
+            </div>
+            <a href="app.html" class="lp-btn btn-cta-primary btn-sheen">
+              🚀 Enter Full Store App →
+            </a>
+          </div>
+
+          <div class="lp-terminal-frame">
+            <div class="lp-terminal-bar">
+              <div class="lp-terminal-brand">
+                <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" alt="MyDukaan24 Terminal" />
+                <img src="assets/logo.svg" style="width: 24px; height: 24px; border-radius: 6px;" alt="Vector Emblem" />
+                <div>
+                  <div style="font-size: 13px; font-weight: 800; color: #FFFFFF;">MyDukaan24 Online Counter</div>
+                  <div style="font-size: 11px; color: #34D399; font-family: var(--font-mono);">● Live Server Connected (/api/gemini)</div>
+                </div>
               </div>
-              <div style="font-size: 11.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">
-                MyDukkan24 Terminal • Real-Time POS & Health Simulator
-              </div>
-              <div style="font-size: 11px; color: var(--lp-success); font-weight: 700; display: flex; align-items: center; gap: 6px;">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--lp-success); box-shadow: 0 0 8px var(--lp-success);"></span>
-                <span>Inbuilt Local DB Ready</span>
+
+              <div class="lp-terminal-tabs" role="tablist">
+                <button type="button" class="lp-term-tab active" data-term-tab="pos" onclick="LiveTerminal.switchTab('pos')">🛒 Live POS &amp; UPI</button>
+                <button type="button" class="lp-term-tab" data-term-tab="ai" onclick="LiveTerminal.switchTab('ai')">✨ Live Gemini AI</button>
+                <button type="button" class="lp-term-tab" data-term-tab="analytics" onclick="LiveTerminal.switchTab('analytics')">📊 P&amp;L Telemetry</button>
               </div>
             </div>
 
-            <!-- INTERACTIVE KIRANA POS PLAYGROUND -->
-            <div class="lp-sim-wrapper">
-              <!-- Simulator Control & Status Bar -->
-              <div class="lp-sim-top-bar">
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                  <span class="pulse-glow" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
-                  <span style="font-size: 12px; font-weight: 700; color: #F8FAFC; font-family: var(--font-heading);">
-                    ⚡ Interactive Kirana POS Simulator
-                  </span>
-                  <span style="font-size: 11px; color: var(--lp-text-muted); font-family: var(--font-mono);">
-                    (Try clicking items below)
-                  </span>
-                </div>
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-                  <button id="sim-audio-btn" class="lp-sim-btn" style="background: rgba(255,255,255,0.06); color: #CBD5E1; padding: 4px 10px; font-size: 11px;" onclick="SimPOS.toggleAudio()">
-                    🔊 Sound: ON
-                  </button>
-                  <button class="lp-sim-btn" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; font-size: 11px;" onclick="SimPOS.simulateBarcodeGun()">
-                    🏷️ Simulate Barcode Gun
-                  </button>
-                  <button class="lp-sim-btn" style="background: rgba(255,255,255,0.06); color: var(--lp-text-secondary); padding: 4px 10px; font-size: 11px;" onclick="SimPOS.resetCart()">
-                    ↺ Reset
-                  </button>
-                </div>
-              </div>
-
-              <!-- 4-Stat Header Grid with Rolling Animated Counters -->
+            <div class="lp-terminal-body">
+              <!-- Live Counters Header -->
               <div class="lp-sim-kpi-grid">
-                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
-                  <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Today's Revenue</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #10B981; margin-top: 4px; font-family: var(--font-mono);" id="kpi-rev-counter">₹14,850</div>
-                  <div style="font-size: 11px; color: #10B981; margin-top: 2px;">+18% vs yesterday</div>
+                <div class="lp-sim-kpi-card">
+                  <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Live Counter Sales</div>
+                  <div id="kpi-rev-counter" class="tabular-nums" style="font-size: 22px; font-weight: 800; color: #34D399; font-family: var(--font-mono); margin-top: 4px;">₹18,450</div>
                 </div>
-                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
-                  <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Catalog Products</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-top: 4px; font-family: var(--font-mono);" id="kpi-sku-counter">128 SKUs</div>
-                  <div style="font-size: 11px; color: #818CF8; margin-top: 2px;">Barcode Vision 0.4s</div>
+                <div class="lp-sim-kpi-card">
+                  <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Active Cloud SKUs</div>
+                  <div id="kpi-sku-counter" class="tabular-nums" style="font-size: 22px; font-weight: 800; color: #FFFFFF; font-family: var(--font-mono); margin-top: 4px;">240 SKUs</div>
                 </div>
-                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
-                  <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Low Stock Warning</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #F59E0B; margin-top: 4px; font-family: var(--font-mono);" id="kpi-low-counter">3 Items</div>
-                  <div style="font-size: 11px; color: #F59E0B; margin-top: 2px;">Needs wholesale restock</div>
+                <div class="lp-sim-kpi-card">
+                  <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">AI Engine Status</div>
+                  <div style="font-size: 19px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 5px;">Gemini 3.8</div>
                 </div>
-                <div style="background: #141B2D; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);" class="spotlight-card">
-                  <div style="font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">Pending Udhaar</div>
-                  <div style="font-size: 22px; font-weight: 800; color: #F43F5E; margin-top: 4px; font-family: var(--font-mono);" id="kpi-udh-counter">₹5,700</div>
-                  <div style="font-size: 11px; color: #F43F5E; margin-top: 2px;">4 Customer balances</div>
+                <div class="lp-sim-kpi-card">
+                  <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">UPI Settlement</div>
+                  <div style="font-size: 19px; font-weight: 800; color: #FB923C; font-family: var(--font-mono); margin-top: 5px;">Instant QR</div>
                 </div>
               </div>
 
-              <!-- Simulator 2-Column POS Workspace -->
-              <div class="lp-sim-layout" id="sim-workspace" style="position: relative; overflow: hidden;">
-                <div id="sim-laser" style="display: none;" class="laser-beam"></div>
+              <!-- TAB 1: Live POS & Dynamic UPI -->
+              <div class="lp-term-pane active" id="term-pane-pos">
+                <div class="lp-pos-workspace" id="sim-workspace">
+                  <div id="sim-laser" style="display: none;" class="lp-laser-beam"></div>
 
-                <!-- Shelf: Clickable FMCG Products -->
-                <div>
-                  <div class="lp-sim-shelf-header">
-                    <span class="lp-sim-shelf-title">
-                      📦 Kirana Shelf Items <span style="font-size: 11px; font-weight: 400; color: #94A3B8;">(Click to scan item)</span>
-                    </span>
-                    <span style="font-size: 11px; font-family: var(--font-mono); color: #10B981;">
-                      Instant MRP & Barcode
-                    </span>
-                  </div>
-
-                  <div class="lp-sim-products-grid">
-                    <!-- Product 1 -->
-                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p1')">
-                      <div>
-                        <div class="lp-sim-prod-icon">🌾</div>
-                        <div class="lp-sim-prod-name">Aashirvaad Chakki Atta 5kg</div>
-                        <div class="lp-sim-prod-meta">EAN: 8901030383847</div>
+                  <div style="min-width: 0;">
+                    <div class="lp-pos-toolbar">
+                      <div style="font-size: 13.5px; font-weight: 800; color: #FFFFFF;">📦 Tap Shelf Item or Trigger Laser Scan</div>
+                      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="lp-btn btn-cta-amber" style="min-height: 36px; padding: 7px 14px; font-size: 12px;" onclick="SimPOS.simulateBarcodeGun()">
+                          🏷️ Laser Scan
+                        </button>
+                        <button type="button" id="sim-audio-btn" class="lp-btn btn-cta-glass" style="min-height: 36px; padding: 7px 13px; font-size: 12px;" onclick="SimPOS.toggleAudio()">
+                          🔊 Sound ON
+                        </button>
+                        <button type="button" class="lp-btn btn-cta-glass" style="min-height: 36px; padding: 7px 13px; font-size: 12px;" onclick="SimPOS.resetCart()">
+                          ↺ Reset
+                        </button>
                       </div>
-                      <div class="lp-sim-prod-price-row">
+                    </div>
+
+                    <div class="lp-sim-products-grid">
+                      <button type="button" class="lp-prod-card" data-pid="p1" onclick="SimPOS.addItem('p1')">
                         <div>
-                          <span class="lp-sim-price">₹235</span>
-                          <span class="lp-sim-mrp">₹270</span>
+                          <div style="font-size: 24px; margin-bottom: 4px;">🌾</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Aashirvaad Atta 5kg</div>
+                          <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">8901030383847</div>
                         </div>
-                        <span class="lp-sim-add-btn">+ ADD</span>
-                      </div>
-                    </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                          <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono);">₹235</span>
+                          <span class="lp-add-pill">+ ADD</span>
+                        </div>
+                      </button>
 
-                    <!-- Product 2 -->
-                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p2')">
-                      <div>
-                        <div class="lp-sim-prod-icon">🫙</div>
-                        <div class="lp-sim-prod-name">Fortune Sunlite Oil 1L</div>
-                        <div class="lp-sim-prod-meta">EAN: 8906007280014</div>
-                      </div>
-                      <div class="lp-sim-prod-price-row">
+                      <button type="button" class="lp-prod-card" data-pid="p2" onclick="SimPOS.addItem('p2')">
                         <div>
-                          <span class="lp-sim-price">₹155</span>
-                          <span class="lp-sim-mrp">₹180</span>
+                          <div style="font-size: 24px; margin-bottom: 4px;">🫙</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Fortune Oil 1L</div>
+                          <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">8906007280014</div>
                         </div>
-                        <span class="lp-sim-add-btn">+ ADD</span>
-                      </div>
-                    </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                          <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono);">₹155</span>
+                          <span class="lp-add-pill">+ ADD</span>
+                        </div>
+                      </button>
 
-                    <!-- Product 3 -->
-                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p3')">
-                      <div>
-                        <div class="lp-sim-prod-icon">🧈</div>
-                        <div class="lp-sim-prod-name">Amul Butter 500g</div>
-                        <div class="lp-sim-prod-meta">EAN: 8901262010057</div>
-                      </div>
-                      <div class="lp-sim-prod-price-row">
+                      <button type="button" class="lp-prod-card" data-pid="p3" onclick="SimPOS.addItem('p3')">
                         <div>
-                          <span class="lp-sim-price">₹275</span>
-                          <span class="lp-sim-mrp">₹290</span>
+                          <div style="font-size: 24px; margin-bottom: 4px;">🧈</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Amul Butter 500g</div>
+                          <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">8901262010057</div>
                         </div>
-                        <span class="lp-sim-add-btn">+ ADD</span>
-                      </div>
-                    </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                          <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono);">₹275</span>
+                          <span class="lp-add-pill">+ ADD</span>
+                        </div>
+                      </button>
 
-                    <!-- Product 4 -->
-                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p4')">
-                      <div>
-                        <div class="lp-sim-prod-icon">☕</div>
-                        <div class="lp-sim-prod-name">Tata Tea Gold 500g</div>
-                        <div class="lp-sim-prod-meta">EAN: 8901052002139</div>
-                      </div>
-                      <div class="lp-sim-prod-price-row">
+                      <button type="button" class="lp-prod-card" data-pid="p4" onclick="SimPOS.addItem('p4')">
                         <div>
-                          <span class="lp-sim-price">₹310</span>
-                          <span class="lp-sim-mrp">₹350</span>
+                          <div style="font-size: 24px; margin-bottom: 4px;">☕</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Tata Tea Gold 500g</div>
+                          <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">8901052002139</div>
                         </div>
-                        <span class="lp-sim-add-btn">+ ADD</span>
-                      </div>
-                    </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                          <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono);">₹310</span>
+                          <span class="lp-add-pill">+ ADD</span>
+                        </div>
+                      </button>
 
-                    <!-- Product 5 -->
-                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p5')">
-                      <div>
-                        <div class="lp-sim-prod-icon">🧼</div>
-                        <div class="lp-sim-prod-name">Surf Excel Quick Wash 1kg</div>
-                        <div class="lp-sim-prod-meta">EAN: 8901030004926</div>
-                      </div>
-                      <div class="lp-sim-prod-price-row">
+                      <button type="button" class="lp-prod-card" data-pid="p5" onclick="SimPOS.addItem('p5')">
                         <div>
-                          <span class="lp-sim-price">₹140</span>
-                          <span class="lp-sim-mrp">₹160</span>
+                          <div style="font-size: 24px; margin-bottom: 4px;">🧼</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Surf Excel 1kg</div>
+                          <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">8901030004926</div>
                         </div>
-                        <span class="lp-sim-add-btn">+ ADD</span>
-                      </div>
-                    </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                          <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono);">₹140</span>
+                          <span class="lp-add-pill">+ ADD</span>
+                        </div>
+                      </button>
 
-                    <!-- Product 6 -->
-                    <div class="lp-sim-product-card" onclick="SimPOS.addItem('p6')">
-                      <div>
-                        <div class="lp-sim-prod-icon">🍫</div>
-                        <div class="lp-sim-prod-name">Cadbury Dairy Milk Silk</div>
-                        <div class="lp-sim-prod-meta">EAN: 7622201438902</div>
-                      </div>
-                      <div class="lp-sim-prod-price-row">
+                      <button type="button" class="lp-prod-card" data-pid="p6" onclick="SimPOS.addItem('p6')">
                         <div>
-                          <span class="lp-sim-price">₹90</span>
-                          <span class="lp-sim-mrp">₹105</span>
+                          <div style="font-size: 24px; margin-bottom: 4px;">🍫</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Dairy Milk Silk</div>
+                          <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--lp-text-muted);">7622201438902</div>
                         </div>
-                        <span class="lp-sim-add-btn">+ ADD</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Active Bill & Interactive Cart -->
-                <div class="lp-sim-cart-panel">
-                  <div class="lp-sim-cart-head">
-                    <div>
-                      <div style="font-weight: 700; font-size: 13.5px; color: #fff; font-family: var(--font-heading);">
-                        ⚡ Bill: Ramesh Sharma
-                      </div>
-                      <div style="font-size: 11px; font-family: var(--font-mono); color: var(--lp-text-muted);">
-                        Customer ID: #CUST-104 • INV-2026
-                      </div>
-                    </div>
-                    <span class="lp-brand-tag" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border-color: rgba(16, 185, 129, 0.3);">
-                      Active Cart (<span id="sim-cart-count">2</span>)
-                    </span>
-                  </div>
-
-                  <!-- Dynamic Item List -->
-                  <div class="lp-sim-items-list" id="sim-cart-items">
-                    <!-- Populated by JS -->
-                  </div>
-
-                  <!-- Live Totals Calculation -->
-                  <div class="lp-sim-totals-box">
-                    <div class="lp-sim-total-row">
-                      <span>Total MRP:</span>
-                      <span id="sim-mrp-total" style="font-family: var(--font-mono); text-decoration: line-through;">₹450</span>
-                    </div>
-                    <div class="lp-sim-total-row" style="color: #10B981;">
-                      <span>Customer Savings:</span>
-                      <span id="sim-discount-val" style="font-family: var(--font-mono); font-weight: 700;">-₹60</span>
-                    </div>
-                    <div class="lp-sim-grand-row">
-                      <span style="font-weight: 700; color: #fff; font-size: 13px;">Grand Total Payable:</span>
-                      <span class="lp-sim-grand-val" id="sim-grand-total">₹390</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                          <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono);">₹90</span>
+                          <span class="lp-add-pill">+ ADD</span>
+                        </div>
+                      </button>
                     </div>
                   </div>
 
-                  <!-- Interactive Actions (QR Code, Receipt, Launch App) -->
-                  <div class="lp-sim-actions-grid">
-                    <button class="lp-sim-btn lp-sim-btn-upi" onclick="SimPOS.openUPIModal()">
-                      📱 Pay via UPI QR
-                    </button>
-                    <button class="lp-sim-btn lp-sim-btn-print" onclick="SimPOS.openReceiptModal()">
-                      🖨️ Thermal Slip
-                    </button>
+                  <!-- Active Checkout Panel -->
+                  <div class="lp-cart-panel">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                      <div>
+                        <div style="font-size: 14px; font-weight: 800; color: #FFFFFF;">⚡ Live Bill #INV-2026</div>
+                        <div style="font-size: 11px; color: var(--lp-text-muted); font-family: var(--font-mono);">Customer: Aarav Traders</div>
+                      </div>
+                      <span class="lp-brand-tag">Items: <strong id="sim-cart-count">2</strong></span>
+                    </div>
+
+                    <div class="lp-cart-list" id="sim-cart-items"></div>
+
+                    <div class="lp-cart-totals">
+                      <div style="display: flex; justify-content: space-between; color: var(--lp-text-muted);">
+                        <span>MRP Value</span>
+                        <span id="sim-mrp-total" class="tabular-nums" style="font-family: var(--font-mono); text-decoration: line-through;">₹450</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; color: #34D399; font-weight: 700;">
+                        <span>Direct Savings</span>
+                        <span id="sim-discount-val" class="tabular-nums" style="font-family: var(--font-mono);">-₹60</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px dashed rgba(148,163,184,0.3); font-size: 16px; font-weight: 800; color: #FFFFFF;">
+                        <span>Payable Total</span>
+                        <span id="sim-grand-total" class="tabular-nums" style="font-family: var(--font-mono); color: #34D399;">₹390</span>
+                      </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                      <button type="button" class="lp-btn btn-cta-emerald" style="min-height: 42px; padding: 9px 12px; font-size: 13px; border-radius: 12px;" onclick="SimPOS.openUPIModal()">
+                        📱 UPI QR Pay
+                      </button>
+                      <button type="button" class="lp-btn btn-cta-primary" style="min-height: 42px; padding: 9px 12px; font-size: 13px; border-radius: 12px;" onclick="SimPOS.openReceiptModal()">
+                        🖨️ 80mm Receipt
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Live Gemini 3.8 Flash Retail Intelligence Bubble -->
-              <div class="lp-sim-ai-box">
-                <div class="lp-sim-ai-spark">✨</div>
-                <div>
-                  <div style="font-size: 12.5px; font-weight: 800; color: #A5B4FC; font-family: var(--font-heading);">
-                    MyDukaan24 AI Retail Intelligence (Live Context)
+              <!-- TAB 2: REAL LIVE GEMINI AI COPILOT ONLINE -->
+              <div class="lp-term-pane" id="term-pane-ai">
+                <div class="lp-ai-stage">
+                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <img src="assets/logo.svg" style="width: 34px; height: 34px; border-radius: 10px;" alt="Gemini AI Crest" />
+                      <div>
+                        <div style="font-size: 14.5px; font-weight: 800; color: #FFFFFF;">Dukkan Copilot — Live Gemini Interactions API</div>
+                        <div style="font-size: 12px; color: #93C5FD;">Real-time online response via <code>/api/gemini</code> with live counter cart context</div>
+                      </div>
+                    </div>
+                    <span id="lp-ai-model-pill" class="lp-brand-tag">Online API Ready</span>
                   </div>
-                  <div class="lp-sim-ai-text" id="sim-ai-advice">
-                    "Atta & Sunflower oil combo detected. Ramesh Sharma usually buys Toor Dal every Tuesday — recommend 1kg packet for an extra ₹130 store revenue."
+
+                  <div class="lp-ai-chips">
+                    <button type="button" class="lp-ai-chip" onclick="LiveTerminal.askGemini('Suggest 3 high-margin items I should pair with Atta & Cooking Oil at my checkout counter today.')">💡 Suggest High-Margin Combo</button>
+                    <button type="button" class="lp-ai-chip" onclick="LiveTerminal.askGemini('Give me a polite Hindi/Hinglish WhatsApp message to collect pending customer Udhaar smoothly.')">📲 Draft Udhaar WhatsApp</button>
+                    <button type="button" class="lp-ai-chip" onclick="LiveTerminal.askGemini('How can an Indian kirana store increase daily UPI ticket value by 20%?')">📈 Boost Ticket Size</button>
+                    <button type="button" class="lp-ai-chip" onclick="LiveTerminal.askGemini('List 5 fast-moving evening rush snacks that increase repeat footfall.')">🛒 Evening Rush Mix</button>
+                  </div>
+
+                  <div class="lp-ai-output" id="lp-ai-output">Tap any prompt chip above or ask your own business question below — responses stream live from Google Gemini 3.8 online!</div>
+
+                  <form class="lp-ai-form" onsubmit="event.preventDefault(); LiveTerminal.submitCustomPrompt();">
+                    <input type="text" id="lp-ai-input" class="lp-input" placeholder="Ask Dukkan Copilot live (e.g. 'How do I improve oil margin by 4%?')..." required />
+                    <button type="submit" id="lp-ai-send-btn" class="lp-btn btn-cta-primary btn-sheen">
+                      ✨ Ask Live Gemini →
+                    </button>
+                    <a href="app.html" class="lp-btn btn-cta-glass">Open Full Copilot →</a>
+                  </form>
+                </div>
+              </div>
+
+              <!-- TAB 3: LIVE P&L ANALYTICS TELEMETRY -->
+              <div class="lp-term-pane" id="term-pane-analytics">
+                <div class="lp-analytics-grid">
+                  <div class="lp-chart-card">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
+                      <div>
+                        <div style="font-size: 12px; color: var(--lp-text-muted); font-family: var(--font-mono);">REVENUE STREAM</div>
+                        <div id="lp-chart-headline" class="tabular-nums" style="font-size: 24px; font-weight: 800; color: #FFFFFF;">₹1,42,890 <span style="font-size: 13px; color: #34D399;">+24.6%</span></div>
+                      </div>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="lp-term-tab active" data-range="today" onclick="LiveTerminal.setChartRange('today')">Today</button>
+                        <button type="button" class="lp-term-tab" data-range="week" onclick="LiveTerminal.setChartRange('week')">7D</button>
+                        <button type="button" class="lp-term-tab" data-range="month" onclick="LiveTerminal.setChartRange('month')">30D</button>
+                      </div>
+                    </div>
+                    <svg id="lp-live-chart-svg" viewBox="0 0 460 150" style="width: 100%; height: 150px;" aria-label="Revenue Curve">
+                      <defs>
+                        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="rgba(59,130,246,0.45)" />
+                          <stop offset="100%" stop-color="rgba(59,130,246,0.0)" />
+                        </linearGradient>
+                      </defs>
+                      <path id="lp-chart-area" d="M10 120 L85 95 L160 105 L235 60 L310 72 L385 32 L450 22 L450 140 L10 140 Z" fill="url(#chartFill)" />
+                      <path id="lp-chart-line" d="M10 120 L85 95 L160 105 L235 60 L310 72 L385 32 L450 22" fill="none" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+                      <circle id="lp-chart-dot" cx="450" cy="22" r="5" fill="#10B981" />
+                    </svg>
+                  </div>
+
+                  <div class="lp-chart-card">
+                    <div style="font-size: 13.5px; font-weight: 800; color: #FFFFFF; margin-bottom: 14px;">Tender Mix &amp; Net Take-Home</div>
+                    <div class="lp-bar-row">
+                      <div style="display: flex; justify-content: space-between; font-size: 12.5px;"><span>PhonePe / GPay / UPI</span><strong id="bar-val-upi" class="tabular-nums">56%</strong></div>
+                      <div class="lp-bar-track"><div id="bar-fill-upi" class="lp-bar-fill" style="width: 56%; background: linear-gradient(90deg, #10B981, #34D399);"></div></div>
+                    </div>
+                    <div class="lp-bar-row">
+                      <div style="display: flex; justify-content: space-between; font-size: 12.5px;"><span>Cash Drawer</span><strong id="bar-val-cash" class="tabular-nums">28%</strong></div>
+                      <div class="lp-bar-track"><div id="bar-fill-cash" class="lp-bar-fill" style="width: 28%; background: linear-gradient(90deg, #3B82F6, #60A5FA);"></div></div>
+                    </div>
+                    <div class="lp-bar-row">
+                      <div style="display: flex; justify-content: space-between; font-size: 12.5px;"><span>Card / Digital Khata</span><strong id="bar-val-card" class="tabular-nums">16%</strong></div>
+                      <div class="lp-bar-track"><div id="bar-fill-card" class="lp-bar-fill" style="width: 16%; background: linear-gradient(90deg, #EA580C, #FB923C);"></div></div>
+                    </div>
+                    <a href="app.html" class="lp-btn btn-cta-emerald" style="width: 100%; min-height: 40px; padding: 9px 14px; font-size: 13px; margin-top: 8px;">
+                      Open Full P&amp;L Ledger →
+                    </a>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Simulator UPI QR Modal -->
-        <div class="lp-sim-modal-overlay" id="sim-upi-modal" onclick="if(event.target===this) SimPOS.closeModals()">
-          <div class="lp-sim-modal-content" style="text-align: center;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h3 style="font-family: var(--font-heading); font-size: 16px; color: #fff;">📱 Live Dynamic UPI Payment</h3>
-              <button onclick="SimPOS.closeModals()" style="color: var(--lp-text-muted); font-size: 18px; cursor: pointer;">✕</button>
+      <!-- ================================================================
+           4. INTERACTIVE FIVE ENGINES STAGE
+           ================================================================ -->
+      <section class="lp-section lp-reveal" id="engines">
+        <div class="lp-container">
+          <div class="lp-section-head">
+            <div>
+              <div class="lp-section-tag">🧩 CORE ARCHITECTURE</div>
+              <h2 class="lp-section-h2">Five Specialized Retail Engines in One URL</h2>
             </div>
-            
-            <div style="background: #fff; padding: 14px; border-radius: 12px; display: inline-block; margin-bottom: 14px;">
-              <img id="sim-upi-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=6306437348@upi&pn=MyDukaan24&am=390" alt="UPI QR Code" style="width: 170px; height: 170px; display: block;" />
-            </div>
-
-            <div style="font-size: 14px; font-weight: 800; color: #10B981; font-family: var(--font-mono); margin-bottom: 6px;">
-              Amount to Pay: <span id="sim-modal-upi-amt">₹390</span>
-            </div>
-            <div style="font-size: 12px; color: var(--lp-text-secondary); margin-bottom: 16px;">
-              Scan using PhonePe, Google Pay, Paytm, or BHIM UPI
-            </div>
-
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button class="lp-btn-primary" style="flex: 1; justify-content: center; font-size: 12.5px; background: #10B981;" onclick="SimPOS.simulatePaymentSuccess()">
-                ✓ Simulate Customer Payment
-              </button>
-              <button class="lp-btn-secondary" style="padding: 10px 14px; font-size: 12.5px;" onclick="SimPOS.closeModals()">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Simulator Thermal Slip Modal -->
-        <div class="lp-sim-modal-overlay" id="sim-receipt-modal" onclick="if(event.target===this) SimPOS.closeModals()">
-          <div class="lp-sim-modal-content" style="max-width: 340px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <span style="font-size: 12px; font-weight: 700; color: #94A3B8;">80mm Thermal Slip Preview</span>
-              <button onclick="SimPOS.closeModals()" style="color: var(--lp-text-muted); font-size: 18px; cursor: pointer;">✕</button>
-            </div>
-
-            <div class="lp-sim-receipt-paper" id="sim-receipt-body">
-              <div style="text-align: center; border-bottom: 1px dashed #9CA3AF; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px;">MYDUKAAN24 STORE</div>
-                <div style="font-size: 10px; color: #4B5563;">Hazratganj, Lucknow (UP) • GSTIN: 09AAACM1234F1Z5</div>
-                <div style="font-size: 10px; color: #4B5563;">Date: Today • Cashier: Mayur Singh</div>
-              </div>
-              <div id="sim-receipt-items-table" style="margin-bottom: 8px;">
-                <!-- Populated by JS -->
-              </div>
-              <div style="border-top: 1px dashed #9CA3AF; padding-top: 6px; font-weight: 800; display: flex; justify-content: space-between; font-size: 12px;">
-                <span>TOTAL PAID:</span>
-                <span id="sim-receipt-grand">₹390</span>
-              </div>
-              <div style="text-align: center; margin-top: 12px; font-size: 9px; color: #6B7280;">
-                *** THANK YOU FOR SHOPPING! ***<br>
-                Powered by MyDukaan24 • Mayur Singh
-              </div>
-            </div>
-
-            <button class="lp-btn-primary" style="width: 100%; justify-content: center; margin-top: 14px; font-size: 12px;" onclick="SimPOS.closeModals()">
-              Done Viewing Slip
+            <button type="button" class="lp-btn btn-cta-emerald" onclick="LandingAuth.openModal('signup')">
+              🔐 Activate Your Store Free
             </button>
           </div>
-        </div>
-      </section>
 
-      <!-- Interactive Kirana ROI & Savings Calculator -->
-      <section class="lp-section" id="roi" style="padding-top: 10px; padding-bottom: 40px;">
-        <div class="roi-calc-box">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
-            <div>
-              <div class="lp-section-tag" style="color: #10B981;">💰 Kirana Profit Multiplier</div>
-              <h2 style="font-family: var(--font-heading); font-size: clamp(20px, 3vw, 28px); font-weight: 900; color: #fff;">
-                How Much Time & Money Will MyDukaan24 Save You?
-              </h2>
-            </div>
-            <span class="lp-brand-tag" style="background: rgba(16, 185, 129, 0.2); color: #10B981; border-color: rgba(16, 185, 129, 0.4); font-size: 12px; padding: 4px 12px;">
-              ⚡ Live Interactive Tool
-            </span>
-          </div>
-          <p style="font-size: 14.5px; color: var(--lp-text-secondary); margin-bottom: 22px;">
-            Drag the slider to your store's average daily customer count to calculate instant monthly savings:
-          </p>
-          
-          <div style="background: #0B0E18; padding: 22px; border-radius: var(--lp-radius-md); border: 1.5px solid rgba(255,255,255,0.12);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; font-weight: 700;">
-              <span style="font-size: 14.5px; color: #CBD5E1;">Daily Customers Billed:</span>
-              <span id="roi-cust-val" style="font-size: 22px; font-family: var(--font-mono); color: #818CF8; font-weight: 900;">120 Customers / Day</span>
-            </div>
-            <input type="range" min="30" max="500" step="10" value="120" class="roi-slider" id="roi-slider" oninput="updateRoiCalc(this.value)" />
-            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 11.5px; color: var(--lp-text-muted); font-family: var(--font-mono);">
-              <span>30 (Small Kirana)</span>
-              <span>150 (Corner Retailer)</span>
-              <span>500 (Busy Supermarket)</span>
-            </div>
-          </div>
-
-          <div class="roi-results-grid">
-            <div class="roi-stat-card" style="border-top: 3.5px solid #6366F1;">
-              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Billing Time Saved</div>
-              <div id="roi-time-saved" style="font-size: 26px; font-weight: 900; color: #818CF8; font-family: var(--font-mono); margin-top: 6px;">48 Hours</div>
-              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">Every single month</div>
-            </div>
-            <div class="roi-stat-card" style="border-top: 3.5px solid #F43F5E;">
-              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Lost Udhaar Recovered</div>
-              <div id="roi-udh-saved" style="font-size: 26px; font-weight: 900; color: #F43F5E; font-family: var(--font-mono); margin-top: 6px;">₹18,500</div>
-              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">Zero unrecorded credit loss</div>
-            </div>
-            <div class="roi-stat-card" style="border-top: 3.5px solid #10B981;">
-              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Billing Speed</div>
-              <div id="roi-speed-boost" style="font-size: 26px; font-weight: 900; color: #10B981; font-family: var(--font-mono); margin-top: 6px;">4.2x Faster</div>
-              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">Zero evening queues</div>
-            </div>
-            <div class="roi-stat-card" style="border-top: 3.5px solid #06B6D4;">
-              <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Monthly Subscription</div>
-              <div style="font-size: 26px; font-weight: 900; color: #06B6D4; font-family: var(--font-mono); margin-top: 6px;">₹0 / Free</div>
-              <div style="font-size: 11.5px; color: var(--lp-text-secondary); margin-top: 4px;">100% Inbuilt Offline DB</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Why MyDukaan24 Section -->
-      <section class="lp-section" id="why">
-        <div class="lp-section-header">
-          <div class="lp-section-tag">Business Problems Solved</div>
-          <h2 class="lp-section-h2">Why Local Businesses Need MyDukaan24</h2>
-          <p class="lp-section-p">Eliminate paper diaries, forgotten customer debts, and billing calculation errors forever.</p>
-        </div>
-
-        <div class="lp-bento-grid">
-          <div class="lp-feat-card bento-col-4 card-problem-red">
-            <div class="lp-feat-icon" style="color: #F43F5E; background: rgba(244, 63, 94, 0.14); border-color: rgba(244, 63, 94, 0.3);">📒</div>
-            <h3 class="lp-feat-h3">The Problem: Lost Udhaar</h3>
-            <p class="lp-feat-desc">
-              Shopkeepers lose thousands of rupees every year in forgotten diary records, unreadable scribbles, and disputes over unrecorded customer credit.
-            </p>
-          </div>
-
-          <div class="lp-feat-card bento-col-4 card-problem-amber">
-            <div class="lp-feat-icon" style="color: #F59E0B; background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.3);">⏳</div>
-            <h3 class="lp-feat-h3">The Problem: Slow Billing</h3>
-            <p class="lp-feat-desc">
-              Writing paper receipts and doing manual math causes evening customer queues to back up, leading shoppers to walk over to supermarket chains.
-            </p>
-          </div>
-
-          <div class="lp-feat-card bento-col-4 card-problem-green">
-            <div class="lp-feat-icon" style="color: #10B981; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.3);">💡</div>
-            <h3 class="lp-feat-h3">The MyDukaan24 Solution</h3>
-            <p class="lp-feat-desc">
-              A high-speed, camera barcode scanner terminal with instant MRP detection, 1-click WhatsApp bills, and digital Udhaar payment reminders.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Bento Grid Features Section -->
-      <section class="lp-section" id="features">
-        <div class="lp-section-header">
-          <div class="lp-section-tag">Complete SaaS Suite</div>
-          <h2 class="lp-section-h2">Eight Powerful Modules Built for Indian Retail</h2>
-          <p class="lp-section-p">Everything your shop needs to operate like an enterprise from day one.</p>
-        </div>
-
-        <div class="lp-bento-grid">
-          <!-- Bento 1: POS Billing -->
-          <div class="lp-feat-card bento-col-8">
-            <div class="lp-feat-icon" style="color: #6366F1;">⚡</div>
-            <h3 class="lp-feat-h3">High-Speed POS Billing Terminal</h3>
-            <p class="lp-feat-desc">
-              Generate itemized invoices in under 5 seconds. Includes dynamic live UPI QR code generation so customers can scan with PhonePe/GPay/Paytm, automatic cash change return calculator, and custom discount controls.
-            </p>
-          </div>
-
-          <!-- Bento 2: Barcode Vision -->
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #F43F5E;">📷</div>
-            <h3 class="lp-feat-h3">Barcode Scanner & MRP Vision</h3>
-            <p class="lp-feat-desc">
-              Scan product barcodes with mobile camera or USB handheld scanner guns. Auto-identifies product, MRP, selling price, and stock levels instantly.
-            </p>
-          </div>
-
-          <!-- Bento 3: Udhaar Khata -->
-          <div class="lp-feat-card bento-col-6">
-            <div class="lp-feat-icon" style="color: #F59E0B;">📒</div>
-            <h3 class="lp-feat-h3">Digital Customer Udhaar Khata</h3>
-            <p class="lp-feat-desc">
-              Eliminate physical credit notebooks. Know exactly who owes money, view past purchase history, record partial payments, and generate 1-click polite WhatsApp reminders with your shop UPI ID.
-            </p>
-          </div>
-
-          <!-- Bento 4: Invoices & Receipts -->
-          <div class="lp-feat-card bento-col-6">
-            <div class="lp-feat-icon" style="color: #10B981;">🖨️</div>
-            <h3 class="lp-feat-h3">Thermal Receipts & WhatsApp Invoices</h3>
-            <p class="lp-feat-desc">
-              Print standard 80mm thermal receipts for physical printers or send clean digital PDF-style invoices to customer WhatsApp numbers with zero hassle.
-            </p>
-          </div>
-
-          <!-- Bento 5: Inventory & Margins -->
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #06B6D4;">📦</div>
-            <h3 class="lp-feat-h3">Stock & Profit Margins</h3>
-            <p class="lp-feat-desc">
-              Monitor wholesale cost price vs retail selling price profit margins. Receive automated warnings for items dropping below minimum safety stock levels.
-            </p>
-          </div>
-
-          <!-- Bento 6: Staff & Attendance -->
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #EC4899;">👔</div>
-            <h3 class="lp-feat-h3">Team Attendance & Payroll</h3>
-            <p class="lp-feat-desc">
-              Interactive 31-day attendance register. Click any day to toggle Present, Half-Day, or Absent. Automatically calculates monthly payroll allowances.
-            </p>
-          </div>
-
-          <!-- Bento 7: Real Financial Analytics -->
-          <div class="lp-feat-card bento-col-4">
-            <div class="lp-feat-icon" style="color: #8B5CF6;">📈</div>
-            <h3 class="lp-feat-h3">Real P&L Statement</h3>
-            <p class="lp-feat-desc">
-              Real-time SVG sales trends, operating expenses category breakdown (rent, utilities, logistics), and net take-home in-pocket profit calculation.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Side-by-side Comparison Matrix -->
-      <section class="lp-section" id="comparison">
-        <div class="lp-section-header">
-          <div class="lp-section-tag">Direct Comparison</div>
-          <h2 class="lp-section-h2">Traditional Shop vs MyDukaan24 Shop</h2>
-          <p class="lp-section-p">See how digitizing your Kirana store multiplies speed and profit.</p>
-        </div>
-
-        <div class="comparison-container">
-          <div class="comparison-card bad">
-            <h3 style="font-family: var(--font-heading); font-size: 20px; color: #F43F5E; margin-bottom: 16px;">❌ Traditional Paper Notebook Shop</h3>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--lp-text-secondary);">
-              <li>• Slow checkout: manual paper billing takes 2-3 minutes per customer.</li>
-              <li>• Lost debts: customer Udhaar forgotten in torn notebooks.</li>
-              <li>• Stockouts: popular items run out without warning during weekend rush.</li>
-              <li>• Zero insights: no idea how much net profit was made at month end.</li>
-              <li>• Manual phone calls: awkward arguments over pending payments.</li>
-            </ul>
-          </div>
-
-          <div class="comparison-card good">
-            <h3 style="font-family: var(--font-heading); font-size: 20px; color: #10B981; margin-bottom: 16px;">✅ MyDukaan24 Modern Digitized Shop</h3>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--lp-text-primary);">
-              <li>• 5-second checkout: barcode scanning auto-calculates total and tax.</li>
-              <li>• 100% recorded Udhaar: digital ledger with balance due badges.</li>
-              <li>• Safety stock alerts: restock notifications before items run out.</li>
-              <li>• Real P&L: exact gross sales, expenses, and net profit calculated.</li>
-              <li>• 1-click WhatsApp reminders: polite payment links with store UPI ID.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <!-- AI Assistant Spotlight -->
-      <section class="lp-section" id="ai">
-        <div class="creator-banner" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(139, 92, 246, 0.12)); border-color: rgba(99, 102, 241, 0.4);">
-          <div class="creator-left">
-            <div class="creator-big-avatar" style="background: linear-gradient(135deg, #7C3AED, #9333EA);">✨</div>
-            <div class="creator-meta">
-              <h3>MyDukaan AI — Real Online Retail Brain</h3>
-              <p>Powered by Google Gemini 3.8 Flash. Feeds your live stock, debtors, and margins into context.</p>
-              <div style="font-size: 12px; color: var(--lp-text-muted); margin-top: 6px;">
-                Ask: "Which products should I restock?" • "Who owes me the most Udhaar?" • "Ways to increase margin"
-              </div>
-            </div>
-          </div>
-          <a href="app.html" class="lp-btn-primary" style="background: #7C3AED;">
-            Try MyDukaan AI Now →
-          </a>
-        </div>
-      </section>
-
-      <!-- Dedicated Download Application Section -->
-      <section class="lp-section" id="download">
-        <div class="lp-section-header">
-          <div class="lp-section-tag" style="color: #10B981;">Native & Offline Ready</div>
-          <h2 class="lp-section-h2">Download MyDukkan24 Application</h2>
-          <p class="lp-section-p">Run your retail business from any Android smartphone, tablet, or desktop PC with full offline support.</p>
-        </div>
-
-        <div class="lp-download-box">
-          <div>
-            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
-              <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 60px; height: 60px; border-radius: 14px; object-fit: contain; background: #141B2D; padding: 4px;" alt="MyDukkan24 App Logo" />
-              <div>
-                <h3 style="font-family: var(--font-heading); font-size: 22px; font-weight: 800; color: #fff; margin: 0;">MyDukkan24 Mobile OS</h3>
-                <div style="font-size: 13px; color: #10B981; font-weight: 700; margin-top: 2px;">v4.2.0 Production Release</div>
-              </div>
-            </div>
-
-            <p style="font-size: 14.5px; color: var(--lp-text-secondary); line-height: 1.6; margin-bottom: 20px;">
-              Designed specifically for busy Indian Kirana counters. Sub-second barcode camera scanner, thermal Bluetooth printer support, automatic WhatsApp receipts, and 100% offline database that never stops working during internet outages.
-            </p>
-
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
-              <a href="assets/MyDukkan24-v4.apk" download="MyDukkan24-v4.2.0.apk" class="lp-btn-primary" style="padding: 12px 24px; font-size: 14px; background: #10B981;">
-                🤖 Download Android APK (4.8 MB)
-              </a>
-              <a href="app.html" class="lp-btn-secondary" style="padding: 12px 20px; font-size: 14px;">
-                ⚡ 1-Click PWA Web App →
-              </a>
-            </div>
-
-            <div style="font-size: 12px; color: var(--lp-text-muted); display: flex; gap: 16px; flex-wrap: wrap;">
-              <span>• Android 8.0 to Android 15+</span>
-              <span>• Zero Monthly Subscription</span>
-              <span>• ARM64 & Universal</span>
-            </div>
-          </div>
-
-          <div style="background: rgba(16, 21, 36, 0.7); border: 1px solid var(--lp-border); border-radius: var(--lp-radius-lg); padding: 22px;">
-            <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px;">
-              📋 Quick Installation Guide:
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--lp-text-secondary); line-height: 1.5;">
-              <div style="display: flex; gap: 10px;">
-                <span style="width: 22px; height: 22px; border-radius: 50%; background: rgba(37,99,235,0.2); color: #60A5FA; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">1</span>
-                <span>Click <strong>Download Android APK</strong> or open <strong>MyDukkan24</strong> in Chrome.</span>
-              </div>
-              <div style="display: flex; gap: 10px;">
-                <span style="width: 22px; height: 22px; border-radius: 50%; background: rgba(37,99,235,0.2); color: #60A5FA; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">2</span>
-                <span>Tap Chrome menu (⋮) → Select <strong>"Install app"</strong> or open the downloaded <code>.apk</code>.</span>
-              </div>
-              <div style="display: flex; gap: 10px;">
-                <span style="width: 22px; height: 22px; border-radius: 50%; background: rgba(37,99,235,0.2); color: #60A5FA; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">3</span>
-                <span>Launch MyDukkan24 from your home screen. Works full-screen with offline database!</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Authentic Retailer Testimonials -->
-      <section class="lp-section" id="testimonials">
-        <div class="lp-section-header">
-          <div class="lp-section-tag" style="color: #F59E0B;">Verified Customer Stories</div>
-          <h2 class="lp-section-h2">Loved by Modern Indian Retailers</h2>
-          <p class="lp-section-p">See how everyday shopkeepers across India transformed their daily billing speed and credit recovery.</p>
-        </div>
-
-        <div class="lp-testimonials-grid">
-          <!-- Testimonial 1 -->
-          <div class="lp-testimonial-card">
-            <div>
-              <div class="lp-test-stars">★★★★★</div>
-              <p class="lp-test-quote">
-                "Pehle purani dairy me udhaar hisab kho jata tha aur grahak se vivad hota tha. MyDukkan24 se har bill ka WhatsApp reminder 1 click me chala jata hai. Pichhle mahine ₹42,000 ka pending udhaar bina kisi behas ke recover ho gaya!"
-              </p>
-            </div>
-            <div class="lp-test-author-row">
-              <div class="lp-test-avatar">RS</div>
-              <div>
-                <div class="lp-test-name">Ramesh Sharma</div>
-                <div class="lp-test-shop">Sharma Kirana & General Store • Hazratganj, Lucknow</div>
-                <span class="lp-test-badge">✓ Recovered ₹42k Udhaar</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Testimonial 2 -->
-          <div class="lp-testimonial-card">
-            <div>
-              <div class="lp-test-stars">★★★★★</div>
-              <p class="lp-test-quote">
-                "Barcode scanner camera itna tez hai ki sham ke time bheed me bhi 5 second me bill ban jata hai. Dynamic UPI QR code screen par aate hi customer PhonePe se turant pay kar dete hain. Counter par chhutte paise ki jhanjhat khatam!"
-              </p>
-            </div>
-            <div class="lp-test-author-row">
-              <div class="lp-test-avatar" style="background: linear-gradient(135deg, #10B981, #06B6D4);">SG</div>
-              <div>
-                <div class="lp-test-name">Sunil Gupta</div>
-                <div class="lp-test-shop">Gupta Electronics & Hardware • Chandni Chowk, Delhi</div>
-                <span class="lp-test-badge">✓ 5-Second Checkout</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Testimonial 3 -->
-          <div class="lp-testimonial-card">
-            <div>
-              <div class="lp-test-stars">★★★★★</div>
-              <p class="lp-test-quote">
-                "Distributor purchase bills aur daily kharche track karke mujhe pehli baar dukan ka exact net profit dikhai diya. Sabse badhiya baat yeh hai ki internet cut hone par bhi app rukti nahi hai, 100% offline chalti hai."
-              </p>
-            </div>
-            <div class="lp-test-author-row">
-              <div class="lp-test-avatar" style="background: linear-gradient(135deg, #F43F5E, #F59E0B);">PV</div>
-              <div>
-                <div class="lp-test-name">Pooja Verma</div>
-                <div class="lp-test-shop">Verma Departmental Mart • Kankarbagh, Patna</div>
-                <span class="lp-test-badge">✓ 100% Offline Ready</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Frequently Asked Questions (Interactive Accordion) -->
-      <section class="lp-section" id="faq">
-        <div class="lp-section-header">
-          <div class="lp-section-tag">Got Questions?</div>
-          <h2 class="lp-section-h2">Frequently Asked Questions</h2>
-          <p class="lp-section-p">Everything you need to know about using MyDukkan24 in your store.</p>
-        </div>
-
-        <div class="lp-faq-container">
-          <div class="lp-faq-item active" onclick="this.classList.toggle('active')">
-            <div class="lp-faq-question">
-              <span>Kya MyDukaan24 internet ke bina (offline) chalta hai?</span>
-              <span class="lp-faq-icon">+</span>
-            </div>
-            <div class="lp-faq-answer">
-              Haan, bilkul! MyDukaan24 100% offline-first architecture par bana hai. Saare products, billing records, customers aur khata aapke device ke local database me securely store hote hain. Internet na hone par bhi aap fast billing, barcode scan aur receipts nikaal sakte hain.
-            </div>
-          </div>
-
-          <div class="lp-faq-item" onclick="this.classList.toggle('active')">
-            <div class="lp-faq-question">
-              <span>Kya isme supermarket jaisi USB barcode gun connect kar sakte hain?</span>
-              <span class="lp-faq-icon">+</span>
-            </div>
-            <div class="lp-faq-answer">
-              Haan! Aap computer/laptop se koi bhi standard USB barcode scanner gun connect kar sakte hain. Saath hi aap apne Android phone ya tablet ke camera ko bhi high-speed barcode vision scanner ke roop me use kar sakte hain.
-            </div>
-          </div>
-
-          <div class="lp-faq-item" onclick="this.classList.toggle('active')">
-            <div class="lp-faq-question">
-              <span>GST aur Non-GST dono tarah ke bills ban sakte hain?</span>
-              <span class="lp-faq-icon">+</span>
-            </div>
-            <div class="lp-faq-answer">
-              Haan, aap Settings me apna GSTIN number aur default tax percentage (0%, 5%, 12%, 18%) set kar sakte hain. Agar aap non-GST small retailer hain, toh 0% tax choose karke clean simple receipt bana sakte hain.
-            </div>
-          </div>
-
-          <div class="lp-faq-item" onclick="this.classList.toggle('active')">
-            <div class="lp-faq-question">
-              <span>Mera store data kahan save hota hai? Kya yeh offline aur online dono me secure hai?</span>
-              <span class="lp-faq-icon">+</span>
-            </div>
-            <div class="lp-faq-answer">
-              Aapka data dual-layer storage me rehta hai: aapke device par 0ms Offline LocalStorage + IndexedDB cache me aur Firebase login ke baad aapke private Cloud Firestore account (<code>/users/{uid}/</code>) me real-time sync hota hai. Internet na ho tab bhi billing rukti nahi, aur online aate hi sab auto-sync ho jata hai.
-            </div>
-          </div>
-
-          <div class="lp-faq-item" onclick="this.classList.toggle('active')">
-            <div class="lp-faq-question">
-              <span>Kya iske liye koi monthly subscription fee deni hogi?</span>
-              <span class="lp-faq-icon">+</span>
-            </div>
-            <div class="lp-faq-answer">
-              Nahi! MyDukaan24 100% free software platform hai. Isme koi hidden monthly subscription ya per-bill charge nahi hai. Aap ise zindagi bhar muft me use kar sakte hain.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Contact & Merchant Query Section -->
-      <section class="lp-section" id="contact">
-        <div class="lp-section-header">
-          <div class="lp-section-tag" style="color: #60A5FA;">Get In Touch</div>
-          <h2 class="lp-section-h2">Connect with MyDukkan24 Team</h2>
-          <p class="lp-section-p">Need assistance setting up your store or connecting barcode hardware? Reach out directly.</p>
-        </div>
-
-        <div class="lp-contact-grid">
-          <!-- Left: Contact Inquiry Form -->
-          <div class="lp-contact-card">
-            <h3 style="font-family: var(--font-heading); font-size: 18px; color: #fff; margin-bottom: 6px;">Send Us an Inquiry</h3>
-            <p style="font-size: 13px; color: var(--lp-text-secondary); margin-bottom: 18px;">Fill in your details and we'll reply directly on WhatsApp or Email:</p>
-            <form onsubmit="event.preventDefault(); LandingContact.submitQuery();">
-              <input type="text" id="contact-name" class="lp-contact-input" placeholder="Your Name *" required />
-              <input type="text" id="contact-shop" class="lp-contact-input" placeholder="Shop / Business Name *" required />
-              <input type="tel" id="contact-phone" class="lp-contact-input" placeholder="WhatsApp Phone Number *" required />
-              <textarea id="contact-message" class="lp-contact-input" rows="3" placeholder="How can we help your business?"></textarea>
-              <button type="submit" class="lp-btn-primary" style="width: 100%; justify-content: center; font-size: 14px;">
-                📨 Submit Inquiry via WhatsApp
+          <div class="lp-engines-layout">
+            <div class="lp-engine-nav">
+              <button type="button" class="lp-engine-tab active" data-engine="billing" onclick="EngineExplorer.select('billing')">
+                <span><strong>01.</strong> High-Speed POS &amp; UPI QR</span>
+                <span>→</span>
               </button>
-            </form>
+              <button type="button" class="lp-engine-tab" data-engine="vision" onclick="EngineExplorer.select('vision')">
+                <span><strong>02.</strong> Camera &amp; Laser Barcode AI</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="khata" onclick="EngineExplorer.select('khata')">
+                <span><strong>03.</strong> Smart Udhaar &amp; WhatsApp CRM</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="pnl" onclick="EngineExplorer.select('pnl')">
+                <span><strong>04.</strong> Wholesale Purchase &amp; Net P&amp;L</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="cloud" onclick="EngineExplorer.select('cloud')">
+                <span><strong>05.</strong> Multi-Device Cloud Sync &amp; Staff</span>
+                <span>→</span>
+              </button>
+            </div>
+
+            <div class="lp-engine-stage" id="lp-engine-stage"></div>
           </div>
+        </div>
+      </section>
 
-          <!-- Right: Direct Connect Channels -->
-          <div class="lp-contact-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <!-- ================================================================
+           5. INTERACTIVE STORE GROWTH & SPEED ESTIMATOR
+           ================================================================ -->
+      <section class="lp-section lp-reveal" id="impact">
+        <div class="lp-container">
+          <div class="lp-impact-card">
+            <div class="lp-section-head" style="margin-bottom: 18px;">
+              <div>
+                <div class="lp-section-tag" style="color: #FB923C;">📈 LIVE ROI SIMULATOR</div>
+                <h2 class="lp-section-h2">Calculate Your Counter Time &amp; Credit Recovery</h2>
+              </div>
+              <span id="roi-cust-val" class="lp-brand-tag" style="font-size: 14px; padding: 6px 14px; color: #FFFFFF; background: rgba(249,115,22,0.24); border-color: rgba(251,146,60,0.6);">140 Bills / Day</span>
+            </div>
+
+            <input type="range" min="30" max="500" step="10" value="140" class="lp-slider" id="roi-slider" aria-label="Daily Customer Bills Slider" oninput="updateRoiCalc(this.value)" />
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--lp-text-muted); font-family: var(--font-mono);">
+              <span>30 Bills</span>
+              <span>250 Bills</span>
+              <span>500 Bills</span>
+            </div>
+
+            <div class="lp-impact-kpis">
+              <div class="lp-impact-stat">
+                <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Time Saved / Mo</div>
+                <div id="roi-time-saved" class="tabular-nums" style="font-size: 26px; font-weight: 800; color: #60A5FA; font-family: var(--font-mono); margin-top: 6px;">105 Hours</div>
+              </div>
+              <div class="lp-impact-stat">
+                <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Credit Protected</div>
+                <div id="roi-udh-saved" class="tabular-nums" style="font-size: 26px; font-weight: 800; color: #34D399; font-family: var(--font-mono); margin-top: 6px;">₹22,050</div>
+              </div>
+              <div class="lp-impact-stat">
+                <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Checkout Velocity</div>
+                <div id="roi-speed-boost" class="tabular-nums" style="font-size: 26px; font-weight: 800; color: #FB923C; font-family: var(--font-mono); margin-top: 6px;">4.2x Faster</div>
+              </div>
+              <div class="lp-impact-stat">
+                <div style="font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase;">Platform Plan</div>
+                <div style="font-size: 26px; font-weight: 800; color: #FFFFFF; font-family: var(--font-mono); margin-top: 6px;">₹0 / Free</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; margin-top: 22px;">
+              <button type="button" class="lp-btn btn-cta-emerald" onclick="LandingAuth.openModal('signup')">🔐 Create Free Cloud Store</button>
+              <a href="app.html" class="lp-btn btn-cta-primary btn-sheen">⚡ Launch Live POS Now →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           6. CLOUD WEB APP + ANDROID APK SUITE (ZERO GUIDES)
+           ================================================================ -->
+      <section class="lp-section lp-reveal" id="download">
+        <div class="lp-container">
+          <div class="lp-platform-card">
             <div>
-              <h3 style="font-family: var(--font-heading); font-size: 18px; color: #fff; margin-bottom: 14px;">Direct Help & Creator Support</h3>
-              
-              <div style="display: flex; flex-direction: column; gap: 14px;">
-                <a href="https://wa.me/916306437348?text=Hello%20Mayur,%20I%20want%20to%20know%20more%20about%20MyDukaan24" target="_blank" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
-                  <span style="font-size: 24px; flex-shrink: 0;">💬</span>
-                  <div style="flex: 1; min-width: 0; overflow-wrap: anywhere;">
-                    <div style="font-weight: 700; color: #10B981; font-size: 14px;">WhatsApp Direct: +91 6306437348</div>
-                    <div style="font-size: 11.5px; color: var(--lp-text-muted);">Instant merchant support & feature queries</div>
-                  </div>
-                </a>
-
-                <a href="tel:+916306437348" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
-                  <span style="font-size: 24px; flex-shrink: 0;">📞</span>
-                  <div style="flex: 1; min-width: 0; overflow-wrap: anywhere;">
-                    <div style="font-weight: 700; color: #818CF8; font-size: 14px;">Call Direct: +91 6306437348</div>
-                    <div style="font-size: 11.5px; color: var(--lp-text-muted);">Direct phone support for shopkeepers</div>
-                  </div>
-                </a>
-
-                <a href="mailto:mayur4singhhh@gmail.com" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); padding: 12px 16px; border-radius: var(--lp-radius-md); text-decoration: none;">
-                  <span style="font-size: 24px; flex-shrink: 0;">📧</span>
-                  <div style="flex: 1; min-width: 0; overflow-wrap: anywhere;">
-                    <div style="font-weight: 700; color: #60A5FA; font-size: 14px;">mayur4singhhh@gmail.com</div>
-                    <div style="font-size: 11.5px; color: var(--lp-text-muted);">Official developer & enterprise contact</div>
-                  </div>
-                </a>
-
-                <div style="background: var(--lp-surface); border: 1px solid var(--lp-border); padding: 12px 16px; border-radius: var(--lp-radius-md);">
-                  <div style="font-size: 12px; color: var(--lp-text-muted);">📍 Headquarters & Deployment:</div>
-                  <div style="font-size: 13.5px; font-weight: 700; color: #fff; margin-top: 2px;">Lucknow, Uttar Pradesh, India</div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 58px; height: 58px; border-radius: 16px; border: 1.5px solid rgba(249,115,22,0.55);" alt="MyDukaan24 App Crest" />
+                <img src="assets/logo.svg" style="width: 42px; height: 42px; border-radius: 12px;" alt="MD24 Vector Logo" />
+                <div>
+                  <div class="lp-section-tag" style="margin-bottom: 2px; color: #34D399;">MULTI-DEVICE SUITE</div>
+                  <h2 style="font-family: var(--font-heading); font-size: clamp(22px, 3vw, 30px); font-weight: 800; color: #FFFFFF;">Desktop, Tablet &amp; Android Ready</h2>
                 </div>
               </div>
+
+              <p style="font-size: 15px; color: var(--lp-text-secondary); margin-bottom: 22px; max-width: 560px;">
+                Run MyDukaan24 instantly online in any browser or download the Android package for handheld counter billing, Bluetooth thermal receipts, and camera barcode capture.
+              </p>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <a href="app.html" class="lp-btn btn-cta-primary btn-sheen">⚡ Open Online Web POS →</a>
+                <a href="assets/MyDukkan24-v4.apk" download="MyDukkan24-v4.apk" class="lp-btn btn-cta-amber btn-sheen">🤖 Download Android APK</a>
+                <button type="button" class="lp-btn btn-cta-glass" onclick="LandingAuth.openModal('signin')">🔐 Sign In to Sync</button>
+              </div>
             </div>
 
-            <div style="border-top: 1px solid var(--lp-border); padding-top: 14px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-              <span style="font-size: 12px; color: var(--lp-text-muted);">Verified Production Deployment</span>
-              <a href="app.html" class="lp-btn-secondary" style="padding: 6px 14px; font-size: 12px;">Launch Web App →</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Final Call To Action -->
-      <section class="lp-section" style="padding: 50px 20px 40px;">
-        <div style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(79, 70, 229, 0.14) 100%); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--lp-radius-xl); padding: 50px 30px; text-align: center; max-width: 900px; margin: 0 auto; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);">
-          <div class="lp-section-tag" style="color: #60A5FA;">Get Started In Under 60 Seconds</div>
-          <h2 style="font-family: var(--font-heading); font-size: clamp(26px, 4vw, 42px); font-weight: 900; color: #FFFFFF; margin-bottom: 14px; letter-spacing: -0.8px; line-height: 1.2;">
-            Your Shop. Your Data. Business, Simplified.
-          </h2>
-          <p style="font-size: 15.5px; color: var(--lp-text-secondary); max-width: 620px; margin: 0 auto 28px; line-height: 1.6;">
-            Join modern Indian retailers using MyDukkan24. High-speed billing, automated Udhaar ledger, offline-ready database, zero monthly fees.
-          </p>
-          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-            <a href="app.html" class="lp-btn-primary" style="padding: 14px 32px; font-size: 15px;">
-              🚀 Open POS Terminal Now →
-            </a>
-            <a href="#why" class="lp-btn-secondary" style="padding: 14px 24px; font-size: 15px;">
-              Learn More
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Developer Profile Section -->
-      <section class="lp-section" id="developer" style="padding-top: 0;">
-        <div class="creator-banner">
-          <div class="creator-left">
-            <div class="creator-big-avatar">M</div>
-            <div class="creator-meta">
-              <h3>Mayur Singh <span class="lp-brand-tag" style="background: var(--lp-primary); color: #fff;">Lead Creator & Deployer</span></h3>
-              <p>📍 Lucknow, UP • 📞 <a href="tel:+916306437348" style="color: #10B981; font-weight: 700;">+91 6306437348</a> • 📧 <a href="mailto:mayur4singhhh@gmail.com" style="color: #818CF8;">mayur4singhhh@gmail.com</a></p>
-              <div style="display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 8px; font-size: 13px;">
-                <a href="https://instagram.com/_mayur.x24" target="_blank" style="color: #818CF8; font-weight: 700;">
-                  Instagram: @_mayur.x24
-                </a>
-                <span>•</span>
-                <a href="https://linkedin.com/in/mayursingh24" target="_blank" style="color: #818CF8; font-weight: 700;">
-                  LinkedIn: mayursingh24
-                </a>
+            <div class="lp-phone-frame">
+              <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 112px; height: 112px; border-radius: 26px; margin: 0 auto 14px; border: 2px solid rgba(249,115,22,0.55); box-shadow: 0 10px 30px rgba(37,99,235,0.4);" alt="MyDukaan24 Mobile Icon" />
+              <div style="font-size: 17px; font-weight: 800; color: #FFFFFF;">MyDukaan24 OS</div>
+              <div style="font-size: 12px; color: #34D399; font-family: var(--font-mono); margin: 4px 0 14px;">Production v8.2 • Online Active</div>
+              <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                <span class="lp-brand-tag">Android 8–15+</span>
+                <span class="lp-brand-tag" style="color: #93C5FD; border-color: rgba(96,165,250,0.45); background: rgba(59,130,246,0.18);">Chrome PWA</span>
               </div>
             </div>
           </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            <a href="https://github.com/mayursingh24" target="_blank" class="lp-btn-secondary">
-              GitHub @mayursingh24
-            </a>
-            <a href="app.html" class="lp-btn-primary">
-              Launch Terminal →
-            </a>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           7. DIRECT MERCHANT CONNECT & CREATOR SIGNATURE
+           ================================================================ -->
+      <section class="lp-section lp-reveal" id="connect">
+        <div class="lp-container">
+          <div class="lp-contact-grid">
+            <div class="lp-surface-card">
+              <div class="lp-section-tag" style="color: #34D399;">💬 DIRECT WHATSAPP DESK</div>
+              <h2 style="font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: #FFFFFF; margin-bottom: 14px;">Connect With Mayur Singh</h2>
+              <form onsubmit="event.preventDefault(); LandingContact.submitQuery();" style="display: flex; flex-direction: column; gap: 11px;">
+                <input type="text" id="contact-name" class="lp-input" placeholder="Your Full Name *" required />
+                <input type="text" id="contact-shop" class="lp-input" placeholder="Store / Business Name *" required />
+                <input type="tel" id="contact-phone" class="lp-input" placeholder="Phone / WhatsApp Number *" required />
+                <textarea id="contact-message" class="lp-input" rows="3" style="min-height: 86px; resize: vertical;" placeholder="Requirement or store feedback..."></textarea>
+                <button type="submit" class="lp-btn btn-cta-emerald btn-sheen" style="width: 100%; margin-top: 4px;">
+                  💬 Send Inquiry on WhatsApp →
+                </button>
+              </form>
+            </div>
+
+            <div class="lp-surface-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 18px;">
+                  <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 56px; height: 56px; border-radius: 15px; border: 1.5px solid rgba(59,130,246,0.5);" alt="MyDukaan24 Brand Seal" />
+                  <div>
+                    <div style="font-size: 18px; font-weight: 800; color: #FFFFFF;">Mayur Singh</div>
+                    <div style="font-size: 13px; color: #93C5FD; font-weight: 600;">Creator &amp; Lead Architect • Lucknow, India</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <a href="https://wa.me/916306437348?text=Namaste%20Mayur,%20I%20checked%20MyDukaan24%20live!" target="_blank" class="lp-channel-btn" style="border-color: rgba(16,185,129,0.5);">
+                    <span>💬 WhatsApp Support: +91 6306437348</span>
+                    <span style="color: #34D399;">Chat →</span>
+                  </a>
+                  <a href="tel:+916306437348" class="lp-channel-btn" style="border-color: rgba(59,130,246,0.5);">
+                    <span>📞 Direct Phone: +91 6306437348</span>
+                    <span style="color: #60A5FA;">Call →</span>
+                  </a>
+                  <a href="mailto:mayur4singhhh@gmail.com" class="lp-channel-btn" style="border-color: rgba(249,115,22,0.5);">
+                    <span>📧 mayur4singhhh@gmail.com</span>
+                    <span style="color: #FB923C;">Mail →</span>
+                  </a>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <a href="https://github.com/mayursingh24/MyDukaan" target="_blank" class="lp-btn btn-cta-glass" style="min-height: 40px; padding: 8px 14px; font-size: 12.5px;">GitHub</a>
+                <a href="https://linkedin.com/in/mayursingh24" target="_blank" class="lp-btn btn-cta-glass" style="min-height: 40px; padding: 8px 14px; font-size: 12.5px;">LinkedIn</a>
+                <a href="https://instagram.com/_mayur.x24" target="_blank" class="lp-btn btn-cta-glass" style="min-height: 40px; padding: 8px 14px; font-size: 12.5px;">Instagram</a>
+                <a href="app.html" class="lp-btn btn-cta-primary" style="min-height: 40px; padding: 8px 16px; font-size: 12.5px; margin-left: auto;">Launch App →</a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer Brand Lockup -->
     <footer class="lp-footer">
-      <div style="margin-bottom: 10px; font-size: 14px; font-family: var(--font-heading); font-weight: 700;">
-        MyDukaan24 — Modern Retail Business OS for Indian Kiranas
-      </div>
-      <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 14px; font-size: 13px; flex-wrap: wrap;">
-        <a href="app.html" style="color: var(--lp-text-secondary);">Terminal</a>
-        <a href="#features" style="color: var(--lp-text-secondary);">Features</a>
-        <a href="https://wa.me/916306437348" target="_blank" style="color: #10B981; font-weight: 700;">WhatsApp: +91 6306437348</a>
-        <a href="https://instagram.com/_mayur.x24" target="_blank" style="color: var(--lp-text-secondary);">Instagram</a>
-        <a href="https://linkedin.com/in/mayursingh24" target="_blank" style="color: var(--lp-text-secondary);">LinkedIn</a>
-        <a href="mailto:mayur4singhhh@gmail.com" style="color: var(--lp-text-secondary);">Contact</a>
-      </div>
-      <div>
-        © 2026 Mayur Singh (Lucknow, India). All rights reserved.
+      <div class="lp-container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 44px; height: 44px; border-radius: 12px;" alt="MyDukaan24 Footer Logo" />
+          <img src="assets/logo.svg" style="width: 30px; height: 30px; border-radius: 8px;" alt="MD24 Vector Logo" />
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px; color: #FFFFFF;">MyDukaan24 — Live Cloud Retail OS</div>
+            <div style="font-size: 12px; color: var(--lp-text-muted);">© 2026 Mayur Singh (Lucknow, India). All rights reserved.</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          <button type="button" class="lp-btn btn-cta-emerald" style="min-height: 40px; padding: 8px 16px; font-size: 13px;" onclick="LandingAuth.openModal('signin')">🔐 Sign In / Join</button>
+          <a href="app.html" class="lp-btn btn-cta-primary" style="min-height: 40px; padding: 8px 16px; font-size: 13px;">⚡ Open Live POS →</a>
+        </div>
       </div>
     </footer>
   </div>
 
-  <!-- Landing Auth & Firebase Cloud Sync Modal -->
+  <!-- ================================================================
+       CLEAN SAAS MODALS (UPI QR, 80MM THERMAL SLIP, LOGIN/SIGNUP)
+       ================================================================ -->
+  <div class="lp-auth-backdrop" id="sim-upi-modal" onclick="if(event.target === this) SimPOS.closeModals()">
+    <div class="lp-auth-modal" style="max-width: 390px; text-align: center;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width: 28px; height: 28px; border-radius: 7px;" alt="Logo" />
+          <strong style="font-size: 15px;">Dynamic UPI Payment</strong>
+        </div>
+        <button type="button" class="lp-auth-close" onclick="SimPOS.closeModals()">✕</button>
+      </div>
+      <div id="sim-upi-body">
+        <div style="background: #FFFFFF; padding: 12px; border-radius: 14px; display: inline-block; margin-bottom: 12px;">
+          <img id="sim-upi-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=6306437348@upi%26pn=MyDukaan24%26am=390" alt="UPI QR" style="width: 170px; height: 170px;" />
+        </div>
+        <div style="font-size: 17px; font-weight: 800; color: #34D399; font-family: var(--font-mono); margin-bottom: 12px;">
+          Payable: <span id="sim-modal-upi-amt">₹390</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="lp-btn btn-cta-emerald" style="flex: 1 1 180px;" onclick="SimPOS.simulatePaymentSuccess()">✓ Confirm Live UPI</button>
+          <button type="button" class="lp-btn btn-cta-glass" style="flex: 1 1 90px;" onclick="SimPOS.closeModals()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lp-auth-backdrop" id="sim-receipt-modal" onclick="if(event.target === this) SimPOS.closeModals()">
+    <div class="lp-auth-modal" style="max-width: 360px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <span style="font-size: 13px; font-weight: 700; color: #93C5FD;">80mm Branded Thermal Slip</span>
+        <button type="button" class="lp-auth-close" onclick="SimPOS.closeModals()">✕</button>
+      </div>
+      <div class="lp-sim-receipt-paper">
+        <div style="text-align: center; border-bottom: 1px dashed #64748B; padding-bottom: 10px; margin-bottom: 10px;">
+          <img src="assets/logo.svg" style="width: 30px; height: 30px; margin: 0 auto 6px; border-radius: 7px;" alt="MD24 Crest" />
+          <div style="font-weight: 800; font-size: 14px;">MYDUKAAN24 MART</div>
+          <div style="font-size: 10px; color: #475569;">Hazratganj, Lucknow • Cashier: Mayur Singh</div>
+        </div>
+        <div id="sim-receipt-items-table" style="margin-bottom: 8px;"></div>
+        <div style="border-top: 1px dashed #64748B; padding-top: 8px; display: flex; justify-content: space-between; font-weight: 800; font-size: 13px;">
+          <span>GRAND TOTAL</span>
+          <span id="sim-receipt-grand">₹390</span>
+        </div>
+        <div style="text-align: center; font-size: 10px; color: #475569; margin-top: 10px;">MyDukaan24 • Thank You!</div>
+      </div>
+      <button type="button" class="lp-btn btn-cta-primary" style="width: 100%; margin-top: 14px;" onclick="SimPOS.closeModals()">Done</button>
+    </div>
+  </div>
+
+  <!-- Zero-Guide SaaS Authentication Modal -->
   <div id="lp-auth-modal" class="lp-auth-backdrop" onclick="if (event.target === this) LandingAuth.closeModal()">
     <div id="lp-auth-modal-card" class="lp-auth-modal" role="dialog" aria-modal="true" aria-labelledby="lp-auth-title"></div>
   </div>
 
-  <!-- Firebase Hybrid Offline + Cloud Sync Engine -->
-  <script src="js/firebase-sync.js?v=8.1"></script>
+  <!-- Firebase Live Cloud Sync Engine -->
+  <script src="js/firebase-sync.js?v=8.2"></script>
 
-  <!-- INTERACTIVE PLAYGROUND & ANIMATIONS JAVASCRIPT -->
   <script>
-    // 1. Audio Synthesizer (Zero-latency Web Audio API)
+    // Scroll Progress & Reveal Animations
+    window.addEventListener('scroll', () => {
+      const bar = document.getElementById('lp-scroll-progress');
+      if (!bar) return;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? Math.min(100, (window.scrollY / docHeight) * 100) : 0;
+      bar.style.width = `${pct}%`;
+    }, { passive: true });
+
+    // Mobile Nav Drawer
+    function toggleLandingMobileNav() {
+      const drawer = document.getElementById('lp-mobile-drawer');
+      if (drawer) drawer.classList.toggle('active');
+    }
+    window.toggleLandingMobileNav = toggleLandingMobileNav;
+
+    // Web Audio Synthesizer
     const SimAudio = {
       enabled: true,
       ctx: null,
       getCtx() {
         if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) this.ctx = new AudioContext();
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
         }
         if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
+          this.ctx.resume().catch(() => {});
         }
         return this.ctx;
       },
@@ -1062,165 +886,127 @@
           const gain = ctx.createGain();
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, ctx.currentTime);
-          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.setValueAtTime(0.16, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start();
           osc.stop(ctx.currentTime + duration);
-        } catch(e) {}
+        } catch (e) {}
       },
       chime() {
         if (!this.enabled) return;
         try {
           const ctx = this.getCtx();
           if (!ctx) return;
-          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
-            gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.08 + 0.35);
+            osc.frequency.setValueAtTime(f, ctx.currentTime + idx * 0.075);
+            gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.075);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.075 + 0.3);
             osc.connect(gain);
             gain.connect(ctx.destination);
-            osc.start(ctx.currentTime + idx * 0.08);
-            osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
+            osc.start(ctx.currentTime + idx * 0.075);
+            osc.stop(ctx.currentTime + idx * 0.075 + 0.3);
           });
-        } catch(e) {}
+        } catch (e) {}
       }
     };
 
-    // 2. Interactive Kirana POS Simulator Controller
+    // Interactive POS Sandbox
     const SimPOS = {
       products: {
-        p1: { id: 'p1', name: 'Aashirvaad Chakki Atta 5kg', price: 235, mrp: 270, icon: '🌾' },
+        p1: { id: 'p1', name: 'Aashirvaad Atta 5kg', price: 235, mrp: 270, icon: '🌾' },
         p2: { id: 'p2', name: 'Fortune Sunlite Oil 1L', price: 155, mrp: 180, icon: '🫙' },
         p3: { id: 'p3', name: 'Amul Butter 500g', price: 275, mrp: 290, icon: '🧈' },
         p4: { id: 'p4', name: 'Tata Tea Gold 500g', price: 310, mrp: 350, icon: '☕' },
-        p5: { id: 'p5', name: 'Surf Excel Quick Wash 1kg', price: 140, mrp: 160, icon: '🧼' },
-        p6: { id: 'p6', name: 'Cadbury Dairy Milk Silk', price: 90, mrp: 105, icon: '🍫' }
+        p5: { id: 'p5', name: 'Surf Excel 1kg', price: 140, mrp: 160, icon: '🧼' },
+        p6: { id: 'p6', name: 'Dairy Milk Silk', price: 90, mrp: 105, icon: '🍫' }
       },
       cart: [
         { id: 'p1', qty: 1 },
         { id: 'p2', qty: 1 }
       ],
-      aiQuotes: {
-        p1: "🌾 Atta detected: 74% of buyers also take 1L Cooking Oil or Ghee. Suggest Fortune Sunlite for +₹25 margin.",
-        p2: "🫙 Sunflower Oil detected: Current batch has 8 months expiry. High-turnover Kirana essential.",
-        p3: "🧈 Butter in bill: Ramesh Sharma often takes Britannia Bread on Tuesdays. Recommend breakfast pairing.",
-        p4: "☕ Premium Tea: Customer appreciates quality. Offer festive discount on 1kg pack next week.",
-        p5: "🧼 Detergent added: Suggest fabric conditioner pouch near billing counter for impulse buy.",
-        p6: "🍫 Silk chocolate: Ramesh has kids! High margin confectionery item (+28% retail margin)."
+      currentTotal: 390,
+
+      addItem(id) {
+        if (!this.products[id]) return;
+        const found = this.cart.find(c => c.id === id);
+        if (found) found.qty += 1;
+        else this.cart.push({ id, qty: 1 });
+        SimAudio.beep();
+        this.renderCart();
       },
 
-      init() {
+      changeQty(id, delta) {
+        const idx = this.cart.findIndex(c => c.id === id);
+        if (idx < 0) return;
+        this.cart[idx].qty += delta;
+        if (this.cart[idx].qty <= 0) this.cart.splice(idx, 1);
+        SimAudio.beep(delta > 0 ? 1850 : 1200, 0.05);
+        this.renderCart();
+      },
+
+      resetCart() {
+        this.cart = [{ id: 'p1', qty: 1 }, { id: 'p2', qty: 1 }];
         this.renderCart();
       },
 
       toggleAudio() {
         SimAudio.enabled = !SimAudio.enabled;
         const btn = document.getElementById('sim-audio-btn');
-        if (btn) {
-          btn.textContent = SimAudio.enabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
-          btn.style.color = SimAudio.enabled ? '#CBD5E1' : '#F87171';
-        }
-      },
-
-      addItem(id) {
-        SimAudio.beep(1950, 0.08);
-        const item = this.cart.find(i => i.id === id);
-        if (item) {
-          item.qty++;
-        } else {
-          this.cart.push({ id, qty: 1 });
-        }
-        this.renderCart();
-        this.updateAIAdvice(id);
-      },
-
-      changeQty(id, delta) {
-        const item = this.cart.find(i => i.id === id);
-        if (!item) return;
-        item.qty += delta;
-        if (item.qty <= 0) {
-          this.cart = this.cart.filter(i => i.id !== id);
-        }
-        SimAudio.beep(delta > 0 ? 1950 : 1200, 0.06);
-        this.renderCart();
-      },
-
-      resetCart() {
-        this.cart = [{ id: 'p1', qty: 1 }];
-        SimAudio.beep(1400, 0.1);
-        this.renderCart();
+        if (btn) btn.textContent = SimAudio.enabled ? '🔊 Sound ON' : '🔇 Muted';
       },
 
       simulateBarcodeGun() {
+        const keys = Object.keys(this.products);
+        const pick = keys[Math.floor(Math.random() * keys.length)];
         const laser = document.getElementById('sim-laser');
+        const card = document.querySelector(`[data-pid="${pick}"]`);
         if (laser) {
           laser.style.display = 'block';
-          setTimeout(() => {
-            laser.style.display = 'none';
-          }, 800);
+          setTimeout(() => { laser.style.display = 'none'; }, 660);
         }
-
-        const keys = Object.keys(this.products);
-        const randomKey = keys[Math.floor(Math.random() * keys.length)];
-        this.addItem(randomKey);
-      },
-
-      updateAIAdvice(lastId) {
-        const adviceEl = document.getElementById('sim-ai-advice');
-        if (!adviceEl) return;
-        adviceEl.innerHTML = this.aiQuotes[lastId] || "Cart updated. MyDukaan AI is monitoring margin, stock thresholds, and customer purchase cadence.";
+        if (card) {
+          card.classList.add('scanning');
+          setTimeout(() => card.classList.remove('scanning'), 700);
+        }
+        this.addItem(pick);
       },
 
       renderCart() {
-        const container = document.getElementById('sim-cart-items');
-        const countBadge = document.getElementById('sim-cart-count');
-        const mrpEl = document.getElementById('sim-mrp-total');
-        const discEl = document.getElementById('sim-discount-val');
-        const grandEl = document.getElementById('sim-grand-total');
-
-        if (!container) return;
-
-        let totalMrp = 0;
+        const list = document.getElementById('sim-cart-items');
+        if (!list) return;
+        let mrpTotal = 0;
         let grandTotal = 0;
-        let totalUnits = 0;
+        let count = 0;
 
-        if (this.cart.length === 0) {
-          container.innerHTML = `
-            <div style="text-align: center; padding: 28px 10px; color: var(--lp-text-muted); font-size: 12px;">
-              Cart is empty. Click any Kirana item on the left to start billing!
-            </div>
-          `;
+        if (!this.cart.length) {
+          list.innerHTML = `<div style="text-align: center; padding: 24px 10px; color: var(--lp-text-muted); font-size: 13px;">Tap any shelf product to start live billing.</div>`;
         } else {
-          container.innerHTML = this.cart.map(item => {
-            const p = this.products[item.id];
+          list.innerHTML = this.cart.map(entry => {
+            const p = this.products[entry.id];
             if (!p) return '';
-            const linePrice = p.price * item.qty;
-            const lineMrp = p.mrp * item.qty;
-            totalMrp += lineMrp;
-            grandTotal += linePrice;
-            totalUnits += item.qty;
-
+            const line = p.price * entry.qty;
+            mrpTotal += p.mrp * entry.qty;
+            grandTotal += line;
+            count += entry.qty;
             return `
-              <div class="lp-sim-cart-item pop-active">
-                <div class="lp-sim-item-title">
-                  <span>${p.icon}</span>
-                  <div>
-                    <div style="color: #fff;">${p.name}</div>
-                    <div style="font-size: 10px; color: var(--lp-text-muted); font-family: var(--font-mono);">
-                      ₹${p.price} × ${item.qty}
-                    </div>
+              <div class="lp-cart-row">
+                <div style="display: flex; align-items: center; gap: 9px; min-width: 0;">
+                  <span style="font-size: 18px;">${p.icon}</span>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
+                    <div style="font-size: 11px; color: var(--lp-text-muted); font-family: var(--font-mono);">₹${p.price} × ${entry.qty}</div>
                   </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-family: var(--font-mono); font-weight: 700; color: #10B981;">₹${linePrice}</span>
-                  <div class="lp-sim-qty-controls">
-                    <button class="lp-sim-qty-btn" onclick="SimPOS.changeQty('${item.id}', -1)">−</button>
-                    <span style="font-size: 11px; font-weight: 700; min-width: 14px; text-align: center;">${item.qty}</span>
-                    <button class="lp-sim-qty-btn" onclick="SimPOS.changeQty('${item.id}', 1)">+</button>
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                  <span class="tabular-nums" style="font-weight: 800; color: #34D399; font-family: var(--font-mono); font-size: 13px;">₹${line}</span>
+                  <div class="lp-qty-box">
+                    <button type="button" class="lp-qty-btn" onclick="SimPOS.changeQty('${p.id}', -1)">−</button>
+                    <span style="font-size: 12px; font-weight: 700; min-width: 14px; text-align: center;">${entry.qty}</span>
+                    <button type="button" class="lp-qty-btn" onclick="SimPOS.changeQty('${p.id}', 1)">+</button>
                   </div>
                 </div>
               </div>
@@ -1228,25 +1014,33 @@
           }).join('');
         }
 
-        const savings = Math.max(0, totalMrp - grandTotal);
-        if (countBadge) countBadge.textContent = totalUnits;
-        if (mrpEl) mrpEl.textContent = `₹${totalMrp}`;
+        const savings = Math.max(0, mrpTotal - grandTotal);
+        this.currentTotal = grandTotal;
+        const countEl = document.getElementById('sim-cart-count');
+        const mrpEl = document.getElementById('sim-mrp-total');
+        const discEl = document.getElementById('sim-discount-val');
+        const grandEl = document.getElementById('sim-grand-total');
+        if (countEl) countEl.textContent = count;
+        if (mrpEl) mrpEl.textContent = `₹${mrpTotal}`;
         if (discEl) discEl.textContent = `-₹${savings}`;
         if (grandEl) grandEl.textContent = `₹${grandTotal}`;
-
-        this.currentTotal = grandTotal;
-        this.currentSavings = savings;
       },
 
       openUPIModal() {
         const modal = document.getElementById('sim-upi-modal');
-        const amtEl = document.getElementById('sim-modal-upi-amt');
-        const qrImg = document.getElementById('sim-upi-qr-img');
         const amt = this.currentTotal || 390;
-
-        if (amtEl) amtEl.textContent = `₹${amt}`;
-        if (qrImg) {
-          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=6306437348@upi%26pn=MyDukaan24%26am=${amt}`;
+        const body = document.getElementById('sim-upi-body');
+        if (body) {
+          body.innerHTML = `
+            <div style="background: #FFFFFF; padding: 12px; border-radius: 14px; display: inline-block; margin-bottom: 12px;">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=6306437348@upi&pn=MyDukaan24&am=${amt}`)}" alt="UPI QR" style="width: 170px; height: 170px;" />
+            </div>
+            <div style="font-size: 17px; font-weight: 800; color: #34D399; font-family: var(--font-mono); margin-bottom: 12px;">Payable: ₹${amt}</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="lp-btn btn-cta-emerald" style="flex: 1 1 180px;" onclick="SimPOS.simulatePaymentSuccess()">✓ Confirm Live UPI</button>
+              <button type="button" class="lp-btn btn-cta-glass" style="flex: 1 1 90px;" onclick="SimPOS.closeModals()">Close</button>
+            </div>
+          `;
         }
         if (modal) modal.classList.add('active');
         SimAudio.beep(1600, 0.05);
@@ -1255,172 +1049,238 @@
       simulatePaymentSuccess() {
         SimAudio.chime();
         const amt = this.currentTotal || 390;
-        const modalContent = document.querySelector('#sim-upi-modal .lp-sim-modal-content');
-        if (modalContent) {
-          modalContent.innerHTML = `
-            <div style="text-align: center; padding: 24px 10px;">
-              <div style="font-size: 48px; margin-bottom: 12px;" class="pulse-glow">✅</div>
-              <h3 style="font-family: var(--font-heading); font-size: 20px; color: #10B981; margin-bottom: 6px;">
-                ₹${amt} Received via PhonePe!
-              </h3>
-              <p style="font-size: 13px; color: #94A3B8; margin-bottom: 18px;">
-                Customer Ramesh Sharma paid successfully. Invoice INV-2026 marked PAID.
-              </p>
-              <button class="lp-btn-primary" style="justify-content: center; width: 100%;" onclick="SimPOS.closeModals()">
-                Continue Billing
-              </button>
+        const body = document.getElementById('sim-upi-body');
+        if (body) {
+          body.innerHTML = `
+            <div style="padding: 18px 8px;">
+              <div style="font-size: 46px; margin-bottom: 10px;">✅</div>
+              <div style="font-size: 19px; font-weight: 800; color: #34D399; margin-bottom: 6px;">₹${amt} Confirmed Live</div>
+              <div style="font-size: 13px; color: var(--lp-text-secondary); margin-bottom: 16px;">UPI settlement logged cleanly in store ledger.</div>
+              <button type="button" class="lp-btn btn-cta-primary" style="width: 100%;" onclick="SimPOS.closeModals()">Continue</button>
             </div>
           `;
         }
-        setTimeout(() => {
-          this.closeModals();
-        }, 3200);
       },
 
       openReceiptModal() {
         const modal = document.getElementById('sim-receipt-modal');
         const table = document.getElementById('sim-receipt-items-table');
-        const grandEl = document.getElementById('sim-receipt-grand');
-
+        const grand = document.getElementById('sim-receipt-grand');
         if (table) {
-          table.innerHTML = this.cart.map(item => {
-            const p = this.products[item.id];
+          table.innerHTML = this.cart.map(entry => {
+            const p = this.products[entry.id];
             if (!p) return '';
-            return `
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span>${p.name.substring(0, 18)} (x${item.qty})</span>
-                <span>₹${p.price * item.qty}</span>
-              </div>
-            `;
-          }).join('');
+            return `<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${p.name.slice(0, 20)} ×${entry.qty}</span><span>₹${p.price * entry.qty}</span></div>`;
+          }).join('') || '<div>Empty Cart</div>';
         }
-
-        if (grandEl) grandEl.textContent = `₹${this.currentTotal || 390}`;
+        if (grand) grand.textContent = `₹${this.currentTotal}`;
         if (modal) modal.classList.add('active');
-        SimAudio.beep(1200, 0.05);
+        SimAudio.beep(1250, 0.05);
       },
 
       closeModals() {
-        document.querySelectorAll('.lp-sim-modal-overlay').forEach(m => m.classList.remove('active'));
+        document.getElementById('sim-upi-modal')?.classList.remove('active');
+        document.getElementById('sim-receipt-modal')?.classList.remove('active');
       }
     };
+    window.SimPOS = SimPOS;
 
-    // 3. Rolling Animated Number Counters
-    function animateCounter(el, target, prefix = '', suffix = '', duration = 1600) {
-      if (!el) return;
-      let startTime = null;
-      function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const current = Math.floor(easeOut * target);
-        el.textContent = `${prefix}${current.toLocaleString('en-IN')}${suffix}`;
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        } else {
-          el.textContent = `${prefix}${target.toLocaleString('en-IN')}${suffix}`;
+    // Live Multi-Tab Command Center + Real Online /api/gemini Integration
+    const LiveTerminal = {
+      busyAi: false,
+
+      switchTab(tab) {
+        document.querySelectorAll('[data-term-tab]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.termTab === tab);
+        });
+        document.querySelectorAll('.lp-term-pane').forEach(pane => {
+          pane.classList.remove('active');
+        });
+        document.getElementById(`term-pane-${tab}`)?.classList.add('active');
+      },
+
+      getGeminiEndpoint() {
+        if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          return 'https://mydukaan-eta.vercel.app/api/gemini';
         }
+        return '/api/gemini';
+      },
+
+      submitCustomPrompt() {
+        const input = document.getElementById('lp-ai-input');
+        const q = (input ? input.value : '').trim();
+        if (!q) return;
+        this.askGemini(q);
+      },
+
+      async askGemini(promptText) {
+        if (this.busyAi) return;
+        const out = document.getElementById('lp-ai-output');
+        const btn = document.getElementById('lp-ai-send-btn');
+        const pill = document.getElementById('lp-ai-model-pill');
+        if (!out) return;
+
+        this.busyAi = true;
+        if (btn) btn.disabled = true;
+        if (pill) pill.textContent = 'Querying Live API...';
+        out.textContent = '✨ Connecting to MyDukaan24 live Gemini Interactions server...';
+
+        const cartSummary = SimPOS.cart.map(e => `${SimPOS.products[e.id]?.name} x${e.qty}`).join(', ') || 'Atta 5kg, Oil 1L';
+        try {
+          const resp = await fetch(this.getGeminiEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: promptText,
+              storeContext: `Live Store Showcase (Today Revenue: ₹18,450, Active Bill: ${cartSummary}, Payable: ₹${SimPOS.currentTotal}). Answer concisely in under 5 sharp bullet lines for an Indian store owner.`
+            })
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data && data.success && data.text) {
+            out.textContent = data.text;
+            if (pill) pill.textContent = `● Live (${data.model || 'gemini-3.8-flash'})`;
+          } else {
+            out.textContent = data.error || `Live server responded (${resp.status}). Launch app.html for full store diagnostics.`;
+            if (pill) pill.textContent = `HTTP ${resp.status || 'Notice'}`;
+          }
+        } catch (err) {
+          out.textContent = `Online AI connection notice: ${err.message || 'Check internet connection to reach live /api/gemini.'}`;
+          if (pill) pill.textContent = 'Network Notice';
+        } finally {
+          this.busyAi = false;
+          if (btn) btn.disabled = false;
+        }
+      },
+
+      setChartRange(range) {
+        document.querySelectorAll('[data-range]').forEach(b => b.classList.toggle('active', b.dataset.range === range));
+        const presets = {
+          today: { head: '₹1,42,890 <span style="font-size:13px;color:#34D399;">+24.6%</span>', upi: 56, cash: 28, card: 16, endY: 22, path: 'M10 120 L85 95 L160 105 L235 60 L310 72 L385 32 L450 22' },
+          week:  { head: '₹8,94,300 <span style="font-size:13px;color:#34D399;">+31.2%</span>', upi: 61, cash: 24, card: 15, endY: 16, path: 'M10 112 L85 88 L160 76 L235 84 L310 46 L385 38 L450 16' },
+          month: { head: '₹36,48,500 <span style="font-size:13px;color:#34D399;">+38.9%</span>', upi: 64, cash: 21, card: 15, endY: 12, path: 'M10 130 L85 110 L160 92 L235 74 L310 52 L385 34 L450 12' }
+        };
+        const p = presets[range] || presets.today;
+        const h = document.getElementById('lp-chart-headline');
+        if (h) h.innerHTML = p.head;
+        const line = document.getElementById('lp-chart-line');
+        const area = document.getElementById('lp-chart-area');
+        const dot = document.getElementById('lp-chart-dot');
+        if (line) line.setAttribute('d', p.path);
+        if (area) area.setAttribute('d', `${p.path} L450 140 L10 140 Z`);
+        if (dot) dot.setAttribute('cy', String(p.endY));
+        document.getElementById('bar-val-upi').textContent = `${p.upi}%`;
+        document.getElementById('bar-fill-upi').style.width = `${p.upi}%`;
+        document.getElementById('bar-val-cash').textContent = `${p.cash}%`;
+        document.getElementById('bar-fill-cash').style.width = `${p.cash}%`;
+        document.getElementById('bar-val-card').textContent = `${p.card}%`;
+        document.getElementById('bar-fill-card').style.width = `${p.card}%`;
       }
-      requestAnimationFrame(step);
-    }
+    };
+    window.LiveTerminal = LiveTerminal;
 
-    // 4. Spotlight Mouse Follower on Cards
-    document.addEventListener('pointermove', (e) => {
-      const cards = document.querySelectorAll('.lp-feat-card, .spotlight-card, .comparison-card');
-      cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
-      });
-    });
+    // Interactive Five Engines Spotlight
+    const EngineExplorer = {
+      data: {
+        billing: {
+          tag: '⚡ ENGINE 01 • INSTANT POS',
+          title: '5-Second Counter Checkout with Dynamic UPI QR',
+          desc: 'Auto-calculates MRP discounts, GST slabs, cash change, and generates amount-locked UPI QR codes plus 80mm/58mm thermal bills and WhatsApp shares.',
+          m1: ['3.2s', 'Avg Bill Speed'],
+          m2: ['UPI + Cash', 'Multi-Tender'],
+          m3: ['80mm / 58mm', 'Thermal Ready']
+        },
+        vision: {
+          tag: '📷 ENGINE 02 • OPTICAL BARCODE AI',
+          title: 'Camera Vision, Gun Scanner & Gemini Lookup',
+          desc: 'Instant EAN/UPC detection via mobile camera or USB laser scanner gun, enriched live with Open Food Facts and Gemini Google Search product identification.',
+          m1: ['0.28s', 'Frame Lock'],
+          m2: ['890 GS1', 'India Registry'],
+          m3: ['USB + Cam', 'Dual Input']
+        },
+        khata: {
+          tag: '📒 ENGINE 03 • CREDIT CRM',
+          title: 'Automated Udhaar Khata & 1-Click WhatsApp Collection',
+          desc: 'Track customer balances with exact invoice lineage, accept partial settlements, and dispatch branded UPI payment reminders on WhatsApp in one tap.',
+          m1: ['Zero', 'Missed Entries'],
+          m2: ['1-Tap', 'UPI Reminder'],
+          m3: ['100%', 'Audit History']
+        },
+        pnl: {
+          tag: '📈 ENGINE 04 • PROFIT INTELLIGENCE',
+          title: 'Wholesale Stock Inward, Margins & Net P&L',
+          desc: 'Record distributor GST bills, track supplier payouts, log daily store rent & overheads, and measure real net profit live across any period.',
+          m1: ['Real-Time', 'COGS Tracking'],
+          m2: ['Supplier', 'Payable CRM'],
+          m3: ['SVG', 'Revenue Curve']
+        },
+        cloud: {
+          tag: '☁️ ENGINE 05 • CLOUD & TEAM',
+          title: 'Live Multi-Device Sync, Attendance & Multi-Shop Control',
+          desc: 'Secure per-owner Google & Email authentication powered by Firebase Firestore alongside 31-day staff attendance and payroll calculation.',
+          m1: ['Per-Owner', 'UID Isolation'],
+          m2: ['Multi-Shop', 'Cloud Sync'],
+          m3: ['31-Day', 'Staff Register']
+        }
+      },
+      select(key) {
+        const d = this.data[key] || this.data.billing;
+        document.querySelectorAll('.lp-engine-tab').forEach(b => b.classList.toggle('active', b.dataset.engine === key));
+        const mount = document.getElementById('lp-engine-stage');
+        if (!mount) return;
+        mount.innerHTML = `
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+              <span class="lp-section-tag" style="margin-bottom:0;">${d.tag}</span>
+              <img src="assets/logo.svg" style="width:28px;height:28px;border-radius:8px;" alt="MD24 Crest" />
+            </div>
+            <h3 style="font-family:var(--font-heading);font-size:clamp(20px,3vw,26px);font-weight:800;color:#FFFFFF;margin-bottom:10px;">${d.title}</h3>
+            <p style="font-size:14.5px;color:var(--lp-text-secondary);line-height:1.65;">${d.desc}</p>
+          </div>
+          <div class="lp-engine-metrics">
+            <div class="lp-engine-metric"><div style="font-family:var(--font-mono);font-size:17px;font-weight:800;color:#60A5FA;">${d.m1[0]}</div><div style="font-size:11px;color:var(--lp-text-muted);margin-top:2px;">${d.m1[1]}</div></div>
+            <div class="lp-engine-metric"><div style="font-family:var(--font-mono);font-size:17px;font-weight:800;color:#34D399;">${d.m2[0]}</div><div style="font-size:11px;color:var(--lp-text-muted);margin-top:2px;">${d.m2[1]}</div></div>
+            <div class="lp-engine-metric"><div style="font-family:var(--font-mono);font-size:17px;font-weight:800;color:#FB923C;">${d.m3[0]}</div><div style="font-size:11px;color:var(--lp-text-muted);margin-top:2px;">${d.m3[1]}</div></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="app.html" class="lp-btn btn-cta-primary btn-sheen">⚡ Launch This Module →</a>
+            <button type="button" class="lp-btn btn-cta-emerald" onclick="LandingAuth.openModal('signup')">🔐 Sign Up Free</button>
+          </div>
+        `;
+      }
+    };
+    window.EngineExplorer = EngineExplorer;
 
-    // 5. Scroll Reveal & Counter Triggering
-    window.addEventListener('DOMContentLoaded', () => {
-      SimPOS.init();
-
-      // Trigger metric animation when simulator enters viewport
-      const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            animateCounter(document.getElementById('kpi-rev-counter'), 14850, '₹', '');
-            animateCounter(document.getElementById('kpi-sku-counter'), 128, '', ' SKUs');
-            animateCounter(document.getElementById('kpi-low-counter'), 3, '', ' Items');
-            animateCounter(document.getElementById('kpi-udh-counter'), 5700, '₹', '');
-            obs.disconnect();
-          }
-        });
-      }, { threshold: 0.25 });
-
-      const previewEl = document.getElementById('preview');
-      if (previewEl) observer.observe(previewEl);
-
-      // Section Scroll Reveals
-      const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('reveal-active');
-          }
-        });
-      }, { threshold: 0.1 });
-
-      document.querySelectorAll('.lp-section, .lp-feat-card, .comparison-card').forEach(el => {
-        el.classList.add('reveal-init');
-        revealObserver.observe(el);
-      });
-    });
-
+    // ROI Calculator
     function updateRoiCalc(val) {
-      const cust = parseInt(val, 10);
-      const custEl = document.getElementById('roi-cust-val');
-      const timeEl = document.getElementById('roi-time-saved');
-      const udhEl = document.getElementById('roi-udh-saved');
-      const speedEl = document.getElementById('roi-speed-boost');
-
-      if (custEl) custEl.textContent = `${cust} Customers / Day`;
-      
+      const cust = parseInt(val, 10) || 140;
       const hours = Math.round((cust * 1.5 * 30) / 60);
-      if (timeEl) timeEl.textContent = `${hours} Hours`;
-
       const udhaar = Math.round(cust * 150 * 30 * 0.035);
-      if (udhEl) udhEl.textContent = `₹${udhaar.toLocaleString('en-IN')}`;
-
       const speed = (3.5 + (cust / 200)).toFixed(1);
-      if (speedEl) speedEl.textContent = `${speed}x Faster`;
+      document.getElementById('roi-cust-val').textContent = `${cust} Bills / Day`;
+      document.getElementById('roi-time-saved').textContent = `${hours} Hours`;
+      document.getElementById('roi-udh-saved').textContent = `₹${udhaar.toLocaleString('en-IN')}`;
+      document.getElementById('roi-speed-boost').textContent = `${speed}x Faster`;
     }
     window.updateRoiCalc = updateRoiCalc;
 
+    // Direct WhatsApp Contact
     const LandingContact = {
       submitQuery() {
-        const name = (document.getElementById('contact-name').value || '').trim();
-        const shop = (document.getElementById('contact-shop').value || '').trim();
-        const phone = (document.getElementById('contact-phone').value || '').trim();
-        const msg = (document.getElementById('contact-message').value || '').trim();
-
-        if (!name || !shop || !phone) {
-          alert('Please enter your name, shop name, and phone number.');
-          return;
-        }
-
-        const text = `Namaste Mayur ji! My name is ${name} from "${shop}" (Phone: ${phone}). ${msg ? 'Query: ' + msg : 'I want to know more about MyDukkan24 Retail OS.'}`;
-        const waUrl = `https://wa.me/916306437348?text=${encodeURIComponent(text)}`;
-        window.open(waUrl, '_blank');
+        const name = (document.getElementById('contact-name')?.value || '').trim();
+        const shop = (document.getElementById('contact-shop')?.value || '').trim();
+        const phone = (document.getElementById('contact-phone')?.value || '').trim();
+        const msg = (document.getElementById('contact-message')?.value || '').trim();
+        if (!name || !shop || !phone) return;
+        const text = `Namaste Mayur ji! My name is ${name} from "${shop}" (${phone}). ${msg || 'Interested in MyDukaan24 Live Retail OS.'}`;
+        window.open(`https://wa.me/916306437348?text=${encodeURIComponent(text)}`, '_blank');
       }
     };
     window.LandingContact = LandingContact;
 
-    function toggleLandingMobileNav() {
-      const drawer = document.getElementById('lp-mobile-drawer');
-      if (drawer) drawer.classList.toggle('active');
-    }
-    window.toggleLandingMobileNav = toggleLandingMobileNav;
-
-    // 6. Landing Page Login / Sign Up & Firebase Config Controller
+    // Zero-Guide Clean SaaS Auth Modal Controller
     const LandingAuth = {
       isOpen: false,
-      tab: 'signin', // 'signin' | 'signup'
-      showConfig: false,
+      tab: 'signin',
       busy: false,
       notice: null,
 
@@ -1435,29 +1295,21 @@
 
       openModal(preferredTab = 'signin') {
         this.tab = preferredTab === 'signup' ? 'signup' : 'signin';
-        const cfg = window.CloudSync ? window.CloudSync.getSavedConfig() : null;
-        this.showConfig = !cfg;
+        this.notice = null;
         this.isOpen = true;
-        const backdrop = document.getElementById('lp-auth-modal');
-        if (backdrop) backdrop.classList.add('active');
+        document.getElementById('lp-auth-modal')?.classList.add('active');
         this.renderModal();
       },
 
       closeModal() {
         this.isOpen = false;
-        const backdrop = document.getElementById('lp-auth-modal');
-        if (backdrop) backdrop.classList.remove('active');
+        document.getElementById('lp-auth-modal')?.classList.remove('active');
       },
 
       setTab(tab) {
         this.tab = tab === 'signup' ? 'signup' : 'signin';
         if (window.CloudSync) window.CloudSync.authTab = this.tab;
         this.notice = null;
-        this.renderModal();
-      },
-
-      toggleConfig(show) {
-        this.showConfig = Boolean(show);
         this.renderModal();
       },
 
@@ -1468,38 +1320,36 @@
 
       syncPageUI() {
         const cloud = window.CloudSync;
-        const status = cloud ? cloud.getStatusSummary() : { configured: false, signedIn: false, online: navigator.onLine !== false };
+        const status = cloud ? cloud.getStatusSummary() : { configured: false, signedIn: false };
         const user = cloud && cloud.user ? cloud.user : null;
-        const userLabel = user ? (user.displayName || user.email || 'Synced Account') : '';
+        const label = user ? (user.displayName || user.email || 'Synced Store') : '';
 
         const navBtn = document.getElementById('lp-nav-auth-btn');
         if (navBtn) {
           if (user) {
-            const shortName = userLabel.split('@')[0].slice(0, 14);
+            const shortName = this.escapeHtml(label.split('@')[0].slice(0, 14));
             navBtn.classList.add('signed-in');
-            navBtn.innerHTML = `<span class="lp-auth-dot"></span><span>${this.escapeHtml(shortName)}</span>`;
-            navBtn.onclick = () => this.openModal('signin');
+            navBtn.innerHTML = `<span class="lp-auth-dot"></span><span>${shortName}</span>`;
           } else {
             navBtn.classList.remove('signed-in');
-            navBtn.innerHTML = `<span class="lp-auth-text-full">🔐 Login / Sign Up</span><span class="lp-auth-text-short">🔐 Login</span>`;
-            navBtn.onclick = () => this.openModal('signin');
+            navBtn.innerHTML = `<span class="lp-auth-text-full">🔐 Sign In / Join</span><span class="lp-auth-text-short">🔐 Login</span>`;
           }
         }
 
         const drawerBtn = document.getElementById('lp-drawer-auth-btn');
         if (drawerBtn) {
           drawerBtn.innerHTML = user
-            ? `✅ Account: ${this.escapeHtml(userLabel)}`
-            : `🔐 Login / Create Store Account`;
+            ? `✅ Signed In: ${this.escapeHtml(label)}`
+            : `🔐 Sign In / Create Store Account`;
         }
 
         const heroBtn = document.getElementById('lp-hero-auth-btn');
         if (heroBtn) {
           if (user) {
-            heroBtn.innerHTML = `🚀 Open Synced POS (${this.escapeHtml(userLabel.split('@')[0])}) →`;
-            heroBtn.onclick = () => { window.location.href = 'app.html'; };
+            heroBtn.innerHTML = `✅ Account Active (${this.escapeHtml(label.split('@')[0])})`;
+            heroBtn.onclick = () => this.openModal('signin');
           } else {
-            heroBtn.innerHTML = `🔐 Login / Create Store Account`;
+            heroBtn.innerHTML = `🔐 Sign In / Create Store`;
             heroBtn.onclick = () => this.openModal('signin');
           }
         }
@@ -1510,24 +1360,18 @@
             accountBar.classList.add('signed-in');
             accountBar.innerHTML = `
               <span class="lp-auth-dot"></span>
-              <span>Signed in as <strong>${this.escapeHtml(userLabel)}</strong></span>
-              <span style="color: var(--lp-text-muted);">•</span>
-              <button type="button" class="lp-auth-link-btn" onclick="LandingAuth.openModal('signin')">Account</button>
-              <span style="color: var(--lp-text-muted);">•</span>
-              <button type="button" class="lp-auth-link-btn" style="color: #FCA5A5;" onclick="LandingAuth.signOut()">Sign Out</button>
+              <span>Synced Store: <strong>${this.escapeHtml(label)}</strong></span>
+              <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signin')">Manage</button>
+              <button type="button" class="lp-inline-action" style="border-color: rgba(244,63,94,0.5); color: #FECDD3;" onclick="LandingAuth.signOut()">Sign Out</button>
             `;
           } else {
             accountBar.classList.remove('signed-in');
-            const cfgNote = status.configured
-              ? `Firebase Linked (${this.escapeHtml(status.projectId)})`
-              : `Firebase + 0ms Offline Ready`;
             accountBar.innerHTML = `
-              <span>☁️ ${cfgNote}:</span>
-              <button type="button" class="lp-auth-link-btn" onclick="LandingAuth.openModal('signin')">Sign In</button>
-              <span style="color: var(--lp-text-muted);">•</span>
-              <button type="button" class="lp-auth-link-btn" onclick="LandingAuth.openModal('signup')">Create Account</button>
-              <span style="color: var(--lp-text-muted);">•</span>
-              <a href="#preview" class="lp-auth-link-btn" style="color: #A7F3D0;">Try Simulator ↓</a>
+              <span class="lp-pulse-dot" style="width:7px;height:7px;"></span>
+              <span><strong>${status.configured ? `Cloud Ready (${this.escapeHtml(status.projectId)}):` : 'Live Cloud Store:'}</strong></span>
+              <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signin')">Sign In</button>
+              <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signup')">Create Account</button>
+              <a href="#showcase" class="lp-inline-action" style="background: rgba(16,185,129,0.2); border-color: rgba(52,211,153,0.5);">Live AI Demo ↓</a>
             `;
           }
         }
@@ -1547,69 +1391,63 @@
         const cloud = window.CloudSync;
         const cfg = cloud ? cloud.getSavedConfig() : null;
         const user = cloud && cloud.user ? cloud.user : null;
-        const status = cloud ? cloud.getStatusSummary() : { online: navigator.onLine !== false };
-        const host = this.escapeHtml(window.location.hostname || 'mydukaan-eta.vercel.app');
         const alertHtml = this.notice
           ? `<div class="lp-auth-alert ${this.escapeHtml(this.notice.type)}">${this.escapeHtml(this.notice.text)}</div>`
-          : (cloud && cloud.lastError ? `<div class="lp-auth-alert danger">${this.escapeHtml(cloud.lastError)}</div>` : '');
+          : '';
 
-        // State A: Signed In
         if (user) {
           const email = this.escapeHtml(user.email || user.displayName || 'Connected Store Owner');
-          const pid = this.escapeHtml((cfg && cfg.projectId) || 'connected');
+          const pid = this.escapeHtml((cfg && cfg.projectId) || 'cloud-live');
           const uidShort = this.escapeHtml((user.uid || '').slice(0, 12));
           card.innerHTML = `
-            <div class="lp-auth-header">
-              <div>
-                <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #34D399;">● Cloud + Offline Connected</div>
-                <h2 id="lp-auth-title" style="font-size: 20px; font-weight: 800; color: #FFFFFF; margin-top: 2px;">Store Account Active</h2>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width:40px;height:40px;border-radius:11px;" alt="MyDukaan24" />
+                <div>
+                  <div style="font-size:11px;font-weight:800;color:#34D399;text-transform:uppercase;">● Cloud Store Connected</div>
+                  <h2 id="lp-auth-title" style="font-size:19px;font-weight:800;color:#FFFFFF;">Store Account Active</h2>
+                </div>
               </div>
               <button type="button" class="lp-auth-close" onclick="LandingAuth.closeModal()" aria-label="Close">✕</button>
             </div>
             ${alertHtml}
             <div class="lp-auth-status-grid">
               <div class="lp-auth-status-cell">
-                <div style="font-size: 10.5px; color: #94A3B8; text-transform: uppercase;">Signed In As</div>
-                <div style="font-size: 12.5px; font-weight: 700; color: #FFFFFF; margin-top: 2px; overflow-wrap: anywhere;">${email}</div>
+                <div style="font-size:10.5px;color:#94A3B8;text-transform:uppercase;">Owner</div>
+                <div style="font-size:12.5px;font-weight:700;color:#FFFFFF;overflow-wrap:anywhere;">${email}</div>
               </div>
               <div class="lp-auth-status-cell">
-                <div style="font-size: 10.5px; color: #94A3B8; text-transform: uppercase;">Firebase Project</div>
-                <div style="font-size: 12.5px; font-weight: 700; color: #93C5FD; font-family: var(--font-mono); margin-top: 2px; overflow-wrap: anywhere;">${pid}</div>
+                <div style="font-size:10.5px;color:#94A3B8;text-transform:uppercase;">Cloud Node</div>
+                <div style="font-size:12.5px;font-weight:700;color:#93C5FD;font-family:var(--font-mono);overflow-wrap:anywhere;">${pid}</div>
               </div>
               <div class="lp-auth-status-cell">
-                <div style="font-size: 10.5px; color: #94A3B8; text-transform: uppercase;">Dual Storage</div>
-                <div style="font-size: 12px; font-weight: 700; color: #10B981; margin-top: 2px;">0ms Offline + Firestore</div>
+                <div style="font-size:10.5px;color:#94A3B8;text-transform:uppercase;">Tenant Key</div>
+                <div style="font-size:12px;font-weight:700;color:#CBD5E1;font-family:var(--font-mono);">${uidShort}...</div>
               </div>
               <div class="lp-auth-status-cell">
-                <div style="font-size: 10.5px; color: #94A3B8; text-transform: uppercase;">Tenant UID</div>
-                <div style="font-size: 12px; font-weight: 700; color: #CBD5E1; font-family: var(--font-mono); margin-top: 2px;">${uidShort}...</div>
+                <div style="font-size:10.5px;color:#94A3B8;text-transform:uppercase;">Live Sync</div>
+                <div style="font-size:12px;font-weight:700;color:#34D399;">Active ✓</div>
               </div>
             </div>
-            <a href="app.html" class="lp-btn-primary" style="width: 100%; justify-content: center; padding: 12px 16px; font-size: 14.5px; border-radius: 11px; margin-bottom: 10px;">
-              🚀 Open My Synced POS Terminal →
+            <a href="app.html" class="lp-btn btn-cta-primary btn-sheen" style="width:100%;margin-bottom:10px;">
+              🚀 Open Live POS Terminal →
             </a>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" class="lp-btn-secondary" style="flex: 1 1 130px; justify-content: center; padding: 10px 12px; font-size: 12.5px; border-radius: 10px;" onclick="LandingAuth.toggleConfig(!LandingAuth.showConfig)">
-                ⚙️ ${this.showConfig ? 'Hide Config' : 'Firebase Config'}
-              </button>
-              <button type="button" class="lp-btn-secondary" style="flex: 1 1 110px; justify-content: center; padding: 10px 12px; font-size: 12.5px; border-radius: 10px; border-color: rgba(244, 63, 94, 0.4); color: #FDA4AF;" onclick="LandingAuth.signOut()">
-                Sign Out
-              </button>
-            </div>
-            ${this.showConfig ? this.renderConfigEditorHtml(cfg, host) : ''}
+            <button type="button" class="lp-btn btn-cta-glass" style="width:100%;min-height:42px;border-color:rgba(244,63,94,0.45);color:#FECDD3;" onclick="LandingAuth.signOut()">
+              Sign Out
+            </button>
           `;
           return;
         }
 
-        // State B: Sign In / Create Account (with optional 1-time Firebase link box)
         const isSignup = this.tab === 'signup';
         card.innerHTML = `
-          <div class="lp-auth-header">
-            <div>
-              <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #818CF8;">Offline + Cloud POS Sync</div>
-              <h2 id="lp-auth-title" style="font-size: 20px; font-weight: 800; color: #FFFFFF; margin-top: 2px;">
-                ${isSignup ? 'Create Store Account' : 'Sign In to MyDukaan24'}
-              </h2>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <img src="assets/LOGO.jpeg" onerror="this.src='assets/logo.svg'" style="width:40px;height:40px;border-radius:11px;" alt="MyDukaan24" />
+              <div>
+                <div style="font-size:11px;font-weight:800;color:#93C5FD;text-transform:uppercase;letter-spacing:0.06em;">MyDukaan24 Cloud ID</div>
+                <h2 id="lp-auth-title" style="font-size:19px;font-weight:800;color:#FFFFFF;">${isSignup ? 'Create Store Account' : 'Sign In to MyDukaan24'}</h2>
+              </div>
             </div>
             <button type="button" class="lp-auth-close" onclick="LandingAuth.closeModal()" aria-label="Close">✕</button>
           </div>
@@ -1621,8 +1459,6 @@
 
           ${alertHtml}
 
-          ${!status.online ? `<div class="lp-auth-alert warning">System offline — internet is required once to sign in, or continue offline in POS Terminal.</div>` : ''}
-
           <button type="button" class="lp-auth-google-btn" ${this.busy ? 'disabled' : ''} onclick="LandingAuth.signInGoogle()">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M23.52 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.59-5.17 3.59-8.82z"/>
@@ -1633,90 +1469,35 @@
             <span>Continue with Google</span>
           </button>
 
-          <div class="lp-auth-divider">or continue with email</div>
+          <div class="lp-auth-divider">or with store email</div>
 
-          <form onsubmit="event.preventDefault(); LandingAuth.submitEmailAuth();">
-            <div class="lp-auth-field">
-              <label class="lp-auth-label" for="lp-auth-email">Store Owner Email *</label>
-              <input type="email" id="lp-auth-email" class="lp-auth-input" required placeholder="owner@mydukkan24.com" />
+          <form onsubmit="event.preventDefault(); LandingAuth.submitEmailAuth();" style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label for="lp-auth-email" style="display:block;font-size:12px;font-weight:700;color:#CBD5E1;margin-bottom:5px;">Store Email *</label>
+              <input type="email" id="lp-auth-email" class="lp-input" style="width:100%;" required placeholder="owner@mydukkan24.com" />
             </div>
-            <div class="lp-auth-field">
-              <label class="lp-auth-label" for="lp-auth-password">Password (min 6 chars) *</label>
-              <input type="password" id="lp-auth-password" class="lp-auth-input" required minlength="6" placeholder="••••••" />
+            <div>
+              <label for="lp-auth-password" style="display:block;font-size:12px;font-weight:700;color:#CBD5E1;margin-bottom:5px;">Password *</label>
+              <input type="password" id="lp-auth-password" class="lp-input" style="width:100%;" required minlength="6" placeholder="••••••" />
             </div>
-            <button type="submit" class="lp-btn-primary" ${this.busy ? 'disabled' : ''} style="width: 100%; justify-content: center; padding: 12px 16px; font-size: 14px; border-radius: 11px;">
-              ${this.busy ? 'Please wait...' : (isSignup ? '🔐 Create Account & Sync Store' : '🔐 Sign In & Sync Store')}
+            <button type="submit" class="lp-btn btn-cta-primary btn-sheen" ${this.busy ? 'disabled' : ''} style="width:100%;margin-top:4px;">
+              ${this.busy ? 'Connecting...' : (isSignup ? '🔐 Create Store Account →' : '🔐 Sign In to Store →')}
             </button>
           </form>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,0.2);">
             ${!isSignup
-              ? `<button type="button" class="lp-auth-link-btn" onclick="LandingAuth.sendReset()">Forgot Password?</button>`
-              : `<span style="color: #94A3B8;">Creates private <code>/users/{uid}/</code> storage</span>`}
-            <a href="app.html" class="lp-auth-link-btn" style="color: #6EE7B7;">Use Offline POS Without Login →</a>
-          </div>
-
-          ${this.showConfig || !cfg
-            ? this.renderConfigEditorHtml(cfg, host)
-            : `
-              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11.5px; color: #94A3B8;">
-                <span>✅ Firebase Linked: <strong style="color: #E2E8F0; font-family: var(--font-mono);">${this.escapeHtml(cfg.projectId)}</strong></span>
-                <button type="button" class="lp-auth-link-btn" onclick="LandingAuth.toggleConfig(true)">Change Config</button>
-              </div>
-            `}
-        `;
-      },
-
-      renderConfigEditorHtml(cfg, host) {
-        const prefill = cfg && window.CloudSync && window.CloudSync.hasLocalOverrideConfig()
-          ? this.escapeHtml(JSON.stringify(cfg, null, 2))
-          : '';
-        return `
-          <div class="lp-auth-config-panel">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
-              <strong style="font-size: 12.5px; color: ${cfg ? '#93C5FD' : '#FCD34D'};">
-                ${cfg ? '⚙️ Update Firebase Project Config' : '⚠️ One-Time Step: Connect Your Firebase Project'}
-              </strong>
-              ${cfg ? `<button type="button" class="lp-auth-link-btn" onclick="LandingAuth.toggleConfig(false)">Hide</button>` : ''}
-            </div>
-            <p style="font-size: 11.5px; color: #94A3B8; line-height: 1.5; margin-bottom: 8px;">
-              Paste your Web App <code>firebaseConfig</code> from <strong>Firebase Console ➔ Project Settings</strong>. Remember to add <code style="color: #E2E8F0;">${host}</code> in <strong>Authentication ➔ Authorized domains</strong>.
-            </p>
-            <textarea id="lp-fb-config-input" class="lp-auth-textarea" rows="5" placeholder='const firebaseConfig = {\n  apiKey: "...",\n  authDomain: "your-app.firebaseapp.com",\n  projectId: "your-app-id",\n  appId: "1:123:web:abc"\n};'>${prefill}</textarea>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-              <button type="button" class="lp-btn-primary" style="flex: 1 1 160px; justify-content: center; padding: 9px 12px; font-size: 12.5px; border-radius: 9px;" onclick="LandingAuth.saveConfig()">
-                ✓ Save & Connect Firebase
-              </button>
-              ${cfg && window.CloudSync && window.CloudSync.hasLocalOverrideConfig()
-                ? `<button type="button" class="lp-btn-secondary" style="padding: 9px 12px; font-size: 12px; border-radius: 9px; border-color: rgba(244,63,94,0.4); color: #FDA4AF;" onclick="LandingAuth.disconnectConfig()">Disconnect</button>`
-                : ''}
-            </div>
+              ? `<button type="button" class="lp-inline-action" onclick="LandingAuth.sendReset()">Forgot Password?</button>`
+              : `<span style="font-size:11.5px;color:#94A3B8;">Instant encrypted store workspace</span>`}
+            <a href="app.html" class="lp-inline-action" style="background:rgba(16,185,129,0.2);border-color:rgba(52,211,153,0.5);">Open Live POS →</a>
           </div>
         `;
-      },
-
-      async saveConfig() {
-        if (!window.CloudSync) return;
-        const input = document.getElementById('lp-fb-config-input');
-        const raw = input ? input.value : '';
-        this.busy = true;
-        this.renderModal();
-        const res = await window.CloudSync.saveConfig(raw);
-        this.busy = false;
-        if (!res.ok) {
-          this.setNotice('danger', res.error);
-          return;
-        }
-        this.showConfig = false;
-        this.setNotice('success', `Connected to Firebase project "${res.config.projectId}". Now sign in with Google or Email!`);
-        this.syncPageUI();
       },
 
       async signInGoogle() {
         if (!window.CloudSync) return;
         if (!window.CloudSync.getSavedConfig()) {
-          this.showConfig = true;
-          this.setNotice('warning', 'Pehle neeche apna Firebase Web Config paste karke "Save & Connect Firebase" click karein.');
+          this.setNotice('info', 'Cloud login activation is pending backend Firebase credentials. Open Live POS to start billing right now.');
           return;
         }
         this.busy = true;
@@ -1724,7 +1505,7 @@
         const res = await window.CloudSync.signInWithGoogle();
         this.busy = false;
         if (res && res.ok) {
-          this.setNotice('success', 'Signed in with Google! Click "Open My Synced POS Terminal" below.');
+          this.setNotice('success', 'Signed in with Google! Launch your Live POS Terminal below.');
         } else if (res && res.error) {
           this.setNotice('danger', res.error);
         }
@@ -1734,14 +1515,13 @@
       async submitEmailAuth() {
         if (!window.CloudSync) return;
         if (!window.CloudSync.getSavedConfig()) {
-          this.showConfig = true;
-          this.setNotice('warning', 'Pehle neeche apna Firebase Web Config paste karke "Save & Connect Firebase" click karein.');
+          this.setNotice('info', 'Cloud login activation is pending backend Firebase credentials. Open Live POS to start billing right now.');
           return;
         }
         const email = (document.getElementById('lp-auth-email')?.value || '').trim();
         const password = document.getElementById('lp-auth-password')?.value || '';
         if (!email || password.length < 6) {
-          this.setNotice('warning', 'Valid email aur kam se kam 6-character password daalein.');
+          this.setNotice('warning', 'Enter a valid email and at least a 6-character password.');
           return;
         }
         this.busy = true;
@@ -1751,9 +1531,7 @@
           : await window.CloudSync.signInEmail(email, password);
         this.busy = false;
         if (res && res.ok) {
-          this.setNotice('success', this.tab === 'signup'
-            ? 'Account created! Your offline + online Firestore sync is ready.'
-            : 'Signed in! Your store cloud sync is ready.');
+          this.setNotice('success', 'Store account connected cleanly! Launch Live POS below.');
         } else if (res && res.error) {
           this.setNotice('danger', res.error);
         }
@@ -1762,31 +1540,24 @@
 
       async sendReset() {
         if (!window.CloudSync) return;
+        if (!window.CloudSync.getSavedConfig()) {
+          this.setNotice('info', 'Password reset unlocks automatically as soon as Firebase project config is active.');
+          return;
+        }
         const email = (document.getElementById('lp-auth-email')?.value || '').trim();
         if (!email) {
-          this.setNotice('warning', 'Pehle upar Email field mein apna registered email type karein.');
+          this.setNotice('warning', 'Enter your registered Store Email first.');
           return;
         }
         const res = await window.CloudSync.resetPassword(email);
-        if (res && res.ok) {
-          this.setNotice('success', `Password reset link sent to ${email}.`);
-        } else if (res && res.error) {
-          this.setNotice('danger', res.error);
-        }
+        if (res && res.ok) this.setNotice('success', `Password reset email sent to ${email}.`);
+        else if (res && res.error) this.setNotice('danger', res.error);
       },
 
       async signOut() {
         if (!window.CloudSync) return;
         await window.CloudSync.signOutUser();
-        this.setNotice('info', 'Signed out. Your local offline device data stays safe.');
-        this.syncPageUI();
-      },
-
-      async disconnectConfig() {
-        if (!window.CloudSync) return;
-        await window.CloudSync.clearConfig();
-        this.showConfig = !window.CloudSync.getSavedConfig();
-        this.setNotice('info', 'Removed local Firebase project config from this browser.');
+        this.setNotice('info', 'Signed out cleanly.');
         this.syncPageUI();
       }
     };
@@ -1795,10 +1566,40 @@
     window.addEventListener('mydukaan:cloud-status', () => LandingAuth.syncPageUI());
     window.addEventListener('mydukaan:auth-changed', () => LandingAuth.syncPageUI());
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && LandingAuth.isOpen) LandingAuth.closeModal();
+      if (e.key === 'Escape') {
+        if (LandingAuth.isOpen) LandingAuth.closeModal();
+        SimPOS.closeModals();
+      }
     });
+
+    // Boot Page Experience
     window.addEventListener('DOMContentLoaded', () => {
+      SimPOS.renderCart();
+      EngineExplorer.select('billing');
+      updateRoiCalc(140);
       LandingAuth.syncPageUI();
+
+      // Guarantee Reveal Visibility Across Desktop & Mobile
+      const reveals = document.querySelectorAll('.lp-reveal');
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.01, rootMargin: '0px 0px -10px 0px' });
+        reveals.forEach(el => io.observe(el));
+        // Safety fallback so anchor jumps or tall full-page captures never leave elements hidden
+        setTimeout(() => {
+          reveals.forEach(el => el.classList.add('is-visible'));
+        }, 900);
+      } else {
+        reveals.forEach(el => el.classList.add('is-visible'));
+      }
+
+      // Open auth modal directly when navigated via ?auth=login|signup
       const params = new URLSearchParams(window.location.search);
       const authParam = params.get('auth') || window.location.hash.replace('#', '');
       if (authParam === 'login' || authParam === 'signin') {
@@ -1808,15 +1609,12 @@
       }
     });
 
-    // Service Worker Registration for Instant Cache Busting & Offline Support
+    // Register Network-First Service Worker v8.2
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=8.1')
-          .then(reg => {
-            console.log('[PWA] Service Worker v8.1 active ✓ Scope:', reg.scope);
-            reg.update();
-          })
-          .catch(err => console.log('[PWA] Service worker fallback:', err));
+        navigator.serviceWorker.register('./sw.js?v=8.2')
+          .then(reg => reg.update())
+          .catch(() => {});
       });
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {

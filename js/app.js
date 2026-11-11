@@ -1254,50 +1254,19 @@ class AppController {
     const cfg = cloud.getSavedConfig();
     const status = cloud.getStatusSummary();
     const pending = cloud.getPendingCount();
-    const host = this.escapeHtml(window.location.hostname || 'mydukaan-eta.vercel.app');
     const escErr = cloud.lastError ? this.escapeHtml(cloud.lastError) : '';
-    const hasLocalOverride = typeof cloud.hasLocalOverrideConfig === 'function' ? cloud.hasLocalOverrideConfig() : Boolean(cfg);
 
-    // 1. Config Setup / Editor View
-    if (!cfg || this._showFirebaseConfigEditor) {
-      const prefill = cfg && hasLocalOverride ? this.escapeHtml(JSON.stringify(cfg, null, 2)) : '';
+    // 1. Pending Backend Config State (Zero manual config paste or guides shown to users)
+    if (!cfg) {
       return `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; align-items: start;">
-          <div style="min-width: 0;">
-            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 10px;">
-              Store every product, bill, Khata balance, supplier & expense <strong>both offline on this device</strong> (0ms LocalStorage + IndexedDB) and <strong>online in your private Firebase Firestore</strong> across multiple devices.
-            </p>
-            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; color: var(--text-muted); background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 10px;">
-              <div>✓ <strong>Offline First:</strong> Works with zero internet; queues all bills & auto-syncs online.</div>
-              <div>✓ <strong>Google + Email Login:</strong> Private per-owner cloud isolation under <code>/users/{uid}/</code>.</div>
-              <div>✓ <strong>Privacy Safe:</strong> Gemini API keys stay local on device & are never uploaded.</div>
-            </div>
-            <details style="font-size: 11.5px; color: var(--text-secondary); background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-              <summary style="cursor: pointer; font-weight: 700; color: var(--text-primary);">📋 Firebase Console Setup Steps (Spark Free Plan)</summary>
-              <ol style="margin: 8px 0 0; padding-left: 18px; line-height: 1.65;">
-                <li>Open <strong>Firebase Console</strong> ➔ <strong>Authentication</strong> ➔ enable <strong>Google</strong> &amp; <strong>Email/Password</strong>.</li>
-                <li>In <strong>Authentication ➔ Settings ➔ Authorized domains</strong>, add <code style="overflow-wrap: anywhere;">${host}</code>.</li>
-                <li>Create <strong>Firestore Database (Standard Edition)</strong> and paste rules from repo <code>firestore.rules</code>.</li>
-                <li>Copy your Web App <code>firebaseConfig</code> from <strong>Project Settings</strong> &amp; paste on the right.</li>
-              </ol>
-            </details>
-          </div>
-
-          <div style="min-width: 0;">
-            ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px; overflow-wrap: anywhere;">${escErr}</div>` : ''}
-            <label class="form-label">Paste Firebase Web Config (JSON or JS Snippet) *</label>
-            <textarea id="fb-config-input" class="form-textarea" rows="6" style="font-family: var(--font-mono); font-size: 11.5px; line-height: 1.45; margin-bottom: 10px;" placeholder='const firebaseConfig = {\n  apiKey: "YOUR_API_KEY",\n  authDomain: "your-shop.firebaseapp.com",\n  projectId: "your-shop-id",\n  appId: "1:123456789:web:abcdef"\n};'>${prefill}</textarea>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" id="fb-save-cfg-btn" class="btn btn-primary btn-sm" style="flex: 1 1 160px; justify-content: center;" onclick="App.saveFirebaseConfig()">
-                ${Icons.check(14)} Save & Connect Firebase
-              </button>
-              ${cfg ? `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="App.toggleFirebaseConfigEdit(false)">
-                  Cancel
-                </button>
-              ` : ''}
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding: 14px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div style="flex: 1 1 240px; min-width: 0;">
+            <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Cloud Account Sync Ready Soon</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.55;">
+              Live billing, barcode lookup, and Gemini AI run directly online. Google &amp; Email multi-device sync activates automatically once cloud project credentials are linked in the backend.
             </div>
           </div>
+          <span class="badge badge-primary">Live Online OS</span>
         </div>
       `;
     }
@@ -1309,28 +1278,17 @@ class AppController {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; align-items: start;">
           <div style="min-width: 0;">
             <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 12px;">
-              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Linked Firebase Project</div>
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Connected Cloud Node</div>
               <div style="font-size: 14px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); margin-top: 2px; overflow-wrap: anywhere;">${this.escapeHtml(cfg.projectId)}</div>
-              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">IndexedDB Persistence: <strong>${this.escapeHtml(cloud.persistenceMode || 'ready')}</strong></div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Real-time Firestore Sync Ready</div>
             </div>
 
             ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px; overflow-wrap: anywhere;">${escErr}</div>` : ''}
-            ${!status.online ? `<div style="background: var(--warning-light); border: 1px solid var(--warning-border); color: var(--warning); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px;">System is currently offline. Local billing keeps working; connect to the internet once to sign in &amp; sync.</div>` : ''}
+            ${!status.online ? `<div style="background: var(--warning-light); border: 1px solid var(--warning-border); color: var(--warning); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); margin-bottom: 10px;">Internet connection required to sign in and sync.</div>` : ''}
 
-            <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 10px;" onclick="CloudSync.signInWithGoogle()">
+            <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="CloudSync.signInWithGoogle()">
               <span style="font-weight: 900; font-size: 14px;">G</span> Continue with Google
             </button>
-
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" class="btn btn-secondary btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.toggleFirebaseConfigEdit(true)">
-                ${Icons.edit(13)} Edit Config
-              </button>
-              ${hasLocalOverride ? `
-                <button type="button" class="btn btn-danger btn-sm" style="flex: 1 1 110px; justify-content: center;" onclick="App.disconnectFirebase()">
-                  Disconnect
-                </button>
-              ` : ''}
-            </div>
           </div>
 
           <div style="min-width: 0; background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
@@ -1363,7 +1321,7 @@ class AppController {
       `;
     }
 
-    // 3. Connected & Signed In (Dual Online + Offline Sync Active)
+    // 3. Connected & Signed In
     const syncMeta = window.DB ? DB.getSyncMeta() : {};
     const syncedTs = cloud.lastSyncedAt || syncMeta.lastSyncedAt || 0;
     const syncedStr = syncedTs
@@ -1395,11 +1353,11 @@ class AppController {
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); gap: 10px;">
           <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
-            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Device Offline Cache</div>
-            <div style="font-size: 12.5px; font-weight: 700; color: #10B981; margin-top: 3px;">LocalStorage + IndexedDB</div>
+            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Sync Cache</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #10B981; margin-top: 3px;">Cloud + Local Instant</div>
           </div>
           <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
-            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Offline Sync Queue</div>
+            <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Sync Queue</div>
             <div style="font-size: 12.5px; font-weight: 700; color: ${pending > 0 ? 'var(--warning)' : 'var(--text-primary)'}; margin-top: 3px;">${pending} Pending Change(s)</div>
           </div>
           <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
@@ -1408,62 +1366,17 @@ class AppController {
           </div>
           <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 0;">
             <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;">Security Isolation</div>
-            <div style="font-size: 12.5px; font-weight: 700; color: #60A5FA; margin-top: 3px;">Owner Only (Keys Excluded)</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #60A5FA; margin-top: 3px;">Owner Only (UID Isolated)</div>
           </div>
         </div>
 
         <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-top: 4px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="App.toggleFirebaseConfigEdit(true)">
-            ${Icons.edit(13)} Change Config
-          </button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="CloudSync.signOutUser()">
             ${Icons.logOut(13)} Sign Out
           </button>
-          ${hasLocalOverride ? `
-            <button type="button" class="btn btn-danger btn-sm" onclick="App.disconnectFirebase()">
-              Disconnect Project
-            </button>
-          ` : ''}
         </div>
       </div>
     `;
-  }
-
-  async saveFirebaseConfig() {
-    if (!window.CloudSync) return;
-    const input = document.getElementById('fb-config-input');
-    const raw = input ? input.value : '';
-    const btn = document.getElementById('fb-save-cfg-btn');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Connecting...';
-    }
-    const res = await CloudSync.saveConfig(raw);
-    if (!res.ok) {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `${Icons.check(14)} Save & Connect Firebase`;
-      }
-      this.toast('danger', 'Invalid Firebase Config', res.error);
-      return;
-    }
-    this._showFirebaseConfigEditor = false;
-    this.toast('success', 'Firebase Configured', `Linked project: ${res.config.projectId}`);
-    CloudSync.notifyUI();
-  }
-
-  toggleFirebaseConfigEdit(show) {
-    this._showFirebaseConfigEditor = Boolean(show);
-    if (window.CloudSync) CloudSync.notifyUI();
-  }
-
-  async disconnectFirebase() {
-    if (confirm('Disconnect this browser\'s Firebase override? Your local offline store data will NOT be deleted.')) {
-      this._showFirebaseConfigEditor = false;
-      if (window.CloudSync) await CloudSync.clearConfig();
-      const usingDefault = window.CloudSync && typeof CloudSync.isUsingDefaultConfig === 'function' && CloudSync.isUsingDefaultConfig();
-      this.toast('info', 'Firebase Updated', usingDefault ? 'Reverted to default Firebase project config.' : 'Switched back to local-only mode.');
-    }
   }
 
   openCloudAuthSection() {

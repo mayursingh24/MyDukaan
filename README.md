@@ -1,6 +1,6 @@
 # MyDukkan24 — Enterprise Retail OS & Smart POS
 
-![MyDukkan24 Status](https://img.shields.io/badge/MyDukkan24-v8.1%20Production-2563EB?style=for-the-badge&logo=shopify&logoColor=white)
+![MyDukkan24 Status](https://img.shields.io/badge/MyDukkan24-v8.2%20Production-2563EB?style=for-the-badge&logo=shopify&logoColor=white)
 ![Storage](https://img.shields.io/badge/Dual%20Storage-Offline%20%2B%20Firebase%20Firestore-F59E0B?style=for-the-badge&logo=firebase&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Strict%20Online%20%2B%20Offline%20PWA-10B981?style=for-the-badge&logo=pwa&logoColor=white)
 ![AI Engine](https://img.shields.io/badge/AI%20Copilot-Gemini%203.8%20Interactions%20API-3B82F6?style=for-the-badge&logo=google&logoColor=white)
@@ -32,7 +32,7 @@
 
 ---
 
-## 🔥 Firebase Cloud + Offline Dual Storage (v8.1)
+## 🔥 Firebase Cloud + Offline Dual Storage (v8.2)
 
 MyDukkan24 supports **hybrid Offline + Online dual persistence**, so every bill, product SKU, customer Khata ledger entry, supplier invoice, expense, and staff record saves locally in **0ms** and synchronizes automatically with your private **Cloud Firestore Standard Edition** database when online.
 
@@ -207,7 +207,7 @@ If a Netlify preview or deployment floating badge overlaps bottom navigation con
 - **Offline Storage:** Inbuilt `localStorage` Database (`js/storage.js`) with item/meta diff queue, JSON Backup & CSV Import/Export.
 - **Cloud Sync & Auth:** Dynamic Firebase SDK (`11.6.0` ESM) with Google Sign-In + Email/Password Auth and **Cloud Firestore Standard Edition** (`persistentLocalCache` multi-tab IndexedDB + `/users/{uid}/` real-time sync).
 - **Serverless API:** Vercel Functions (`api/gemini.js`) & Netlify Functions (`netlify/functions/gemini.js`) targeting the Gemini Interactions API (`v1beta/interactions`).
-- **PWA Caching:** Service Worker `v8.1` (`sw.js`) with strict Network-First same-origin caching (bypassing `/api/*` and cross-origin SDK/API calls).
+- **PWA Caching:** Service Worker `v8.2` (`sw.js`) with strict Network-First same-origin caching (bypassing `/api/*` and cross-origin SDK/API calls).
 
 ---
 
@@ -221,15 +221,15 @@ MyDukaan-v4/
 │   ├── logo.svg              # Vector logo fallback
 │   └── MyDukkan24-v4.apk     # Android APK download package
 ├── css/
-│   ├── landing.css           # Responsive SaaS landing page + Auth Modal styles (v8.1)
-│   ├── style.css             # Core app theme variables, modals, z-index & mobile layout (v8.1)
-│   └── components.css        # POS terminal, khata cards, scanner & responsive components (v8.1)
+│   ├── landing.css           # Responsive SaaS landing page + Auth Modal styles (v8.2)
+│   ├── style.css             # Core app theme variables, modals, z-index & mobile layout (v8.2)
+│   └── components.css        # POS terminal, khata cards, scanner & responsive components (v8.2)
 ├── js/
 │   ├── html5-qrcode.min.js   # Bundled local barcode vision engine
 │   ├── icons.js              # Centralized SVG icon library
 │   ├── i18n.js               # Multi-language translation engine (EN, HI, Hinglish)
 │   ├── storage.js            # Inbuilt local database, sync queue & Web Audio synthesizer
-│   ├── firebase-sync.js      # Hybrid Offline-First + Firestore real-time cloud sync (v8.1)
+│   ├── firebase-sync.js      # Hybrid Offline-First + Firestore real-time cloud sync (v8.2)
 │   ├── scanner.js            # Strict Online/Offline barcode scanner & FMCG resolver
 │   ├── pos.js                # High-speed POS billing & checkout engine
 │   ├── inventory.js          # Product catalog & stock safety control
@@ -244,15 +244,15 @@ MyDukaan-v4/
 │       └── gemini.js         # Netlify Serverless Gemini Interactions API proxy
 ├── .env.example              # Environment variables template
 ├── _redirects                # Netlify SPA routing rules
-├── app.html                  # Main retail business OS terminal (v8.1)
+├── app.html                  # Main retail business OS terminal (v8.2)
 ├── firebase.json             # Firebase Firestore rules & indexes project config
 ├── firestore.indexes.json    # Firestore composite index configuration
 ├── firestore.rules           # Strict per-user (/users/{uid}/) Firestore security rules
-├── index.html                # Responsive landing page, Login/Sign Up modal & POS simulator (v8.1)
+├── index.html                # Responsive landing page, Login/Sign Up modal & POS simulator (v8.2)
 ├── manifest.json             # PWA metadata & shortcut configuration
 ├── netlify.toml              # Netlify build & cache configuration
-├── README.md                 # Complete system documentation (v8.1)
-├── sw.js                     # Network-First PWA service worker v8.1
+├── README.md                 # Complete system documentation (v8.2)
+├── sw.js                     # Network-First PWA service worker v8.2
 └── vercel.json               # Vercel rewrites & cache configuration
 ```
 
