@@ -551,7 +551,9 @@ class BarcodeScannerEngine {
     }
 
     try {
-      const cached = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
+      const cached = (window.DB && typeof DB.getBarcodeCache === 'function')
+        ? DB.getBarcodeCache()
+        : JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
       if (cached[cleanCode] && cached[cleanCode].name) {
         return {
           item: { ...cached[cleanCode], barcode: cleanCode },
@@ -716,13 +718,17 @@ class BarcodeScannerEngine {
         }
       }
 
-      // Persist online match to cache for future offline scans
+      // Persist online match to synced DB + local cache for future offline scans across devices
       if (matchedItem && matchedItem.name) {
-        try {
-          const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
-          cache[barcode] = matchedItem;
-          localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
-        } catch (e) {}
+        if (window.DB && typeof DB.setBarcodeCacheEntry === 'function') {
+          DB.setBarcodeCacheEntry(barcode, matchedItem);
+        } else {
+          try {
+            const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
+            cache[barcode] = matchedItem;
+            localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
+          } catch (e) {}
+        }
       }
     } else {
       // STRICT OFFLINE PATH: System is offline -> use local FMCG catalog / cache / GS1 prefix
@@ -844,7 +850,10 @@ class BarcodeScannerEngine {
       unit: 'pack',
       minStock: 5,
       gstRate: DB.inferDefaultGstRate(cat, name),
-      expiryDate: ''
+      expiryDate: '',
+      soldQty: 0,
+      soldRevenue: 0,
+      lastSoldAt: 0
     };
 
     DB.updateItem('products', newProduct);
@@ -882,7 +891,10 @@ class BarcodeScannerEngine {
       unit: "pack",
       minStock: 5,
       gstRate: DB.inferDefaultGstRate(cat, name),
-      expiryDate: ''
+      expiryDate: '',
+      soldQty: 0,
+      soldRevenue: 0,
+      lastSoldAt: 0
     };
 
     DB.updateItem('products', newProduct);

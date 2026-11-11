@@ -101,10 +101,14 @@ class StaffEngine {
                   </div>
 
                   <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    ${emp.status && emp.status !== 'Active' ? `<span class="badge badge-muted">${DB.escapeHtml(emp.status)}</span>` : ''}
                     <span class="badge badge-success">${presentCount} Present</span>
                     <span class="badge badge-warning">${halfCount} Half</span>
                     <span class="badge badge-danger">${leaveCount} Absent</span>
                     <span class="badge badge-primary" title="Estimated Earned Pay so far">Est: ₹${estPay.toLocaleString('en-IN')}</span>
+                    <button class="btn btn-secondary btn-sm" onclick="Staff.openEditStaffModal('${DB.escapeHtml(emp.id)}')" title="Edit employee details">
+                      ${Icons.edit(13)}
+                    </button>
                     <button class="btn btn-danger btn-sm" onclick="Staff.deleteStaff('${DB.escapeHtml(emp.id)}')" title="Delete employee">
                       ${Icons.trash(13)}
                     </button>
@@ -157,50 +161,78 @@ class StaffEngine {
   }
 
   openAddStaffModal() {
+    this.openStaffModal(null);
+  }
+
+  openEditStaffModal(id) {
     if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
-      App.requireOwner('add employees');
+      App.requireOwner('edit employees');
       return;
     }
+    const db = DB.getData();
+    const emp = (db.staff || []).find(s => s.id === id);
+    if (emp) this.openStaffModal(emp);
+  }
+
+  openStaffModal(emp = null) {
+    if (window.App && typeof App.isCashierMode === 'function' && App.isCashierMode()) {
+      App.requireOwner('manage employees');
+      return;
+    }
+
+    const isEdit = Boolean(emp);
+    const curRole = isEdit ? (emp.role || 'Store Helper') : 'Store Helper';
+    const curStatus = isEdit ? (emp.status || 'Active') : 'Active';
 
     const modalHtml = `
       <div class="modal-backdrop" id="add-staff-modal" onclick="if(event.target === this) Staff.closeModal()">
         <div class="modal-card" style="max-width: 440px;">
           <div class="modal-header">
-            <div class="modal-title">${Icons.staff(16)} Add Employee</div>
+            <div class="modal-title">${isEdit ? Icons.edit(16) : Icons.staff(16)} ${isEdit ? 'Edit Employee' : 'Add Employee'}</div>
             <button class="topbar-icon-btn" onclick="Staff.closeModal()">✕</button>
           </div>
           <div class="modal-body">
-            <form onsubmit="event.preventDefault(); Staff.saveStaff();">
+            <form onsubmit="event.preventDefault(); Staff.saveStaff('${isEdit ? DB.escapeHtml(emp.id) : ''}');">
               <div class="form-group">
                 <label class="form-label">Employee Full Name *</label>
-                <input type="text" id="staff-name-input" class="form-input" required placeholder="e.g. Suresh Kumar" />
+                <input type="text" id="staff-name-input" class="form-input" required placeholder="e.g. Suresh Kumar" value="${isEdit ? DB.escapeHtml(emp.name || '') : ''}" />
               </div>
 
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label">Store Role *</label>
                   <select id="staff-role-input" class="form-select">
-                    <option value="Store Helper">Store Helper</option>
-                    <option value="Billing Cashier">Billing Cashier</option>
-                    <option value="Delivery Boy">Delivery Boy</option>
-                    <option value="Supervisor">Supervisor</option>
+                    <option value="Store Helper" ${curRole === 'Store Helper' ? 'selected' : ''}>Store Helper</option>
+                    <option value="Billing Cashier" ${curRole === 'Billing Cashier' ? 'selected' : ''}>Billing Cashier</option>
+                    <option value="Delivery Boy" ${curRole === 'Delivery Boy' ? 'selected' : ''}>Delivery Boy</option>
+                    <option value="Supervisor" ${curRole === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Monthly Salary (₹) *</label>
-                  <input type="number" id="staff-salary-input" class="form-input" required min="0" placeholder="15000" />
+                  <input type="number" id="staff-salary-input" class="form-input" required min="0" placeholder="15000" value="${isEdit ? (Number(emp.salary) || 0) : ''}" />
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Phone Number *</label>
-                <input type="tel" id="staff-phone-input" class="form-input" required placeholder="10-digit mobile number" />
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="tel" id="staff-phone-input" class="form-input" required placeholder="10-digit mobile number" value="${isEdit ? DB.escapeHtml(emp.phone || '') : ''}" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Employment Status</label>
+                  <select id="staff-status-input" class="form-select">
+                    <option value="Active" ${curStatus === 'Active' ? 'selected' : ''}>Active</option>
+                    <option value="On Leave" ${curStatus === 'On Leave' ? 'selected' : ''}>On Leave</option>
+                    <option value="Inactive" ${curStatus === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                  </select>
+                </div>
               </div>
 
               <div class="modal-footer" style="padding: 14px 0 0; background: none;">
                 <button type="button" class="btn btn-secondary" onclick="Staff.closeModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary">
-                  ${Icons.check(14)} Save Employee
+                  ${Icons.check(14)} ${isEdit ? 'Update Employee' : 'Save Employee'}
                 </button>
               </div>
             </form>
@@ -212,30 +244,43 @@ class StaffEngine {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
-  saveStaff() {
+  saveStaff(editId = '') {
     const name = document.getElementById('staff-name-input').value.trim();
     const role = document.getElementById('staff-role-input').value;
     const salary = parseFloat(document.getElementById('staff-salary-input').value) || 0;
     const phone = document.getElementById('staff-phone-input').value.trim();
+    const status = (document.getElementById('staff-status-input')?.value || 'Active').trim();
 
     if (!name || !phone) {
       App.toast('danger', 'Validation', 'Employee name and phone are required');
       return;
     }
 
-    const newEmp = {
-      id: DB.uid('S'),
-      name,
-      role,
-      salary,
-      phone,
-      joinDate: DB.getLocalDateStr(),
-      status: "Active"
-    };
+    const db = DB.getData();
+    const existing = editId ? (db.staff || []).find(s => s.id === editId) : null;
 
-    DB.updateItem('staff', newEmp);
+    const empPayload = existing
+      ? {
+          ...existing,
+          name,
+          role,
+          salary,
+          phone,
+          status
+        }
+      : {
+          id: DB.uid('S'),
+          name,
+          role,
+          salary,
+          phone,
+          joinDate: DB.getLocalDateStr(),
+          status
+        };
+
+    DB.updateItem('staff', empPayload);
     this.closeModal();
-    App.toast('success', 'Staff Added', `${name} (${role})`);
+    App.toast('success', existing ? 'Staff Updated' : 'Staff Added', `${name} (${role})`);
     this.render();
   }
 
@@ -250,7 +295,11 @@ class StaffEngine {
     if (!emp) return;
 
     if (confirm(`Remove "${emp.name}" from employee directory?`)) {
-      DB.deleteItem('staff', id);
+      db.staff = (db.staff || []).filter(s => s.id !== id);
+      if (db.attendance && Object.prototype.hasOwnProperty.call(db.attendance, id)) {
+        delete db.attendance[id];
+      }
+      DB.saveData(db);
       App.toast('info', 'Deleted', `${emp.name} removed`);
       this.render();
     }

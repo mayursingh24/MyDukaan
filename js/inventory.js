@@ -192,6 +192,7 @@ class InventoryEngine {
             <div style="font-weight: 600; color: var(--text-primary); font-size: 13px;">${DB.escapeHtml(p.name)}</div>
             <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
               <span>SKU: ${DB.escapeHtml(p.id)} • ${DB.escapeHtml(p.unit || 'unit')} • GST ${gst}%</span>
+              <span style="color: var(--primary); font-weight: 600;">Sold: ${DB.roundQty(p.soldQty || 0)} ${DB.escapeHtml(p.unit || 'unit')} (₹${DB.round2(p.soldRevenue || 0).toLocaleString('en-IN')})</span>
               ${exp ? `<span class="badge ${exp.badgeClass}" style="font-size: 10px; padding: 1px 6px;">${DB.escapeHtml(exp.label)}</span>` : ''}
             </div>
           </td>
@@ -490,7 +491,10 @@ class InventoryEngine {
         cost,
         stock,
         minStock,
-        expiryDate
+        expiryDate,
+        soldQty: 0,
+        soldRevenue: 0,
+        lastSoldAt: 0
       };
       db.products.unshift(newProd);
       DB.saveData(db);
@@ -776,7 +780,10 @@ class InventoryEngine {
         unit: row.unit,
         minStock: row.minStock,
         gstRate: row.gstRate,
-        expiryDate: row.expiryDate
+        expiryDate: row.expiryDate,
+        soldQty: 0,
+        soldRevenue: 0,
+        lastSoldAt: 0
       });
       added++;
     });
@@ -1080,11 +1087,15 @@ class InventoryEngine {
       }
 
       if (matched) {
-        try {
-          const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
-          cache[barcode] = { ...matched, barcode };
-          localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
-        } catch (e) {}
+        if (window.DB && typeof DB.setBarcodeCacheEntry === 'function') {
+          DB.setBarcodeCacheEntry(barcode, { ...matched, barcode });
+        } else {
+          try {
+            const cache = JSON.parse(localStorage.getItem('mydukaan24_barcode_cache') || '{}');
+            cache[barcode] = { ...matched, barcode };
+            localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache));
+          } catch (e) {}
+        }
         applyFields(matched, sourceLabel, '🟢 Online');
         return;
       }
@@ -1182,7 +1193,13 @@ class InventoryEngine {
       );
     }
 
-    if (this.catalogSort === 'price-asc') {
+    if (this.catalogSort === 'top-selling') {
+      filtered.sort((a, b) => {
+        const diff = (Number(b.soldQty) || 0) - (Number(a.soldQty) || 0);
+        if (diff !== 0) return diff;
+        return (Number(b.soldRevenue) || 0) - (Number(a.soldRevenue) || 0);
+      });
+    } else if (this.catalogSort === 'price-asc') {
       filtered.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
     } else if (this.catalogSort === 'price-desc') {
       filtered.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
@@ -1248,7 +1265,7 @@ class InventoryEngine {
             </div>
             <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); line-height: 1.35;">${DB.escapeHtml(p.name)}</div>
             <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
-              Unit: ${DB.escapeHtml(p.unit || 'pack')} • Stock: <strong style="color: ${stockNum <= 0 ? 'var(--danger)' : stockNum <= (p.minStock || 5) ? 'var(--warning)' : 'var(--success)'};">${DB.roundQty(stockNum)}</strong>
+              Unit: ${DB.escapeHtml(p.unit || 'pack')} • Stock: <strong style="color: ${stockNum <= 0 ? 'var(--danger)' : stockNum <= (p.minStock || 5) ? 'var(--warning)' : 'var(--success)'};">${DB.roundQty(stockNum)}</strong> • Sold: <strong style="color: var(--primary);">${DB.roundQty(p.soldQty || 0)}</strong> <span style="font-size: 10.5px;">(₹${DB.round2(p.soldRevenue || 0).toLocaleString('en-IN')})</span>
               ${expMeta ? ` • <span style="color: ${expMeta.status === 'expired' || expMeta.status === 'expiring7' ? 'var(--danger)' : 'var(--text-muted)'};">${DB.escapeHtml(expMeta.label)}</span>` : ''}
             </div>
           </div>

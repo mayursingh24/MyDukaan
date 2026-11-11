@@ -75,10 +75,13 @@
       this.unsubscribers = [];
       this.syncState = 'idle'; // idle | unconfigured | signed-out | connecting | syncing | synced | offline-queued | error
       this.lastError = '';
+      this.rulesUpgradeNeeded = false;
       this.lastSyncedAt = 0;
       this.persistenceMode = 'memory';
       this.authTab = 'signin';
       this._debounceTimer = null;
+      this._retryTimer = null;
+      this._retryAttempts = 0;
       this._flushPromise = null;
       this._authListenerAttached = false;
       this._authUnsubscribe = null;
@@ -189,7 +192,8 @@
                 gstin: clean.gstin || '',
                 upiId: clean.upiId || '6306437348@upi'
               }],
-              activeShopId: 'SHOP-1'
+              activeShopId: 'SHOP-1',
+              cloudInitialized: false
             }, user);
             await withTimeout(setDoc(metaRef, payload), 10000, 'Timed out saving initial store profile');
           }
@@ -748,6 +752,126 @@
       return out;
     }
 
+    sanitizeAttendance(rawAtt) {
+      if (!rawAtt || typeof rawAtt !== 'object' || Array.isArray(rawAtt)) return {};
+      const cleanAtt = {};
+      Object.keys(rawAtt).slice(0, 200).forEach((empId) => {
+        const cleanEmpId = safeStr(empId, 100);
+        const dayMap = rawAtt[empId];
+        if (!cleanEmpId || !dayMap || typeof dayMap !== 'object' || Array.isArray(dayMap)) return;
+        const cleanDays = {};
+        Object.keys(dayMap).slice(0, 31).forEach((dayKey) => {
+          const dayNum = parseInt(dayKey, 10);
+          const status = dayMap[dayKey];
+          if (dayNum >= 1 && dayNum <= 31 && ['present', 'half', 'leave'].includes(status)) {
+            cleanDays[String(dayNum)] = status;
+          }
+        });
+        cleanAtt[cleanEmpId] = cleanDays;
+      });
+      return cleanAtt;
+    }
+
+    sanitizeBarcodeCache(rawCache) {
+      if (!rawCache || typeof rawCache !== 'object' || Array.isArray(rawCache)) return {};
+      const clean = {};
+      Object.keys(rawCache).slice(-300).forEach((codeKey) => {
+        const code = safeStr(codeKey, 80);
+        const entry = rawCache[codeKey];
+        if (!code || !entry || typeof entry !== 'object' || Array.isArray(entry)) return;
+        const name = safeStr(entry.name, 220);
+        if (!name) return;
+        clean[code] = {
+          barcode: safeStr(entry.barcode || code, 80),
+          name,
+          brand: safeStr(entry.brand, 120),
+          cat: safeStr(entry.cat, 80) || 'Grocery',
+          mrp: safeNum(entry.mrp, 0),
+          price: safeNum(entry.price, 0),
+          cost: safeNum(entry.cost, 0),
+          unit: safeStr(entry.unit, 40) || 'pack',
+          gstRate: [0, 5, 12, 18].includes(Number(entry.gstRate)) ? Number(entry.gstRate) : 5,
+          emoji: safeStr(entry.emoji, 20) || '📦'
+        };
+      });
+      return clean;
+    }
+
+    sanitizeShopsList(rawShops) {
+      if (!Array.isArray(rawShops)) return [];
+      return rawShops.slice(0, 50).filter(s => s && typeof s === 'object').map((s, idx) => ({
+        id: safeStr(s.id, 100) || `SHOP-${idx + 1}`,
+        name: safeStr(s.name, 180) || 'MyDukkan24 Mart',
+        owner: safeStr(s.owner, 140),
+        phone: safeStr(s.phone, 40),
+        address: safeStr(s.address, 300),
+        gstin: safeStr(s.gstin, 40),
+        upiId: safeStr(s.upiId, 120) || '6306437348@upi'
+      }));
+    }
+
+    sanitizeCustomerTransactions(rawList) {
+      if (!Array.isArray(rawList)) return [];
+      return rawList.slice(0, 200).filter(t => t && typeof t === 'object').map((t) => ({
+        id: safeStr(t.id, 100) || `TX_${Date.now().toString(36)}`,
+        date: safeStr(t.date, 40),
+        type: safeStr(t.type, 40) || 'Payment',
+        amount: safeNum(t.amount, 0),
+        desc: safeStr(t.desc, 260),
+        invoiceId: safeStr(t.invoiceId, 100)
+      }));
+    }
+
+    _stripUndefinedDeep(obj) {
+      try {
+        return JSON.parse(JSON.stringify(obj));
+      } catch (e) {
+        return obj;
+      }
+    }
+
+    _mergeAttendance(localAtt, remoteAtt) {
+      const merged = this.sanitizeAttendance(remoteAtt);
+      const localClean = this.sanitizeAttendance(localAtt);
+      Object.keys(localClean).forEach((empId) => {
+        merged[empId] = {
+          ...(merged[empId] || {}),
+          ...localClean[empId]
+        };
+      });
+      return merged;
+    }
+
+    _mergeBarcodeCache(localCache, remoteCache) {
+      const merged = {
+        ...this.sanitizeBarcodeCache(remoteCache),
+        ...this.sanitizeBarcodeCache(localCache)
+      };
+      const keys = Object.keys(merged);
+      if (keys.length > 300) {
+        keys.slice(0, keys.length - 300).forEach((k) => delete merged[k]);
+      }
+      return merged;
+    }
+
+    // Legacy v9.0 rules compatibility bridge if user has not republished firestore.rules yet
+    stripLegacyV90Payload(cat, data) {
+      if (!data || typeof data !== 'object') return data;
+      const copy = { ...data };
+      if (cat === '_meta') {
+        delete copy.barcodeCache;
+        delete copy.voiceLang;
+        delete copy.cloudInitialized;
+      } else if (cat === 'products') {
+        delete copy.soldQty;
+        delete copy.soldRevenue;
+        delete copy.lastSoldAt;
+      } else if (cat === 'customers') {
+        delete copy.transactions;
+      }
+      return copy;
+    }
+
     // Sanitize documents strictly to match firestore.rules schema
     sanitizeMeta(db, user) {
       const shop = db.shop || {};
@@ -767,18 +891,16 @@
 
       const theme = db.theme === 'light' ? 'light' : 'dark';
       const language = ['en', 'hi', 'hinglish'].includes(db.language) ? db.language : 'en';
-      const rawAtt = (db.attendance && typeof db.attendance === 'object' && !Array.isArray(db.attendance)) ? db.attendance : {};
-      const cleanAtt = {};
-      Object.keys(rawAtt).slice(0, 200).forEach((k) => {
-        cleanAtt[k] = rawAtt[k];
-      });
 
       return {
         shop: cleanShop,
-        shops: Array.isArray(db.shops) ? db.shops.slice(0, 50) : [],
+        shops: this.sanitizeShopsList(db.shops),
         activeShopId: safeStr(db.activeShopId, 100) || 'SHOP-1',
-        attendance: cleanAtt,
+        attendance: this.sanitizeAttendance(db.attendance),
         parkedCarts: this.sanitizeParkedCarts(db.parkedCarts),
+        barcodeCache: this.sanitizeBarcodeCache(db.barcodeCache),
+        voiceLang: safeStr(db.voiceLang, 24) || 'hi-IN',
+        cloudInitialized: db.cloudInitialized !== false,
         ownerPinHash: safeStr(db.ownerPinHash, 128),
         theme,
         accent: safeStr(db.accent, 40) || 'blue',
@@ -810,6 +932,9 @@
             price: safeNum(raw.price, 0),
             cost: safeNum(raw.cost, 0),
             stock: safeNum(raw.stock, 0),
+            soldQty: safeNum(raw.soldQty, 0),
+            soldRevenue: safeNum(raw.soldRevenue, 0),
+            lastSoldAt: safeNum(raw.lastSoldAt, 0),
             unit: safeStr(raw.unit, 40) || 'pack',
             minStock: safeNum(raw.minStock, 0),
             gstRate: [0, 5, 12, 18].includes(Number(raw.gstRate)) ? Number(raw.gstRate) : 5,
@@ -829,6 +954,7 @@
             points: safeNum(raw.points, 0),
             tier: safeStr(raw.tier, 40) || 'Bronze',
             notes: safeStr(raw.notes, 1000),
+            transactions: this.sanitizeCustomerTransactions(raw.transactions),
             updatedAt
           };
         case 'invoices':
@@ -840,7 +966,7 @@
             customerName: safeStr(raw.customerName, 180) || 'Walk-in Customer',
             customerPhone: safeStr(raw.customerPhone, 40),
             cashierName: safeStr(raw.cashierName, 140),
-            items: Array.isArray(raw.items) ? raw.items.slice(0, 500) : [],
+            items: Array.isArray(raw.items) ? this._stripUndefinedDeep(raw.items.slice(0, 500)) : [],
             subtotal: safeNum(raw.subtotal, 0),
             tax: safeNum(raw.tax, 0),
             gstBreakdown: this.sanitizeGstBreakdown(raw.gstBreakdown),
@@ -853,7 +979,7 @@
             paymentMode: safeStr(raw.paymentMode, 40) || 'Cash',
             status: safeStr(raw.status, 40) || 'Paid',
             refundAmount: safeNum(raw.refundAmount, 0),
-            returnedItems: Array.isArray(raw.returnedItems) ? raw.returnedItems.slice(0, 500) : [],
+            returnedItems: Array.isArray(raw.returnedItems) ? this._stripUndefinedDeep(raw.returnedItems.slice(0, 500)) : [],
             lastReturnDate: safeStr(raw.lastReturnDate, 40),
             refundMode: safeStr(raw.refundMode, 40),
             shopId: safeStr(raw.shopId, 100),
@@ -879,7 +1005,7 @@
             date: safeStr(raw.date, 40) || localToday,
             supplierId: safeStr(raw.supplierId, 100),
             supplierName: safeStr(raw.supplierName, 180),
-            items: Array.isArray(raw.items) ? raw.items.slice(0, 500) : [],
+            items: Array.isArray(raw.items) ? this._stripUndefinedDeep(raw.items.slice(0, 500)) : [],
             totalAmount: safeNum(raw.totalAmount, 0),
             paidAmount: safeNum(raw.paidAmount, 0),
             dueAmount: safeNum(raw.dueAmount, 0),
@@ -952,27 +1078,41 @@
 
       const cloud = await this.fetchCloudStore(uid);
       const cloudHasCollections = CATEGORIES.some((cat) => (cloud.collections[cat] || []).length > 0);
+      const cloudWasInitialized = Boolean(cloud.meta && cloud.meta.cloudInitialized === true);
 
-      // CASE A: First time setting up Firebase cloud (or landing-created meta with empty collections on fresh device) -> Upload local store & seed starter collections
-      if (!cloud.exists || (!cloudHasCollections && syncMeta.lastSyncedAt === 0)) {
+      // CASE A: First time setting up Firebase cloud (or landing-created meta with empty collections before first sync) -> Upload local store & seed starter collections
+      if (!cloud.exists || (!cloudHasCollections && syncMeta.lastSyncedAt === 0 && !cloudWasInitialized)) {
         if (cloud.exists && cloud.meta && !syncMeta.metaDirty) {
           const adopted = { ...localDb };
           if (cloud.meta.shop) adopted.shop = { ...cloud.meta.shop };
           if (Array.isArray(cloud.meta.shops) && cloud.meta.shops.length) adopted.shops = cloud.meta.shops;
           if (cloud.meta.activeShopId) adopted.activeShopId = cloud.meta.activeShopId;
+          if (cloud.meta.attendance) adopted.attendance = this._mergeAttendance(adopted.attendance, cloud.meta.attendance);
+          if (cloud.meta.barcodeCache) adopted.barcodeCache = this._mergeBarcodeCache(adopted.barcodeCache, cloud.meta.barcodeCache);
           if (Array.isArray(cloud.meta.parkedCarts)) adopted.parkedCarts = cloud.meta.parkedCarts;
           if (typeof cloud.meta.ownerPinHash === 'string') adopted.ownerPinHash = cloud.meta.ownerPinHash;
           if (cloud.meta.theme) adopted.theme = cloud.meta.theme;
           if (cloud.meta.accent) adopted.accent = cloud.meta.accent;
           if (cloud.meta.language) adopted.language = cloud.meta.language;
+          if (cloud.meta.voiceLang) adopted.voiceLang = cloud.meta.voiceLang;
+          if (typeof cloud.meta.soundEnabled === 'boolean') adopted.soundEnabled = cloud.meta.soundEnabled;
           DB.saveData(adopted, { fromCloud: true });
+          if (adopted.voiceLang) {
+            localStorage.setItem('mydukaan24_voice_lang', adopted.voiceLang);
+            if (window.POS) window.POS._voiceLang = adopted.voiceLang;
+          }
+          if (adopted.barcodeCache && typeof DB._writeLocalBarcodeCache === 'function') {
+            DB._writeLocalBarcodeCache(adopted.barcodeCache);
+          }
+        }
+        const latestLocal = DB.getData();
+        if (typeof DB.recomputeProductSalesStats === 'function' && DB.recomputeProductSalesStats(latestLocal, { onlyMissing: true })) {
+          DB.saveData(latestLocal, { fromCloud: true });
         }
         const fullMeta = DB.getSyncMeta();
-        if (!cloud.exists || syncMeta.metaDirty) {
-          fullMeta.metaDirty = true;
-        }
+        fullMeta.metaDirty = true;
         CATEGORIES.forEach((cat) => {
-          fullMeta.pendingUpserts[cat] = (localDb[cat] || []).filter(i => i && i.id).map(i => String(i.id));
+          fullMeta.pendingUpserts[cat] = (latestLocal[cat] || []).filter(i => i && i.id).map(i => String(i.id));
           fullMeta.pendingDeletes[cat] = [];
         });
         DB.saveSyncMeta(fullMeta);
@@ -981,7 +1121,7 @@
           App.updateHeaderStoreName && App.updateHeaderStoreName();
           App.refreshActiveViewFromCloud && App.refreshActiveViewFromCloud();
         }
-        this.showNotice('success', 'Cloud Initialized', 'Your store data has been backed up to Firebase.');
+        this.showNotice('success', 'Cloud Initialized', 'All store data (A–Z) has been synced to Firebase.');
         return;
       }
 
@@ -996,22 +1136,44 @@
 
       // Adopt untouched demo device cleanly without merging sample demo IDs
       const cloudNewerMeta = !syncMeta.hasUserMutated ||
-        (!syncMeta.metaDirty && cloud.meta && (safeNum(cloud.meta.updatedAt, 0) >= safeNum(syncMeta.lastLocalWriteAt, 0)));
+        (!syncMeta.metaDirty && cloud.meta && (safeNum(cloud.meta.updatedAt, 0) >= safeNum(syncMeta.lastMetaWriteAt || syncMeta.lastLocalWriteAt, 0)));
 
       if (cloud.meta && cloudNewerMeta) {
         if (cloud.meta.shop) merged.shop = { ...cloud.meta.shop };
         if (Array.isArray(cloud.meta.shops)) merged.shops = cloud.meta.shops;
         if (cloud.meta.activeShopId) merged.activeShopId = cloud.meta.activeShopId;
-        if (cloud.meta.attendance) merged.attendance = cloud.meta.attendance;
+        if (cloud.meta.attendance) {
+          merged.attendance = syncMeta.metaDirty
+            ? this._mergeAttendance(localDb.attendance, cloud.meta.attendance)
+            : this.sanitizeAttendance(cloud.meta.attendance);
+        }
+        if (cloud.meta.barcodeCache) {
+          merged.barcodeCache = this._mergeBarcodeCache(localDb.barcodeCache, cloud.meta.barcodeCache);
+        }
         if (Array.isArray(cloud.meta.parkedCarts)) merged.parkedCarts = cloud.meta.parkedCarts;
         if (typeof cloud.meta.ownerPinHash === 'string') merged.ownerPinHash = cloud.meta.ownerPinHash;
         if (cloud.meta.theme) merged.theme = cloud.meta.theme;
         if (cloud.meta.accent) merged.accent = cloud.meta.accent;
         if (cloud.meta.language) merged.language = cloud.meta.language;
+        if (cloud.meta.voiceLang) merged.voiceLang = cloud.meta.voiceLang;
         if (typeof cloud.meta.soundEnabled === 'boolean') merged.soundEnabled = cloud.meta.soundEnabled;
         nextSyncMeta.metaDirty = false;
       } else if (syncMeta.metaDirty) {
+        if (cloud.meta && cloud.meta.attendance) {
+          merged.attendance = this._mergeAttendance(localDb.attendance, cloud.meta.attendance);
+        }
+        if (cloud.meta && cloud.meta.barcodeCache) {
+          merged.barcodeCache = this._mergeBarcodeCache(localDb.barcodeCache, cloud.meta.barcodeCache);
+        }
         nextSyncMeta.metaDirty = true;
+      }
+
+      if (merged.voiceLang) {
+        localStorage.setItem('mydukaan24_voice_lang', merged.voiceLang);
+        if (window.POS) window.POS._voiceLang = merged.voiceLang;
+      }
+      if (merged.barcodeCache && typeof DB._writeLocalBarcodeCache === 'function') {
+        DB._writeLocalBarcodeCache(merged.barcodeCache);
       }
 
       CATEGORIES.forEach((cat) => {
@@ -1063,6 +1225,19 @@
         nextSyncMeta.pendingUpserts[cat] = Array.from(upsertSet);
         nextSyncMeta.pendingDeletes[cat] = Array.from(deleteSet);
       });
+
+      // Backfill per-product sales telemetry if migrating older cloud docs
+      if (Array.isArray(merged.products) && typeof DB.recomputeProductSalesStats === 'function') {
+        const missingIds = merged.products
+          .filter(p => p && p.id && p.soldQty === undefined)
+          .map(p => String(p.id));
+        if (missingIds.length) {
+          DB.recomputeProductSalesStats(merged, { onlyMissing: true });
+          const prodUpserts = new Set((nextSyncMeta.pendingUpserts.products || []).map(String));
+          missingIds.forEach(id => prodUpserts.add(id));
+          nextSyncMeta.pendingUpserts.products = Array.from(prodUpserts);
+        }
+      }
 
       // Keep Gemini API key strictly local
       merged.geminiKey = localDb.geminiKey || '';
@@ -1121,9 +1296,20 @@
           localDb.activeShopId = remote.activeShopId;
           changed = true;
         }
-        if (remote.attendance && JSON.stringify(localDb.attendance) !== JSON.stringify(remote.attendance)) {
-          localDb.attendance = remote.attendance;
-          changed = true;
+        if (remote.attendance) {
+          const cleanAtt = this.sanitizeAttendance(remote.attendance);
+          if (JSON.stringify(localDb.attendance) !== JSON.stringify(cleanAtt)) {
+            localDb.attendance = cleanAtt;
+            changed = true;
+          }
+        }
+        if (remote.barcodeCache && typeof remote.barcodeCache === 'object') {
+          const mergedCache = this._mergeBarcodeCache(localDb.barcodeCache, remote.barcodeCache);
+          if (JSON.stringify(localDb.barcodeCache) !== JSON.stringify(mergedCache)) {
+            localDb.barcodeCache = mergedCache;
+            if (typeof DB._writeLocalBarcodeCache === 'function') DB._writeLocalBarcodeCache(mergedCache);
+            changed = true;
+          }
         }
         if (Array.isArray(remote.parkedCarts) && JSON.stringify(localDb.parkedCarts) !== JSON.stringify(remote.parkedCarts)) {
           localDb.parkedCarts = remote.parkedCarts;
@@ -1143,6 +1329,12 @@
         }
         if (remote.language && localDb.language !== remote.language) {
           localDb.language = remote.language;
+          changed = true;
+        }
+        if (remote.voiceLang && localDb.voiceLang !== remote.voiceLang) {
+          localDb.voiceLang = remote.voiceLang;
+          localStorage.setItem('mydukaan24_voice_lang', remote.voiceLang);
+          if (window.POS) window.POS._voiceLang = remote.voiceLang;
           changed = true;
         }
         if (typeof remote.soundEnabled === 'boolean' && localDb.soundEnabled !== remote.soundEnabled) {
@@ -1269,11 +1461,33 @@
       return this._flushPromise;
     }
 
+    _clearRetry() {
+      if (this._retryTimer) {
+        clearTimeout(this._retryTimer);
+        this._retryTimer = null;
+      }
+      this._retryAttempts = 0;
+    }
+
+    _scheduleRetry() {
+      if (!this.user || !this.isOnline() || this._retryTimer || this.getPendingCount() <= 0) return;
+      const delays = [6000, 15000, 30000];
+      const delayMs = delays[Math.min(this._retryAttempts, delays.length - 1)];
+      this._retryAttempts += 1;
+      this._retryTimer = setTimeout(() => {
+        this._retryTimer = null;
+        if (this.user && this.isOnline() && this.getPendingCount() > 0) {
+          this.flushPending().catch(() => {});
+        }
+      }, delayMs);
+    }
+
     async _executeFlush(isManual) {
       const uid = this.user.uid;
       const syncMeta = DB.getSyncMeta();
       const localDb = DB.getData();
-      const { doc, writeBatch } = this.sdk;
+      const { doc, writeBatch, setDoc, deleteDoc } = this.sdk;
+      const flushMetaWriteAt = safeNum(syncMeta.lastMetaWriteAt || syncMeta.lastLocalWriteAt, 0);
 
       const ops = [];
 
@@ -1282,7 +1496,9 @@
           type: 'set',
           ref: doc(this.db, 'users', uid, 'meta', 'store'),
           data: this.sanitizeMeta(localDb, this.user),
-          cat: '_meta'
+          cat: '_meta',
+          id: 'store',
+          metaWriteAt: flushMetaWriteAt
         });
       }
 
@@ -1301,7 +1517,8 @@
                 ref: doc(this.db, 'users', uid, cat, String(id)),
                 data: sanitized,
                 cat,
-                id: String(id)
+                id: String(id),
+                itemUpdatedAt: safeNum(item.updatedAt, 0)
               });
             }
           }
@@ -1318,6 +1535,7 @@
       });
 
       if (!ops.length) {
+        this._clearRetry();
         this.lastSyncedAt = Date.now();
         syncMeta.lastSyncedAt = this.lastSyncedAt;
         DB.saveSyncMeta(syncMeta);
@@ -1330,38 +1548,145 @@
       this.syncState = 'syncing';
       this.notifyUI();
 
+      const succeededOps = [];
+      const failedOps = [];
+      let sawPermissionUpgrade = false;
+      let sawFullSchemaWrite = false;
+      let firstError = null;
+
       try {
         const chunks = chunkArray(ops, 350);
         for (const chunk of chunks) {
-          const batch = writeBatch(this.db);
-          chunk.forEach((op) => {
-            if (op.type === 'set') batch.set(op.ref, op.data);
-            else batch.delete(op.ref);
-          });
-          await withTimeout(batch.commit(), 12000, 'Network timeout syncing batch to Firestore');
+          try {
+            const batch = writeBatch(this.db);
+            chunk.forEach((op) => {
+              if (op.type === 'set') batch.set(op.ref, op.data);
+              else batch.delete(op.ref);
+            });
+            await withTimeout(batch.commit(), 12000, 'Network timeout syncing batch to Firestore');
+            chunk.forEach(op => succeededOps.push(op));
+            if (chunk.some(op => ['_meta', 'products', 'customers'].includes(op.cat) && op.type === 'set')) {
+              sawFullSchemaWrite = true;
+            }
+          } catch (batchErr) {
+            firstError = firstError || batchErr;
+            if (!this.isOnline()) {
+              chunk.forEach(op => failedOps.push(op));
+              continue;
+            }
+            // Partial batch isolation: execute ops individually so one strict rule/doc doesn't block all others
+            const subChunks = chunkArray(chunk, 8);
+            for (const sub of subChunks) {
+              const results = await Promise.allSettled(sub.map(async (op) => {
+                try {
+                  if (op.type === 'set') {
+                    await withTimeout(setDoc(op.ref, op.data), 10000, `Timed out syncing ${op.cat}/${op.id}`);
+                    if (['_meta', 'products', 'customers'].includes(op.cat)) sawFullSchemaWrite = true;
+                  } else {
+                    await withTimeout(deleteDoc(op.ref), 10000, `Timed out deleting ${op.cat}/${op.id}`);
+                  }
+                  return { ok: true, op };
+                } catch (opErr) {
+                  const code = opErr && opErr.code;
+                  if (code === 'permission-denied' && op.type === 'set' && ['products', 'customers', '_meta'].includes(op.cat) && setDoc) {
+                    const legacyPayload = this.stripLegacyV90Payload(op.cat, op.data);
+                    await withTimeout(setDoc(op.ref, legacyPayload), 10000, `Timed out legacy sync ${op.cat}/${op.id}`);
+                    sawPermissionUpgrade = true;
+                    return { ok: true, op, legacyFallback: true };
+                  }
+                  throw opErr;
+                }
+              }));
+
+              results.forEach((r, idx) => {
+                if (r.status === 'fulfilled') {
+                  succeededOps.push(sub[idx]);
+                } else {
+                  firstError = firstError || r.reason;
+                  failedOps.push(sub[idx]);
+                  console.warn(`[CloudSync] Failed op ${sub[idx].cat}/${sub[idx].id}:`, r.reason && r.reason.message);
+                }
+              });
+            }
+          }
         }
 
-        // Only clear successfully committed ops (respect newer writes made mid-flight)
+        // Clear ONLY succeeded ops that were NOT superseded by newer mid-flight local edits
+        const latestDb = DB.getData();
         const latestMeta = DB.getSyncMeta();
-        ops.forEach((op) => {
+        const latestItemsByCat = {};
+        CATEGORIES.forEach((cat) => {
+          latestItemsByCat[cat] = new Map((latestDb[cat] || []).filter(i => i && i.id).map(i => [String(i.id), i]));
+        });
+
+        succeededOps.forEach((op) => {
           if (op.cat === '_meta') {
-            latestMeta.metaDirty = false;
+            if (safeNum(latestMeta.lastMetaWriteAt || 0, 0) <= flushMetaWriteAt) {
+              latestMeta.metaDirty = false;
+            }
           } else if (op.type === 'set') {
-            latestMeta.pendingUpserts[op.cat] = (latestMeta.pendingUpserts[op.cat] || []).filter(x => String(x) !== op.id);
+            const curItem = latestItemsByCat[op.cat] && latestItemsByCat[op.cat].get(op.id);
+            const curTs = curItem ? safeNum(curItem.updatedAt, 0) : 0;
+            const queuedDelete = (latestMeta.pendingDeletes[op.cat] || []).map(String).includes(op.id);
+            if (!queuedDelete && curTs <= safeNum(op.itemUpdatedAt, 0)) {
+              latestMeta.pendingUpserts[op.cat] = (latestMeta.pendingUpserts[op.cat] || []).filter(x => String(x) !== op.id);
+            }
           } else if (op.type === 'delete') {
-            latestMeta.pendingDeletes[op.cat] = (latestMeta.pendingDeletes[op.cat] || []).filter(x => String(x) !== op.id);
+            const reAdded = (latestMeta.pendingUpserts[op.cat] || []).map(String).includes(op.id);
+            if (!reAdded) {
+              latestMeta.pendingDeletes[op.cat] = (latestMeta.pendingDeletes[op.cat] || []).filter(x => String(x) !== op.id);
+            }
           }
         });
-        this.lastSyncedAt = Date.now();
-        latestMeta.lastSyncedAt = this.lastSyncedAt;
+
+        if (sawFullSchemaWrite && !sawPermissionUpgrade) {
+          this.rulesUpgradeNeeded = false;
+        } else if (sawPermissionUpgrade) {
+          this.rulesUpgradeNeeded = true;
+        }
+
+        const remaining = (() => {
+          let cnt = latestMeta.metaDirty ? 1 : 0;
+          CATEGORIES.forEach((cat) => {
+            cnt += (latestMeta.pendingUpserts[cat] || []).length;
+            cnt += (latestMeta.pendingDeletes[cat] || []).length;
+          });
+          return cnt;
+        })();
+
+        if (succeededOps.length > 0 && failedOps.length === 0) {
+          this.lastSyncedAt = Date.now();
+          latestMeta.lastSyncedAt = this.lastSyncedAt;
+        }
         DB.saveSyncMeta(latestMeta);
 
-        this.lastError = '';
-        this.syncState = this.getPendingCount() > 0 ? 'syncing' : 'synced';
+        if (failedOps.length > 0) {
+          this.lastError = (firstError && firstError.message) || 'Some records failed to sync; retrying automatically.';
+          this.syncState = this.isOnline() ? 'error' : 'offline-queued';
+          this.notifyUI();
+          this._scheduleRetry();
+          if (isManual) {
+            this.showNotice('warning', 'Partial Sync', `${succeededOps.length} synced, ${failedOps.length} queued for retry.`);
+          }
+          return false;
+        }
+
+        this._clearRetry();
+        if (this.rulesUpgradeNeeded) {
+          this.lastError = 'Core records synced. Publish updated firestore.rules in Firebase Console to also sync soldQty, customer ledger transactions, voice language & barcode cache.';
+        } else {
+          this.lastError = '';
+        }
+
+        this.syncState = remaining > 0 ? 'syncing' : 'synced';
         this.notifyUI();
 
+        if (remaining > 0 && this.isOnline()) {
+          setTimeout(() => this.flushPending().catch(() => {}), 150);
+        }
+
         if (isManual) {
-          this.showNotice('success', 'Cloud Synced ✓', `${ops.length} store change(s) pushed to Firebase.`);
+          this.showNotice('success', 'Cloud Synced ✓', `${succeededOps.length} store change(s) pushed to Firebase.`);
         }
         return true;
       } catch (err) {
@@ -1369,6 +1694,7 @@
         this.lastError = err.message || 'Cloud sync paused (offline/timeout)';
         this.syncState = this.isOnline() ? 'error' : 'offline-queued';
         this.notifyUI();
+        this._scheduleRetry();
         if (isManual) {
           this.showNotice('warning', 'Sync Queued Locally', this.lastError);
         }
@@ -1376,14 +1702,36 @@
       }
     }
 
-    async forceUploadAll() {
+    async forceUploadAll(options = {}) {
       if (!this.user) {
         this.showNotice('warning', 'Not Signed In', 'Sign in first before pushing full store backup.');
         return;
       }
       const localDb = DB.getData();
       const meta = DB.getSyncMeta();
+      const now = Date.now();
       meta.metaDirty = true;
+      meta.lastMetaWriteAt = now;
+      meta.lastLocalWriteAt = now;
+
+      if (options && options.pruneRemote && this.isOnline() && this.db && this.sdk) {
+        try {
+          const cloud = await this.fetchCloudStore(this.user.uid);
+          CATEGORIES.forEach((cat) => {
+            const localIds = new Set((localDb[cat] || []).filter(i => i && i.id).map(i => String(i.id)));
+            const delSet = new Set((meta.pendingDeletes[cat] || []).map(String));
+            (cloud.collections[cat] || []).forEach((cItem) => {
+              if (cItem && cItem.id && !localIds.has(String(cItem.id))) {
+                delSet.add(String(cItem.id));
+              }
+            });
+            meta.pendingDeletes[cat] = Array.from(delSet);
+          });
+        } catch (e) {
+          console.warn('[CloudSync] Remote prune pre-check notice:', e.message);
+        }
+      }
+
       CATEGORIES.forEach((cat) => {
         meta.pendingUpserts[cat] = (localDb[cat] || []).filter(i => i && i.id).map(i => String(i.id));
       });
@@ -1554,6 +1902,20 @@
         window.CloudSync.syncState = 'offline-queued';
       }
       window.CloudSync.notifyUI();
+    }
+  });
+
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && window.CloudSync && window.CloudSync.user && window.CloudSync.getPendingCount() > 0) {
+      clearTimeout(window.CloudSync._debounceTimer);
+      window.CloudSync.flushPending().catch(() => {});
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    if (window.CloudSync && window.CloudSync.user && window.CloudSync.getPendingCount() > 0) {
+      clearTimeout(window.CloudSync._debounceTimer);
+      window.CloudSync.flushPending().catch(() => {});
     }
   });
 })();

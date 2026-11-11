@@ -1,10 +1,10 @@
 /**
- * MyDukaan24 — Service Worker v9.0
+ * MyDukaan24 — Service Worker v9.3
  * Created & Deployed by Mayur Singh (Lucknow, India)
  * High-Speed Offline-Ready PWA & Pure Network-First Caching Engine
  */
 
-const CACHE_NAME = 'mydukkan24-v9.2';
+const CACHE_NAME = 'mydukkan24-v9.3';
 
 const ASSETS_TO_PRECACHE = [
   './',
@@ -14,23 +14,23 @@ const ASSETS_TO_PRECACHE = [
   './assets/LOGO.jpeg',
   './assets/logo.svg',
   './assets/MyDukkan24-v4.apk',
-  './css/style.css?v=9.2',
-  './css/components.css?v=9.2',
-  './css/landing.css?v=9.2',
-  './js/html5-qrcode.min.js?v=9.2',
-  './js/icons.js?v=9.2',
-  './js/i18n.js?v=9.2',
-  './js/storage.js?v=9.2',
-  './js/firebase-sync.js?v=9.2',
-  './js/scanner.js?v=9.2',
-  './js/pos.js?v=9.2',
-  './js/inventory.js?v=9.2',
-  './js/purchases.js?v=9.2',
-  './js/khata.js?v=9.2',
-  './js/analytics.js?v=9.2',
-  './js/staff.js?v=9.2',
-  './js/ai.js?v=9.2',
-  './js/app.js?v=9.2'
+  './css/style.css?v=9.3',
+  './css/components.css?v=9.3',
+  './css/landing.css?v=9.3',
+  './js/html5-qrcode.min.js?v=9.3',
+  './js/icons.js?v=9.3',
+  './js/i18n.js?v=9.3',
+  './js/storage.js?v=9.3',
+  './js/firebase-sync.js?v=9.3',
+  './js/scanner.js?v=9.3',
+  './js/pos.js?v=9.3',
+  './js/inventory.js?v=9.3',
+  './js/purchases.js?v=9.3',
+  './js/khata.js?v=9.3',
+  './js/analytics.js?v=9.3',
+  './js/staff.js?v=9.3',
+  './js/ai.js?v=9.3',
+  './js/app.js?v=9.3'
 ];
 
 // Install: Cache core assets and activate immediately
@@ -38,7 +38,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW v9.0] Precaching assets');
+      console.log('[SW v9.3] Precaching assets');
       return cache.addAll(ASSETS_TO_PRECACHE).catch(err => {
         console.warn('[SW] Precache non-blocking error:', err);
       });
@@ -53,7 +53,7 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[SW v9.0] Deleting obsolete cache:', key);
+            console.log('[SW v9.3] Deleting obsolete cache:', key);
             return caches.delete(key);
           }
         })

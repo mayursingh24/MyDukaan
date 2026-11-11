@@ -1023,6 +1023,7 @@ class AppController {
             </select>
             <select class="form-select" style="flex: 1 1 140px; min-width: 0;" onchange="Inventory.catalogSort = this.value; Inventory.renderCatalogView();">
               <option value="name" ${activeSort === 'name' ? 'selected' : ''}>Sort: Name (A–Z)</option>
+              <option value="top-selling" ${activeSort === 'top-selling' ? 'selected' : ''}>Top Selling (Units Sold)</option>
               <option value="price-asc" ${activeSort === 'price-asc' ? 'selected' : ''}>Price: Low → High</option>
               <option value="price-desc" ${activeSort === 'price-desc' ? 'selected' : ''}>Price: High → Low</option>
               <option value="discount-desc" ${activeSort === 'discount-desc' ? 'selected' : ''}>Highest MRP Savings</option>
@@ -1359,6 +1360,7 @@ class AppController {
         name: it.name,
         qty: reqQty,
         remQty,
+        netSubtotal: lineTaxable,
         refundValue: lineValue
       });
     });
@@ -1510,12 +1512,15 @@ class AppController {
     const reason = (document.getElementById('return-reason')?.value || '').trim();
     const todayStr = DB.getLocalDateStr();
 
-    // 1. Restore Stock into db.products
+    // 1. Restore Stock & Adjust Product Sales Telemetry into db.products
     let totalQtyRestored = 0;
     calc.lines.forEach(line => {
       const prod = (db.products || []).find(p => p.id === line.id);
       if (prod) {
         prod.stock = DB.roundQty((Number(prod.stock) || 0) + line.qty);
+        const revDelta = line.netSubtotal !== undefined ? line.netSubtotal : line.refundValue;
+        prod.soldQty = Math.max(0, DB.roundQty((Number(prod.soldQty) || 0) - line.qty));
+        prod.soldRevenue = Math.max(0, DB.round2((Number(prod.soldRevenue) || 0) - revDelta));
       }
       totalQtyRestored = DB.roundQty(totalQtyRestored + line.qty);
       if (!Array.isArray(inv.returnedItems)) inv.returnedItems = [];
@@ -1549,8 +1554,10 @@ class AppController {
           date: todayStr,
           type: refundMode === 'Adjust Udhaar' ? 'CreditNote' : 'Refund',
           amount: calc.totalRefund,
-          desc: `Return #${inv.id} (${refundMode})${reason ? ' • ' + reason : ''}`
+          desc: `Return #${inv.id} (${refundMode})${reason ? ' • ' + reason : ''}`,
+          invoiceId: inv.id
         });
+        cust.transactions = cust.transactions.slice(0, 200);
       }
     }
 
@@ -2430,6 +2437,12 @@ class AppController {
           </div>
         </div>
 
+        ${cloud.rulesUpgradeNeeded ? `
+          <div style="background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.45); color: #FCD34D; font-size: 12px; padding: 10px 12px; border-radius: var(--radius-md); overflow-wrap: anywhere;">
+            <strong>⚠️ Firestore Rules Update Recommended:</strong> Your database is syncing via the v9.0 safety bridge. To enable cloud storage of per-product sales telemetry (<code>soldQty</code> / <code>soldRevenue</code>), learned barcodes &amp; Khata history, paste updated <code>firestore.rules</code> into <strong>Firebase Console → mydukaan24-live → Firestore Database → Rules → Publish</strong>.
+          </div>
+        ` : ''}
+
         ${escErr ? `<div style="background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-md); overflow-wrap: anywhere;"><strong>Sync Notice:</strong> ${escErr}</div>` : ''}
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); gap: 10px;">
@@ -2450,6 +2463,42 @@ class AppController {
             <div style="font-size: 12.5px; font-weight: 700; color: #60A5FA; margin-top: 3px;">Owner Only (UID Isolated)</div>
           </div>
         </div>
+
+        ${(() => {
+          const liveDb = window.DB ? DB.getData() : {};
+          const products = liveDb.products || [];
+          const totalUnitsSold = DB.roundQty(products.reduce((s, p) => s + (Number(p.soldQty) || 0), 0));
+          const customers = liveDb.customers || [];
+          const totalCustTxs = customers.reduce((s, c) => s + (Array.isArray(c.transactions) ? c.transactions.length : 0), 0);
+          const attEntries = Object.keys(liveDb.attendance || {}).reduce((s, empId) => s + Object.keys((liveDb.attendance || {})[empId] || {}).length, 0);
+          const learnedBarcodes = Object.keys((liveDb.barcodeCache && typeof liveDb.barcodeCache === 'object') ? liveDb.barcodeCache : {}).length;
+          const telemetryCells = [
+            { label: 'SKUs + Units Sold', val: `${products.length} SKUs • ${totalUnitsSold} sold` },
+            { label: 'Sales Invoices', val: `${(liveDb.invoices || []).length} bills` },
+            { label: 'Customers & Khata', val: `${customers.length} • ${totalCustTxs} TXs` },
+            { label: 'Suppliers & Purchases', val: `${(liveDb.suppliers || []).length} • ${(liveDb.purchases || []).length} GRNs` },
+            { label: 'Shop Expenses', val: `${(liveDb.expenses || []).length} entries` },
+            { label: 'Staff & Attendance', val: `${(liveDb.staff || []).length} staff • ${attEntries} marks` },
+            { label: 'Held / Parked Carts', val: `${(liveDb.parkedCarts || []).length} active` },
+            { label: 'Learned Barcodes', val: `${learnedBarcodes} synced` },
+            { label: 'Settings / PIN / Voice', val: `${(liveDb.shops || []).length} branch • ${this.escapeHtml(liveDb.voiceLang || 'hi-IN')}` }
+          ];
+          return `
+            <div style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 12px;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
+                ☁️ A–Z Cloud Sync Telemetry (Synced Live Under /users/${uidShort}...)
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr)); gap: 6px;">
+                ${telemetryCells.map(cell => `
+                  <div style="background: var(--bg-surface); padding: 6px 9px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); min-width: 0;">
+                    <div style="font-size: 10px; color: var(--text-muted);">${cell.label}</div>
+                    <div style="font-size: 11.5px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${cell.val}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        })()}
 
         <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-top: 4px;">
           <button type="button" class="btn btn-secondary btn-sm" onclick="CloudSync.signOutUser()">
@@ -2620,6 +2669,21 @@ class AppController {
       address: document.getElementById('set-shop-address').value.trim(),
       currency: "₹"
     };
+    if (Array.isArray(db.shops)) {
+      const activeId = db.activeShopId || 'SHOP-1';
+      const idx = db.shops.findIndex(s => s && s.id === activeId);
+      if (idx >= 0) {
+        db.shops[idx] = {
+          ...db.shops[idx],
+          name: db.shop.name,
+          owner: db.shop.owner,
+          phone: db.shop.phone,
+          gstin: db.shop.gstin,
+          upiId: db.shop.upiId,
+          address: db.shop.address
+        };
+      }
+    }
     DB.saveData(db);
     this.updateHeaderStoreName();
     this.toast('success', 'Saved', 'Store profile updated successfully');
@@ -2926,6 +2990,9 @@ class AppController {
           price: DB.round2(p.price || 0),
           mrp: DB.round2(p.mrp || p.price || 0),
           cost: DB.round2(p.cost || 0),
+          soldQty: p.soldQty !== undefined ? DB.roundQty(p.soldQty || 0) : undefined,
+          soldRevenue: p.soldRevenue !== undefined ? DB.round2(p.soldRevenue || 0) : undefined,
+          lastSoldAt: p.lastSoldAt !== undefined ? (Number(p.lastSoldAt) || 0) : undefined,
           gstRate: [0, 5, 12, 18].includes(Number(p.gstRate))
             ? Number(p.gstRate)
             : DB.inferDefaultGstRate(p.cat, p.name)
@@ -2934,7 +3001,8 @@ class AppController {
           ...c,
           id: String(c.id || DB.uid('C')),
           balanceDue: DB.round2(c.balanceDue || 0),
-          totalSpent: DB.round2(c.totalSpent || 0)
+          totalSpent: DB.round2(c.totalSpent || 0),
+          transactions: Array.isArray(c.transactions) ? c.transactions.slice(0, 200) : []
         })),
         suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : [],
         purchases: Array.isArray(parsed.purchases) ? parsed.purchases : [],
@@ -2943,8 +3011,22 @@ class AppController {
         staff: Array.isArray(parsed.staff) ? parsed.staff : [],
         parkedCarts: Array.isArray(parsed.parkedCarts) ? parsed.parkedCarts.slice(0, 25) : [],
         attendance: (parsed.attendance && typeof parsed.attendance === 'object' && !Array.isArray(parsed.attendance)) ? parsed.attendance : {},
-        ownerPinHash: typeof parsed.ownerPinHash === 'string' ? parsed.ownerPinHash : (currentDb.ownerPinHash || '')
+        barcodeCache: (parsed.barcodeCache && typeof parsed.barcodeCache === 'object' && !Array.isArray(parsed.barcodeCache)) ? parsed.barcodeCache : (currentDb.barcodeCache || {}),
+        voiceLang: typeof parsed.voiceLang === 'string' && parsed.voiceLang.trim() ? parsed.voiceLang.trim() : (currentDb.voiceLang || 'hi-IN'),
+        ownerPinHash: typeof parsed.ownerPinHash === 'string' ? parsed.ownerPinHash : (currentDb.ownerPinHash || ''),
+        geminiKey: currentDb.geminiKey || ''
       };
+
+      if (typeof DB.recomputeProductSalesStats === 'function') {
+        DB.recomputeProductSalesStats(normalized, { onlyMissing: true });
+      }
+      if (normalized.voiceLang) {
+        localStorage.setItem('mydukaan24_voice_lang', normalized.voiceLang);
+        if (window.POS) window.POS._voiceLang = normalized.voiceLang;
+      }
+      if (normalized.barcodeCache && typeof DB._writeLocalBarcodeCache === 'function') {
+        DB._writeLocalBarcodeCache(normalized.barcodeCache);
+      }
 
       DB.saveData(normalized);
       this.applyTheme();
@@ -2952,8 +3034,8 @@ class AppController {
       this.updateNotificationBadge();
 
       if (window.CloudSync && CloudSync.user && CloudSync.isOnline()) {
-        this.toast('info', 'Syncing Restore...', 'Uploading restored JSON database to Firebase Cloud...');
-        await CloudSync.forceUploadAll();
+        this.toast('info', 'Syncing Restore...', 'Uploading restored JSON database & pruning old cloud docs...');
+        await CloudSync.forceUploadAll({ pruneRemote: true });
       } else {
         this.toast('success', 'Backup Restored', `${normalized.products.length} products & ${normalized.invoices.length} invoices loaded.`);
       }
@@ -3080,7 +3162,7 @@ class AppController {
                 Official POS Billing, Barcode Scanner & Digital Khata Platform
               </div>
               <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); margin-top: 6px;">
-                Version 9.0.0 • Size: 4.8 MB • Android 8.0+ / PWA Universal
+                Version 9.3.0 • Size: 4.8 MB • Android 8.0+ / PWA Universal
               </div>
             </div>
           </div>
@@ -3300,7 +3382,7 @@ class AppController {
             <tr><td style="padding: 10px 8px; font-weight: 800; font-size: 15px; background: #f3f4f6;">Net Cash Expected in Drawer</td><td style="padding: 10px 8px; text-align: right; font-weight: 800; font-size: 15px; background: #f3f4f6;">₹${reg.netCashInDrawer.toLocaleString('en-IN')}</td></tr>
           </tbody>
         </table>
-        <div style="font-size: 11px; color: #666;">Verified by Store Owner • MyDukkan24 Retail OS v9.0</div>
+        <div style="font-size: 11px; color: #666;">Verified by Store Owner • MyDukkan24 Retail OS v9.3</div>
       </div>
     `;
     this.printHtmlDocument(zHtml, 'wide');

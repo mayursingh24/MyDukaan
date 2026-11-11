@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="css/landing.css?v=9.2" />
+  <link rel="stylesheet" href="css/landing.css?v=9.3" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
@@ -845,7 +845,7 @@
   </div>
 
   <!-- Firebase Live Cloud Sync Engine -->
-  <script src="js/firebase-sync.js?v=9.2"></script>
+  <script src="js/firebase-sync.js?v=9.3"></script>
 
   <script>
     // Scroll Progress & Reveal Animations
@@ -1942,10 +1942,10 @@
       }
     });
 
-    // Register Network-First Service Worker v9.2
+    // Register Network-First Service Worker v9.3
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=9.2')
+        navigator.serviceWorker.register('./sw.js?v=9.3')
           .then(reg => reg.update())
           .catch(() => {});
       });

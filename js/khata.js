@@ -439,6 +439,18 @@ class KhataEngine {
     if (notes) {
       customer.notes = `${customer.notes ? customer.notes + ' | ' : ''}Paid ₹${amount} via ${mode} (${notes})`.slice(0, 200);
     }
+    if (!Array.isArray(customer.transactions)) customer.transactions = [];
+    customer.transactions.unshift({
+      id: DB.uid('TX'),
+      date: DB.getLocalDateStr(),
+      type: 'Payment',
+      amount,
+      desc: `Payment via ${mode}${notes ? ' • ' + notes : ''}`,
+      invoiceId: ''
+    });
+    if (customer.transactions.length > 200) {
+      customer.transactions = customer.transactions.slice(0, 200);
+    }
     DB.saveData(db);
 
     DB.playCashChime();
@@ -460,10 +472,11 @@ class KhataEngine {
     if (!customer) return;
 
     const invoices = (db.invoices || []).filter(i => i.customerId === customerId);
+    const transactions = Array.isArray(customer.transactions) ? customer.transactions : [];
 
     const modalHtml = `
       <div class="modal-backdrop" id="khata-ledger-modal" onclick="if(event.target === this) Khata.closeModal()">
-        <div class="modal-card" style="max-width: 560px;">
+        <div class="modal-card" style="max-width: 580px;">
           <div class="modal-header">
             <div>
               <div class="modal-title">${Icons.receipt(16)} Ledger — ${DB.escapeHtml(customer.name)}</div>
@@ -474,9 +487,9 @@ class KhataEngine {
             <button class="topbar-icon-btn" onclick="Khata.closeModal()">✕</button>
           </div>
           <div class="modal-body">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Order History (${invoices.length} transactions)</div>
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Order History (${invoices.length} invoices)</div>
             ${invoices.length ? `
-              <div class="table-container">
+              <div class="table-container" style="margin-bottom: 14px;">
                 <table class="data-table">
                   <thead>
                     <tr>
@@ -501,8 +514,38 @@ class KhataEngine {
                 </table>
               </div>
             ` : `
-              <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">
-                No orders recorded for this customer yet.
+              <div style="text-align: center; padding: 16px; color: var(--text-muted); font-size: 12.5px; margin-bottom: 10px; background: var(--bg-input); border-radius: var(--radius-md);">
+                No invoices recorded for this customer yet.
+              </div>
+            `}
+
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Khata Payments, Udhaar &amp; Refund Log (${transactions.length})</div>
+            ${transactions.length ? `
+              <div class="table-container" style="max-height: 200px; overflow-y: auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Details</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${transactions.map(tx => `
+                      <tr>
+                        <td>${DB.escapeHtml(tx.date || '')}</td>
+                        <td><span class="badge ${tx.type === 'Payment' ? 'badge-success' : tx.type === 'Udhaar' ? 'badge-warning' : tx.type === 'Refund' || tx.type === 'CreditNote' ? 'badge-danger' : 'badge-primary'}">${DB.escapeHtml(tx.type || 'Entry')}</span></td>
+                        <td style="font-size: 11.5px;">${DB.escapeHtml(tx.desc || '')}</td>
+                        <td style="font-weight: 700;" class="tnum">₹${DB.round2(tx.amount || 0).toLocaleString('en-IN')}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : `
+              <div style="text-align: center; padding: 14px; color: var(--text-muted); font-size: 12px; background: var(--bg-input); border-radius: var(--radius-md);">
+                Settlement payments, credit bills &amp; return credits will sync here automatically.
               </div>
             `}
             <div class="modal-footer" style="padding: 14px 0 0; background: none; display: flex; gap: 8px; justify-content: flex-end;">
@@ -639,7 +682,8 @@ class KhataEngine {
         balanceDue,
         totalSpent: 0,
         points: 0,
-        notes
+        notes,
+        transactions: []
       };
       if (!Array.isArray(db.customers)) db.customers = [];
       db.customers.unshift(newCust);

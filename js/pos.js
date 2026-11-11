@@ -17,7 +17,7 @@ class POSEngine {
     this._voiceRecognition = null;
     this._voiceListening = false;
     this._voiceFinalText = "";
-    this._voiceLang = localStorage.getItem('mydukaan24_voice_lang') || "hi-IN";
+    this._voiceLang = (window.DB && DB.getData().voiceLang) || localStorage.getItem('mydukaan24_voice_lang') || "hi-IN";
     this._voiceParsedItems = [];
   }
 
@@ -763,6 +763,11 @@ class POSEngine {
   setVoiceLang(lang) {
     this._voiceLang = lang || 'hi-IN';
     localStorage.setItem('mydukaan24_voice_lang', this._voiceLang);
+    if (window.DB) {
+      const db = DB.getData();
+      db.voiceLang = this._voiceLang;
+      DB.saveData(db);
+    }
   }
 
   getVoiceLanguages() {
@@ -1291,7 +1296,7 @@ class POSEngine {
         </table>
         <div style="display:flex; justify-content:space-between; font-size:11px;"><span>Subtotal:</span><span>₹${calc.subtotal}</span></div>
         ${calc.discount > 0 ? `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Discount:</span><span>-₹${calc.discount}</span></div>` : ''}
-        ${calc.tax > 0 ? `<div style="display:flex; justify-content:space-between; font-size:10px;"><span>GST Included/Extra:</span><span>₹${calc.tax}</span></div>` : ''}
+        ${calc.taxAmount > 0 ? `<div style="display:flex; justify-content:space-between; font-size:10px;"><span>GST Included/Extra:</span><span>₹${calc.taxAmount}</span></div>` : ''}
         <div style="display:flex; justify-content:space-between; font-weight:800; font-size:13px; border-top:1px dashed #71717A; margin-top:4px; padding-top:4px;">
           <span>ESTIMATED TOTAL:</span><span>₹${calc.grandTotal.toLocaleString('en-IN')}</span>
         </div>
@@ -1371,24 +1376,46 @@ class POSEngine {
       paymentMode: this.paymentMode,
       status: isPaid ? 'Paid' : 'Due',
       refundAmount: 0,
-      returnedItems: []
+      returnedItems: [],
+      shopId: db.activeShopId || 'SHOP-1'
     };
 
-    // Deduct stock from database accurately with decimal support
+    const nowTs = Date.now();
+    const subtotalNum = Number(calc.subtotal) || 0;
+    const discountFactor = subtotalNum > 0 ? Math.max(0, (subtotalNum - (Number(calc.discount) || 0)) / subtotalNum) : 1;
+
+    // Deduct stock & update cumulative sales telemetry per product
     this.cart.forEach(cartItem => {
       const prod = (db.products || []).find(p => p.id === cartItem.id);
       if (prod) {
-        prod.stock = Math.max(0, DB.roundQty((Number(prod.stock) || 0) - cartItem.qty));
+        const qtyNum = DB.roundQty(cartItem.qty || 0);
+        const lineRev = DB.round2((Number(cartItem.price) || 0) * qtyNum * discountFactor);
+        prod.stock = Math.max(0, DB.roundQty((Number(prod.stock) || 0) - qtyNum));
+        prod.soldQty = DB.roundQty((Number(prod.soldQty) || 0) + qtyNum);
+        prod.soldRevenue = DB.round2((Number(prod.soldRevenue) || 0) + lineRev);
+        prod.lastSoldAt = nowTs;
       }
     });
 
-    // Update customer loyalty & balance
+    // Update customer loyalty, balance & structured transaction trail
     if (customer) {
       customer.totalSpent = DB.round2((Number(customer.totalSpent) || 0) + calc.grandTotal);
       if (!isPaid) {
         customer.balanceDue = DB.round2((Number(customer.balanceDue) || 0) + calc.grandTotal);
       }
       customer.points = (Number(customer.points) || 0) + Math.floor(calc.grandTotal / 20);
+      if (!Array.isArray(customer.transactions)) customer.transactions = [];
+      customer.transactions.unshift({
+        id: DB.uid('TX'),
+        date: dateStr,
+        type: isPaid ? 'Purchase' : 'Udhaar',
+        amount: calc.grandTotal,
+        invoiceId: invoice.id,
+        desc: `${invoice.items.length} item(s) • ${this.paymentMode}`
+      });
+      if (customer.transactions.length > 200) {
+        customer.transactions = customer.transactions.slice(0, 200);
+      }
     }
 
     if (!Array.isArray(db.invoices)) db.invoices = [];

@@ -22,6 +22,9 @@ rules_version = '2';
 //      - activeShopId: string <= 100 (optional)
 //      - attendance: map <= 200 entries (optional)
 //      - parkedCarts: list <= 25 items (optional)
+//      - barcodeCache: map <= 300 entries (optional)
+//      - voiceLang: string <= 24 (optional)
+//      - cloudInitialized: bool (optional)
 //      - ownerPinHash: string <= 128 (optional)
 //      - theme: 'dark' | 'light' (optional)
 //      - accent: string <= 40 (optional)
@@ -41,6 +44,9 @@ rules_version = '2';
 //      - barcode: string <= 80 (optional)
 //      - mrp: number >= 0 (optional)
 //      - cost: number >= 0 (optional)
+//      - soldQty: number >= 0 (optional, cumulative net units sold)
+//      - soldRevenue: number >= 0 (optional, cumulative net sales revenue)
+//      - lastSoldAt: number >= 0 (optional, epoch ms of last sale)
 //      - unit: string <= 40 (optional)
 //      - minStock: number >= 0 (optional, accepts decimal quantities)
 //      - gstRate: number 0..100 (optional)
@@ -61,6 +67,7 @@ rules_version = '2';
 //      - points: number >= 0 (optional)
 //      - tier: string <= 40 (optional)
 //      - notes: string <= 1000 (optional)
+//      - transactions: list <= 200 items (optional, Khata payment/udhaar/refund log)
 //      - updatedAt: number >= 0 (optional)
 //
 // 4. Collection: /users/{uid}/invoices/{invoiceId}
@@ -232,9 +239,11 @@ service cloud.firestore {
 
     // 1. Validate /users/{uid}/meta/store
     function isValidMetaStore(data) {
-      return hasRequiredFields(data, ['shop', 'updatedAt']) &&
+      return !('geminiKey' in data) &&
+        hasRequiredFields(data, ['shop', 'updatedAt']) &&
         hasOnlyAllowedFields(data, [
           'shop', 'shops', 'activeShopId', 'attendance', 'parkedCarts',
+          'barcodeCache', 'voiceLang', 'cloudInitialized',
           'ownerPinHash', 'theme', 'accent', 'language', 'soundEnabled',
           'updatedAt', 'updatedByDevice', 'ownerEmail'
         ]) &&
@@ -244,6 +253,9 @@ service cloud.firestore {
         isOptionalString(data, 'activeShopId', 100) &&
         (!('attendance' in data) || (data.attendance is map && data.attendance.size() <= 200)) &&
         (!('parkedCarts' in data) || (data.parkedCarts is list && data.parkedCarts.size() <= 25)) &&
+        (!('barcodeCache' in data) || (data.barcodeCache is map && data.barcodeCache.size() <= 300)) &&
+        isOptionalString(data, 'voiceLang', 24) &&
+        (!('cloudInitialized' in data) || data.cloudInitialized is bool) &&
         isOptionalString(data, 'ownerPinHash', 128) &&
         (!('theme' in data) || data.theme in ['dark', 'light']) &&
         isOptionalString(data, 'accent', 40) &&
@@ -258,8 +270,8 @@ service cloud.firestore {
       return hasRequiredFields(data, ['id', 'name', 'price', 'stock']) &&
         hasOnlyAllowedFields(data, [
           'id', 'name', 'cat', 'barcode', 'mrp', 'price', 'cost',
-          'stock', 'unit', 'minStock', 'gstRate', 'expiryDate',
-          'emoji', 'shopId', 'updatedAt'
+          'stock', 'soldQty', 'soldRevenue', 'lastSoldAt', 'unit',
+          'minStock', 'gstRate', 'expiryDate', 'emoji', 'shopId', 'updatedAt'
         ]) &&
         isValidDocId(data, 'id', productId) &&
         isNonEmptyString(data.name, 220) &&
@@ -269,6 +281,9 @@ service cloud.firestore {
         isOptionalString(data, 'barcode', 80) &&
         isOptionalNonNegNumber(data, 'mrp') &&
         isOptionalNonNegNumber(data, 'cost') &&
+        isOptionalNonNegNumber(data, 'soldQty') &&
+        isOptionalNonNegNumber(data, 'soldRevenue') &&
+        isOptionalNonNegNumber(data, 'lastSoldAt') &&
         isOptionalString(data, 'unit', 40) &&
         isOptionalNonNegNumber(data, 'minStock') &&
         isOptionalNonNegNumber(data, 'gstRate') &&
@@ -284,7 +299,7 @@ service cloud.firestore {
       return hasRequiredFields(data, ['id', 'name']) &&
         hasOnlyAllowedFields(data, [
           'id', 'name', 'phone', 'email', 'balanceDue',
-          'totalSpent', 'points', 'tier', 'notes', 'updatedAt'
+          'totalSpent', 'points', 'tier', 'notes', 'transactions', 'updatedAt'
         ]) &&
         isValidDocId(data, 'id', customerId) &&
         isNonEmptyString(data.name, 180) &&
@@ -295,6 +310,7 @@ service cloud.firestore {
         isOptionalNonNegNumber(data, 'points') &&
         isOptionalString(data, 'tier', 40) &&
         isOptionalString(data, 'notes', 1000) &&
+        (!('transactions' in data) || (data.transactions is list && data.transactions.size() <= 200)) &&
         isOptionalNonNegNumber(data, 'updatedAt');
     }
 

@@ -9,7 +9,7 @@ const PENDING_SHOP_PROFILE_KEY = 'mydukaan24_pending_shop_profile';
 const DEVICE_ROLE_KEY = 'mydukaan24_device_role';
 const DEVICE_CASHIER_KEY = 'mydukaan24_device_cashier';
 const SYNC_CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
-const META_FIELDS = ['shop', 'shops', 'activeShopId', 'attendance', 'theme', 'accent', 'language', 'soundEnabled', 'ownerPinHash', 'parkedCarts'];
+const META_FIELDS = ['shop', 'shops', 'activeShopId', 'attendance', 'theme', 'accent', 'language', 'soundEnabled', 'ownerPinHash', 'parkedCarts', 'voiceLang', 'barcodeCache'];
 
 function localDateOffsetStr(daysOffset = 0) {
   const d = new Date();
@@ -121,6 +121,7 @@ class StorageEngine {
     return {
       hasUserMutated: false,
       lastLocalWriteAt: 0,
+      lastMetaWriteAt: 0,
       lastSyncedAt: 0,
       metaDirty: false,
       pendingUpserts: {},
@@ -150,15 +151,138 @@ class StorageEngine {
     } catch (e) {}
   }
 
+  _readLocalBarcodeCache() {
+    try {
+      const raw = localStorage.getItem('mydukaan24_barcode_cache');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  _writeLocalBarcodeCache(cache) {
+    try {
+      localStorage.setItem('mydukaan24_barcode_cache', JSON.stringify(cache || {}));
+    } catch (e) {}
+  }
+
+  recomputeProductSalesStats(db, options = {}) {
+    if (!db || !Array.isArray(db.products)) return false;
+    const onlyMissing = Boolean(options.onlyMissing);
+    const invoices = Array.isArray(db.invoices) ? db.invoices : [];
+    const statsMap = {};
+
+    invoices.forEach((inv) => {
+      if (!inv || !Array.isArray(inv.items)) return;
+      const retMap = {};
+      (inv.returnedItems || []).forEach((r) => {
+        if (!r || !r.id) return;
+        retMap[r.id] = this.roundQty((retMap[r.id] || 0) + (Number(r.qty) || 0));
+      });
+      const invSubtotal = Number(inv.subtotal) || 0;
+      const invDiscount = Number(inv.discount) || 0;
+      const netFactor = invSubtotal > 0 ? Math.max(0, (invSubtotal - invDiscount) / invSubtotal) : 1;
+      const parsedDateTs = inv.date ? new Date(`${inv.date}T12:00:00`).getTime() : 0;
+      const invTs = Number(inv.updatedAt) || (Number.isFinite(parsedDateTs) ? parsedDateTs : 0) || 0;
+
+      inv.items.forEach((it) => {
+        if (!it || !it.id) return;
+        const origQty = Number(it.qty) || 0;
+        const retQty = Math.min(origQty, retMap[it.id] || 0);
+        const netQty = Math.max(0, this.roundQty(origQty - retQty));
+        const unitSell = (origQty > 0 && it.total !== undefined)
+          ? ((Number(it.total) || 0) / origQty)
+          : (Number(it.price) || 0);
+        const netRev = netQty > 0 ? Math.max(0, this.round2(unitSell * netQty * netFactor)) : 0;
+
+        if (!statsMap[it.id]) {
+          statsMap[it.id] = { soldQty: 0, soldRevenue: 0, lastSoldAt: 0 };
+        }
+        statsMap[it.id].soldQty = this.roundQty(statsMap[it.id].soldQty + netQty);
+        statsMap[it.id].soldRevenue = this.round2(statsMap[it.id].soldRevenue + netRev);
+        if (netQty > 0 && invTs > statsMap[it.id].lastSoldAt) {
+          statsMap[it.id].lastSoldAt = invTs;
+        }
+      });
+    });
+
+    let changed = false;
+    db.products.forEach((p) => {
+      if (!p || !p.id) return;
+      const needsFill = !onlyMissing || p.soldQty === undefined || p.soldRevenue === undefined || p.lastSoldAt === undefined;
+      if (!needsFill) return;
+      const st = statsMap[p.id] || { soldQty: 0, soldRevenue: 0, lastSoldAt: 0 };
+      if (!onlyMissing || p.soldQty === undefined) {
+        p.soldQty = st.soldQty;
+        changed = true;
+      }
+      if (!onlyMissing || p.soldRevenue === undefined) {
+        p.soldRevenue = st.soldRevenue;
+        changed = true;
+      }
+      if (!onlyMissing || p.lastSoldAt === undefined) {
+        p.lastSoldAt = st.lastSoldAt;
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
+  getBarcodeCache() {
+    const db = this.getData();
+    const dbCache = (db.barcodeCache && typeof db.barcodeCache === 'object' && !Array.isArray(db.barcodeCache)) ? db.barcodeCache : {};
+    const localCache = this._readLocalBarcodeCache();
+    return { ...localCache, ...dbCache };
+  }
+
+  setBarcodeCacheEntry(barcode, entry) {
+    const code = String(barcode || '').trim().slice(0, 80);
+    if (!code || !entry || typeof entry !== 'object') return false;
+    const name = String(entry.name || '').trim().slice(0, 220);
+    if (!name) return false;
+
+    const cleanEntry = {
+      barcode: String(entry.barcode || code).trim().slice(0, 80),
+      name,
+      brand: String(entry.brand || '').trim().slice(0, 120),
+      cat: String(entry.cat || 'Grocery').trim().slice(0, 80),
+      mrp: this.round2(Math.max(0, Number(entry.mrp) || 0)),
+      price: this.round2(Math.max(0, Number(entry.price) || 0)),
+      cost: this.round2(Math.max(0, Number(entry.cost) || 0)),
+      unit: String(entry.unit || 'pack').trim().slice(0, 40),
+      gstRate: [0, 5, 12, 18].includes(Number(entry.gstRate)) ? Number(entry.gstRate) : 5,
+      emoji: String(entry.emoji || '📦').trim().slice(0, 20)
+    };
+
+    const db = this.getData();
+    const current = (db.barcodeCache && typeof db.barcodeCache === 'object' && !Array.isArray(db.barcodeCache))
+      ? { ...db.barcodeCache }
+      : {};
+    if (Object.prototype.hasOwnProperty.call(current, code)) {
+      delete current[code];
+    }
+    current[code] = cleanEntry;
+    const keys = Object.keys(current);
+    if (keys.length > 300) {
+      keys.slice(0, keys.length - 300).forEach((k) => delete current[k]);
+    }
+    db.barcodeCache = current;
+    this._writeLocalBarcodeCache(current);
+    this.saveData(db);
+    return true;
+  }
+
   initDatabase() {
     try {
       const existing = localStorage.getItem(STORAGE_KEY);
       if (!existing) {
-        this.saveData({
+        const initialDb = {
           shop: DEFAULT_SHOP,
           shops: DEFAULT_SHOPS,
           activeShopId: "SHOP-1",
-          products: DEFAULT_PRODUCTS,
+          products: DEFAULT_PRODUCTS.map(p => ({ ...p })),
           suppliers: DEFAULT_SUPPLIERS,
           purchases: DEFAULT_PURCHASES,
           customers: DEFAULT_CUSTOMERS,
@@ -167,13 +291,17 @@ class StorageEngine {
           staff: DEFAULT_STAFF,
           attendance: {},
           parkedCarts: [],
+          barcodeCache: this._readLocalBarcodeCache(),
+          voiceLang: localStorage.getItem('mydukaan24_voice_lang') || "hi-IN",
           ownerPinHash: "",
           geminiKey: "",
           theme: "dark",
           accent: "blue",
           language: "en",
           soundEnabled: true
-        }, { silentInit: true });
+        };
+        this.recomputeProductSalesStats(initialDb, { forceAll: true });
+        this.saveData(initialDb, { silentInit: true });
         this.saveSyncMeta({
           ...this.getDefaultSyncMeta(),
           hasUserMutated: false
@@ -185,6 +313,17 @@ class StorageEngine {
           if (!parsed.shop) parsed.shop = { ...DEFAULT_SHOP };
           parsed.shop.phone = "+91 6306437348";
           parsed.shop.upiId = "6306437348@upi";
+          updated = true;
+        }
+        if (!parsed.voiceLang) {
+          parsed.voiceLang = localStorage.getItem('mydukaan24_voice_lang') || "hi-IN";
+          updated = true;
+        }
+        if (!parsed.barcodeCache || typeof parsed.barcodeCache !== 'object' || Array.isArray(parsed.barcodeCache)) {
+          parsed.barcodeCache = this._readLocalBarcodeCache();
+          updated = true;
+        }
+        if (this.recomputeProductSalesStats(parsed, { onlyMissing: true })) {
           updated = true;
         }
         if (updated) this.saveData(parsed, { silentInit: true });
@@ -325,6 +464,9 @@ class StorageEngine {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
         const meta = this.getSyncMeta();
         meta.metaDirty = true;
+        const ts = Date.now();
+        meta.lastLocalWriteAt = ts;
+        meta.lastMetaWriteAt = ts;
         this.saveSyncMeta(meta);
       }
 
@@ -502,6 +644,10 @@ class StorageEngine {
         if (!parsed.shops) parsed.shops = DEFAULT_SHOPS;
         if (!parsed.activeShopId) parsed.activeShopId = "SHOP-1";
         if (!parsed.language) parsed.language = "en";
+        if (!parsed.voiceLang) parsed.voiceLang = localStorage.getItem('mydukaan24_voice_lang') || "hi-IN";
+        if (!parsed.barcodeCache || typeof parsed.barcodeCache !== 'object' || Array.isArray(parsed.barcodeCache)) {
+          parsed.barcodeCache = this._readLocalBarcodeCache();
+        }
         if (!Array.isArray(parsed.parkedCarts)) parsed.parkedCarts = [];
         if (typeof parsed.ownerPinHash !== 'string') parsed.ownerPinHash = "";
         if (Array.isArray(parsed.products)) {
@@ -510,6 +656,7 @@ class StorageEngine {
               p.gstRate = this.inferDefaultGstRate(p.cat, p.name);
             }
           });
+          this.recomputeProductSalesStats(parsed, { onlyMissing: true });
         }
         return parsed;
       }
@@ -529,6 +676,8 @@ class StorageEngine {
       staff: DEFAULT_STAFF,
       attendance: {},
       parkedCarts: [],
+      barcodeCache: this._readLocalBarcodeCache(),
+      voiceLang: localStorage.getItem('mydukaan24_voice_lang') || "hi-IN",
       ownerPinHash: "",
       geminiKey: "",
       theme: "dark",
@@ -590,9 +739,13 @@ class StorageEngine {
         // Track store meta changes
         if (prev) {
           const metaChanged = META_FIELDS.some((k) => JSON.stringify(prev[k]) !== JSON.stringify(data[k]));
-          if (metaChanged) meta.metaDirty = true;
+          if (metaChanged) {
+            meta.metaDirty = true;
+            meta.lastMetaWriteAt = now;
+          }
         } else {
           meta.metaDirty = true;
+          meta.lastMetaWriteAt = now;
         }
 
         this.saveSyncMeta(meta);

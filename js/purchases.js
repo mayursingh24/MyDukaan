@@ -541,7 +541,10 @@ class PurchaseEngine {
           unit: inItem.unit || 'pack',
           minStock: 5,
           gstRate: [0, 5, 12, 18].includes(Number(inItem.gstRate)) ? Number(inItem.gstRate) : 5,
-          expiryDate: inItem.expiryDate || ''
+          expiryDate: inItem.expiryDate || '',
+          soldQty: 0,
+          soldRevenue: 0,
+          lastSoldAt: 0
         };
         db.products.unshift(createdProd);
         return { id: newId, name: inItem.name, cost: inItem.cost, qty: inItem.qty, total: inItem.total };
@@ -881,7 +884,10 @@ class PurchaseEngine {
         unit: it.unit || 'pack',
         minStock: 5,
         gstRate: [0, 5, 12, 18].includes(Number(it.gstRate)) ? Number(it.gstRate) : 5,
-        expiryDate: it.expiryDate || ''
+        expiryDate: it.expiryDate || '',
+        soldQty: 0,
+        soldRevenue: 0,
+        lastSoldAt: 0
       });
       billItems.push({ id: newId, name: it.name, qty, cost, total: lineTotal });
     });
