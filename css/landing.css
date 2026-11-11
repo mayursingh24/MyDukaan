@@ -1455,7 +1455,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 13px 16px;
+  padding: 15px 16px;
   border-radius: var(--lp-r-md);
   background: #14203B;
   border: 1.5px solid rgba(148, 163, 184, 0.32);
@@ -1794,39 +1794,53 @@ button {
 }
 
 @media (max-width: 380px) {
+  .lp-navbar-wrapper {
+    padding: 0 6px;
+  }
+
   .lp-navbar {
-    padding: 6px 8px;
-    gap: 5px;
+    padding: 5px 7px;
+    gap: 4px;
   }
 
   .lp-brand {
-    gap: 6px;
+    gap: 5px;
+    overflow: hidden;
   }
 
   .brand-logo-img {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
   }
 
   .lp-brand-name {
-    font-size: 12px;
+    font-size: 11px;
+    letter-spacing: -0.04em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .lp-nav-actions {
-    gap: 4px;
+    gap: 3px;
   }
 
   .lp-nav-auth-btn,
   .lp-nav-cta {
-    padding: 5px 8px;
-    font-size: 10.5px;
-    min-height: 31px;
+    padding: 5px 7px;
+    font-size: 10px;
+    min-height: 30px;
+    gap: 4px;
+  }
+
+  .lp-nav-auth-btn {
+    max-width: 78px;
   }
 
   .lp-mobile-menu-toggle {
-    width: 31px;
-    height: 31px;
+    width: 30px;
+    height: 30px;
   }
 
   .lp-sim-kpi-grid,
