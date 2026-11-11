@@ -1322,33 +1322,36 @@ button {
 }
 
 /* ==========================================================================
-   INTERACTIVE FIVE ENGINES SPOTLIGHT
+   INTERACTIVE TEN ENGINES SPOTLIGHT
    ========================================================================== */
 .lp-engines-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.18fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 20px;
   align-items: stretch;
 }
 
 .lp-engine-nav {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  align-content: start;
 }
 
 .lp-engine-tab {
   width: 100%;
   text-align: left;
-  padding: 15px 18px;
+  padding: 13px 14px;
   border-radius: var(--lp-r-md);
   background: #0E162B;
   border: 1.5px solid rgba(148, 163, 184, 0.26);
   color: #E2E8F0;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0;
   transition: all 0.18s ease;
 }
 
@@ -1412,99 +1415,6 @@ button {
 }
 
 .lp-engine-bullet-check {
-  color: #34D399;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-/* 5-Card All Engines Deep Architecture Breakdown (Balanced 3 + 2 desktop) */
-.lp-features-deep-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 22px;
-}
-
-.lp-feature-deep-card {
-  grid-column: span 2;
-  background: #0B1326;
-  border: 1.5px solid rgba(148, 163, 184, 0.24);
-  border-radius: var(--lp-r-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  cursor: pointer;
-  min-width: 0;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-}
-
-.lp-feature-deep-card:nth-child(4),
-.lp-feature-deep-card:nth-child(5) {
-  grid-column: span 3;
-}
-
-.lp-feature-deep-card:hover,
-.lp-feature-deep-card.active {
-  transform: translateY(-2px);
-  border-color: #60A5FA;
-  background: #101C36;
-  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.22);
-}
-
-.lp-feature-deep-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.lp-feature-deep-num {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  color: #93C5FD;
-  background: rgba(37, 99, 235, 0.22);
-  border: 1px solid rgba(96, 165, 250, 0.45);
-  border-radius: var(--lp-r-full);
-  padding: 3px 9px;
-}
-
-.lp-feature-deep-title {
-  font-family: var(--font-heading);
-  font-size: 16.5px;
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.3;
-}
-
-.lp-feature-deep-desc {
-  font-size: 13px;
-  color: var(--lp-text-secondary);
-  line-height: 1.55;
-}
-
-.lp-feature-deep-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: 2px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(148, 163, 184, 0.22);
-}
-
-.lp-feature-deep-list li {
-  font-size: 12px;
-  color: #CBD5E1;
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  line-height: 1.45;
-}
-
-.lp-feature-deep-list li::before {
-  content: '✓';
   color: #34D399;
   font-weight: 800;
   flex-shrink: 0;
@@ -1861,19 +1771,6 @@ button {
   .lp-impact-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .lp-features-deep-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .lp-feature-deep-card,
-  .lp-feature-deep-card:nth-child(4) {
-    grid-column: span 1;
-  }
-
-  .lp-feature-deep-card:nth-child(5) {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 768px) {
@@ -1932,14 +1829,8 @@ button {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .lp-features-deep-grid {
+  .lp-engine-nav {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .lp-feature-deep-card,
-  .lp-feature-deep-card:nth-child(4),
-  .lp-feature-deep-card:nth-child(5) {
-    grid-column: span 1;
   }
 
   .lp-section {

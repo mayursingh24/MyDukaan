@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="css/landing.css?v=9.1" />
+  <link rel="stylesheet" href="css/landing.css?v=9.2" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
@@ -579,14 +579,14 @@
       </section>
 
       <!-- ================================================================
-           4. INTERACTIVE FIVE ENGINES STAGE
+           4. INTERACTIVE TEN ENGINES ARCHITECTURE STAGE
            ================================================================ -->
       <section class="lp-section lp-reveal" id="engines">
         <div class="lp-container">
           <div class="lp-section-head">
             <div>
-              <div class="lp-section-tag">🧩 CORE ARCHITECTURE</div>
-              <h2 class="lp-section-h2">Five Specialized Retail Engines in One URL</h2>
+              <div class="lp-section-tag">🧩 COMPLETE ARCHITECTURE</div>
+              <h2 class="lp-section-h2">Ten Specialized Retail Engines in One URL</h2>
             </div>
             <button type="button" class="lp-btn btn-cta-emerald" onclick="LandingAuth.openModal('signup')">
               🔐 Activate Your Store Free
@@ -599,103 +599,45 @@
                 <span><strong>01.</strong> High-Speed POS &amp; UPI QR</span>
                 <span>→</span>
               </button>
+              <button type="button" class="lp-engine-tab" data-engine="loose" onclick="EngineExplorer.select('loose')">
+                <span><strong>02.</strong> Loose-Weight &amp; Hold Queue</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="voice" onclick="EngineExplorer.select('voice')">
+                <span><strong>03.</strong> All-Language Voice Billing</span>
+                <span>→</span>
+              </button>
               <button type="button" class="lp-engine-tab" data-engine="vision" onclick="EngineExplorer.select('vision')">
-                <span><strong>02.</strong> Camera &amp; Laser Barcode AI</span>
+                <span><strong>04.</strong> Camera &amp; Laser Barcode AI</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="ocr" onclick="EngineExplorer.select('ocr')">
+                <span><strong>05.</strong> AI Bill OCR &amp; Wholesale</span>
                 <span>→</span>
               </button>
               <button type="button" class="lp-engine-tab" data-engine="khata" onclick="EngineExplorer.select('khata')">
-                <span><strong>03.</strong> Smart Udhaar &amp; WhatsApp CRM</span>
+                <span><strong>06.</strong> Udhaar Khata &amp; Customer CRM</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="expiry" onclick="EngineExplorer.select('expiry')">
+                <span><strong>07.</strong> Expiry Radar &amp; Bulk CSV</span>
                 <span>→</span>
               </button>
               <button type="button" class="lp-engine-tab" data-engine="pnl" onclick="EngineExplorer.select('pnl')">
-                <span><strong>04.</strong> Wholesale Purchase &amp; Net P&amp;L</span>
+                <span><strong>08.</strong> GSTR-1, Tally &amp; Net P&amp;L</span>
+                <span>→</span>
+              </button>
+              <button type="button" class="lp-engine-tab" data-engine="staff" onclick="EngineExplorer.select('staff')">
+                <span><strong>09.</strong> Owner/Cashier RBAC &amp; Payroll</span>
                 <span>→</span>
               </button>
               <button type="button" class="lp-engine-tab" data-engine="cloud" onclick="EngineExplorer.select('cloud')">
-                <span><strong>05.</strong> Multi-Device Cloud Sync &amp; Staff</span>
+                <span><strong>10.</strong> Offline-First Firebase Cloud</span>
                 <span>→</span>
               </button>
             </div>
 
             <div class="lp-engine-stage" id="lp-engine-stage"></div>
-          </div>
-
-          <!-- Detailed All-5 Engines Architecture Breakdown -->
-          <div class="lp-features-deep-grid" id="lp-features-deep-grid">
-            <article class="lp-feature-deep-card active" data-engine-card="billing" onclick="EngineExplorer.select('billing')">
-              <div class="lp-feature-deep-top">
-                <span class="lp-feature-deep-num">01 • POS &amp; UPI QR</span>
-                <span style="font-size: 20px;">⚡</span>
-              </div>
-              <h3 class="lp-feature-deep-title">5-Second Billing &amp; Dynamic UPI QR</h3>
-              <p class="lp-feature-deep-desc">Built for peak evening rush at Indian retail counters with keyboard shortcuts, cart hold/resume, and automatic discount math.</p>
-              <ul class="lp-feature-deep-list">
-                <li>Hotkeys: F2 Quick Billing, F8 Cash, F9 UPI QR, F10 Udhaar</li>
-                <li>Amount-locked UPI QR (PhonePe, GPay, Paytm, BHIM)</li>
-                <li>Auto MRP savings &amp; GST slab billing (0%, 5%, 12%, 18%)</li>
-                <li>80mm / 58mm thermal slip print + 1-tap WhatsApp bill</li>
-              </ul>
-            </article>
-
-            <article class="lp-feature-deep-card" data-engine-card="vision" onclick="EngineExplorer.select('vision')">
-              <div class="lp-feature-deep-top">
-                <span class="lp-feature-deep-num">02 • BARCODE + AI VISION</span>
-                <span style="font-size: 20px;">📷</span>
-              </div>
-              <h3 class="lp-feature-deep-title">3-Tier Optical Barcode &amp; Gemini 3.8 AI</h3>
-              <p class="lp-feature-deep-desc">Zero manual typing — scan packs using your phone camera or hardware laser gun with live online product enrichment.</p>
-              <ul class="lp-feature-deep-list">
-                <li>Built-in rear camera EAN-13 / UPC scanner with beep feedback</li>
-                <li>Plug-and-play USB &amp; Bluetooth barcode gun support</li>
-                <li>GS1 India (890) &amp; Open Food Facts auto name/category fill</li>
-                <li>Live Gemini 3.8 Copilot for pricing &amp; high-margin combos</li>
-              </ul>
-            </article>
-
-            <article class="lp-feature-deep-card" data-engine-card="khata" onclick="EngineExplorer.select('khata')">
-              <div class="lp-feature-deep-top">
-                <span class="lp-feature-deep-num">03 • UDHAAR KHATA CRM</span>
-                <span style="font-size: 20px;">📒</span>
-              </div>
-              <h3 class="lp-feature-deep-title">Smart Udhaar Ledger &amp; WhatsApp Recovery</h3>
-              <p class="lp-feature-deep-desc">Every credit bill stays linked to its exact invoice and customer profile so zero balance is ever forgotten.</p>
-              <ul class="lp-feature-deep-list">
-                <li>Customer-wise credit history &amp; live pending balance</li>
-                <li>Partial or full settlement via Cash drawer or UPI</li>
-                <li>1-click WhatsApp dues reminder with pre-filled UPI link</li>
-                <li>Gold / Silver / Bronze loyalty tiers &amp; CSV export</li>
-              </ul>
-            </article>
-
-            <article class="lp-feature-deep-card" data-engine-card="pnl" onclick="EngineExplorer.select('pnl')">
-              <div class="lp-feature-deep-top">
-                <span class="lp-feature-deep-num">04 • PURCHASES &amp; NET P&amp;L</span>
-                <span style="font-size: 20px;">📈</span>
-              </div>
-              <h3 class="lp-feature-deep-title">Wholesale Stock Inward, Expenses &amp; Net Profit</h3>
-              <p class="lp-feature-deep-desc">Manage suppliers, distributor GST bills, daily shop overheads, and actual take-home margin across any time window.</p>
-              <ul class="lp-feature-deep-list">
-                <li>Distributor GRN stock-in with instant inventory auto-restock</li>
-                <li>Supplier directory &amp; pending wholesale payable tracking</li>
-                <li>Expense ledger for rent, electricity, freight &amp; staff advances</li>
-                <li>Day-end Cash Drawer Z-Report (F4) &amp; 7D/30D profit telemetry</li>
-              </ul>
-            </article>
-
-            <article class="lp-feature-deep-card" data-engine-card="cloud" onclick="EngineExplorer.select('cloud')">
-              <div class="lp-feature-deep-top">
-                <span class="lp-feature-deep-num">05 • CLOUD SYNC &amp; STAFF</span>
-                <span style="font-size: 20px;">☁️</span>
-              </div>
-              <h3 class="lp-feature-deep-title">Offline-First + Firebase Cloud &amp; Staff Attendance</h3>
-              <p class="lp-feature-deep-desc">0ms local billing even without internet, syncing securely to per-owner Firebase Firestore with team attendance &amp; payroll.</p>
-              <ul class="lp-feature-deep-list">
-                <li>Google &amp; Email Auth with strict UID-isolated cloud storage</li>
-                <li>IndexedDB offline persistence queue + automatic reconnect sync</li>
-                <li>31-day staff muster roll, half-day/leave tracking &amp; salary calc</li>
-                <li>Multi-branch shop switcher, EN/HI/Hinglish UI &amp; JSON backup</li>
-              </ul>
-            </article>
           </div>
         </div>
       </section>
@@ -903,7 +845,7 @@
   </div>
 
   <!-- Firebase Live Cloud Sync Engine -->
-  <script src="js/firebase-sync.js?v=9.0"></script>
+  <script src="js/firebase-sync.js?v=9.2"></script>
 
   <script>
     // Scroll Progress & Reveal Animations
@@ -1245,7 +1187,7 @@
     };
     window.LiveTerminal = LiveTerminal;
 
-    // Interactive Five Engines Spotlight
+    // Interactive Ten Engines Spotlight
     const EngineExplorer = {
       data: {
         billing: {
@@ -1254,7 +1196,7 @@
           desc: 'Auto-calculates MRP discounts, GST slabs, cash change, and generates amount-locked UPI QR codes plus 80mm/58mm thermal bills and WhatsApp shares.',
           highlights: [
             'F2 Quick POS, F8 Cash, F9 UPI QR & F10 Udhaar hotkeys',
-            'Hold / resume multiple active customer carts cleanly',
+            'Amount-locked dynamic UPI QR for PhonePe, GPay, Paytm',
             'Auto GST slab breakup (0–18%) + MRP direct savings math',
             '80mm / 58mm thermal bill print + 1-tap WhatsApp slip'
           ],
@@ -1262,67 +1204,136 @@
           m2: ['UPI + Cash', 'Multi-Tender'],
           m3: ['80mm / 58mm', 'Thermal Ready']
         },
+        loose: {
+          tag: '⚖️ ENGINE 02 • LOOSE & MULTI-QUEUE',
+          title: 'Loose-Weight Precision & Held Customer Queue',
+          desc: 'Sell loose grains, pulses, and oils in decimals (250g, 500g, 1.5kg) without cluttering sealed packets, and park busy carts while serving the next buyer.',
+          highlights: [
+            'Smart weight chips shown ONLY on loose kg & litre SKUs',
+            'Sealed bags, tubes, boxes & packs stay strictly clean',
+            'Park multiple active carts & resume in 1 click',
+            'Exact item-level sales returns with auto stock restock'
+          ],
+          m1: ['0.05 kg', 'Decimal Qty'],
+          m2: ['Multi-Cart', 'Hold Queue'],
+          m3: ['1-Click', 'Sales Return']
+        },
+        voice: {
+          tag: '🎙️ ENGINE 03 • MULTILINGUAL VOICE',
+          title: '16-Language Voice Billing in Hindi & Regional Scripts',
+          desc: 'Speak naturally in Hindi, Hinglish, Marathi, Bengali, Tamil, Telugu, Gujarati, Kannada, Malayalam, Punjabi, Urdu, or English — AI fills the cart.',
+          highlights: [
+            'Web Speech capture across 16 Indian & global languages',
+            'Gemini 3.8 NLU understands "do Maggi, aadha kilo rice"',
+            'Devanagari & Indic digit/word offline fallback matcher',
+            'Auto unit scaling for grams (500g) & litres (500ml)'
+          ],
+          m1: ['16 Langs', 'Voice Ready'],
+          m2: ['Gemini 3.8', 'Live NLU'],
+          m3: ['Offline', 'Script Engine']
+        },
         vision: {
-          tag: '📷 ENGINE 02 • OPTICAL BARCODE AI',
-          title: 'Camera Vision, Gun Scanner & Gemini Lookup',
-          desc: 'Instant EAN/UPC detection via mobile camera or USB laser scanner gun, enriched live with Open Food Facts and Gemini Google Search product identification.',
+          tag: '📷 ENGINE 04 • OPTICAL BARCODE AI',
+          title: 'Camera Vision, Gun Scanner & Product Enrichment',
+          desc: 'Instant EAN/UPC detection via mobile camera or USB laser scanner gun, enriched live with Open Food Facts, GS1 India, and Gemini lookup.',
           highlights: [
             'Rear camera live EAN-13 / UPC scanner with crisp beep audio',
             'Plug-and-play USB & Bluetooth barcode gun compatible',
-            'GS1 India (890 prefix) & Open Food Facts instant autofill',
+            'Visual Price Book with printable SVG barcode stickers',
             'Live Gemini 3.8 Copilot for combo pricing & margin tips'
           ],
           m1: ['0.28s', 'Frame Lock'],
           m2: ['890 GS1', 'India Registry'],
-          m3: ['USB + Cam', 'Dual Input']
+          m3: ['SVG Print', 'Shelf Stickers']
+        },
+        ocr: {
+          tag: '🧾 ENGINE 05 • BILL OCR & GRN',
+          title: 'AI Paper Bill Photo Scanner & Wholesale Ledgers',
+          desc: 'Snap a photo of any handwritten or printed distributor invoice — Gemini Vision extracts every line item, cost rate, and GST slab straight into stock.',
+          highlights: [
+            'Camera photo to structured inward GRN purchase bill',
+            'Automatic stock increment & cost-price weighted update',
+            'FIFO supplier payable tracking & bill-wise print register',
+            'Auto-links matched SKUs or creates brand-new catalog items'
+          ],
+          m1: ['Vision AI', 'Invoice OCR'],
+          m2: ['Auto-Stock', 'Inward Sync'],
+          m3: ['FIFO', 'Vendor Dues']
         },
         khata: {
-          tag: '📒 ENGINE 03 • CREDIT CRM',
-          title: 'Automated Udhaar Khata & 1-Click WhatsApp Collection',
-          desc: 'Track customer balances with exact invoice lineage, accept partial settlements, and dispatch branded UPI payment reminders on WhatsApp in one tap.',
+          tag: '📒 ENGINE 06 • CREDIT & CRM',
+          title: 'Udhaar Khata Recovery Ledger & Loyalty CRM',
+          desc: 'Separate workspaces for pending-due credit collection (with 1-click WhatsApp UPI reminders) and Gold/Silver/Bronze customer loyalty profiles.',
           highlights: [
-            'Every credit invoice linked directly to customer balance due',
-            'Accept full or partial recovery via Cash drawer or UPI',
-            '1-tap WhatsApp reminder with pre-filled UPI pay link',
-            'Gold / Silver / Bronze tiers, history & CSV export'
+            'Dedicated Udhaar Khata & separate Customer CRM views',
+            'Accept partial or full settlement via Cash drawer or UPI',
+            '1-tap WhatsApp reminder with pre-filled UPI payment link',
+            'Printable A4 Khata Statements, Order History & New Bill CTA'
           ],
-          m1: ['Zero', 'Missed Entries'],
+          m1: ['Zero', 'Missed Dues'],
           m2: ['1-Tap', 'UPI Reminder'],
-          m3: ['100%', 'Audit History']
+          m3: ['VIP Tiers', 'Loyalty CRM']
+        },
+        expiry: {
+          tag: '📦 ENGINE 07 • EXPIRY & BULK OPS',
+          title: '7-Day Expiry Radar, Bulk CSV & Print Reports',
+          desc: 'Protect perishable dairy and FMCG margins with automatic ≤7-day expiry alerts, bulk 500-SKU CSV/Excel import, and full printable registers.',
+          highlights: [
+            'Real-time Expired & Expiring ≤7 Days alert filters',
+            'Bulk CSV import for 500+ products + JSON backup restore',
+            'Dedicated A4 Print buttons across Inventory, Sales & Expenses',
+            'Visual Product Catalog price list & shelf label batch print'
+          ],
+          m1: ['≤7 Days', 'Expiry Alert'],
+          m2: ['500+ SKU', 'CSV Import'],
+          m3: ['A4 + 80mm', 'Print Engine']
         },
         pnl: {
-          tag: '📈 ENGINE 04 • PROFIT INTELLIGENCE',
-          title: 'Wholesale Stock Inward, Expenses & Net P&L',
-          desc: 'Record distributor GST bills, track supplier payouts, log daily store rent & overheads, and measure real net profit live across any period.',
+          tag: '📈 ENGINE 08 • PROFIT & GST FILING',
+          title: 'GSTR-1 Tax Slabs, TallyPrime XML & Live Net P&L',
+          desc: 'Real-time COGS calculation, daily expense deduction, 0%/5%/12%/18% GSTR-1 invoice summaries, and 1-click CA-ready TallyPrime XML exports.',
           highlights: [
-            'Distributor GRN purchase inward with instant stock restock',
-            'Supplier directory & pending wholesale payable tracking',
-            'Expense ledger for rent, electricity, freight & advances',
-            'Day-end Z-Report (F4) & live 7D / 30D profit curves'
+            '7D / 30D / All-Time dynamic revenue curves net of refunds',
+            'GST slab summary (Taxable, CGST, SGST) ready for GSTR-1',
+            '1-click TallyPrime Sales Voucher XML & printable P&L sheet',
+            'Day-end Cash Drawer Z-Report (F4) with tender reconciliation'
           ],
-          m1: ['Real-Time', 'COGS Tracking'],
-          m2: ['Supplier', 'Payable CRM'],
-          m3: ['SVG', 'Revenue Curve']
+          m1: ['GSTR-1', 'Slab Tax'],
+          m2: ['Tally XML', '1-Click Export'],
+          m3: ['Net P&L', 'Live Curve']
+        },
+        staff: {
+          tag: '🔐 ENGINE 09 • RBAC & TEAM PAYROLL',
+          title: 'Owner/Cashier Mode Lock & 31-Day Staff Attendance',
+          desc: 'Switch counters to PIN-locked Cashier Mode to protect profits and settings while tracking staff attendance and prorated monthly salaries.',
+          highlights: [
+            'SHA-256 PIN-locked Owner vs Cashier role enforcement',
+            'Cashiers bill fast & view read-only stock without cost/delete access',
+            '31-day visual muster roll (Present / Half-Day / Absent)',
+            'Pro-rated monthly payroll estimation + printable muster roll'
+          ],
+          m1: ['SHA-256', 'PIN RBAC'],
+          m2: ['31-Day', 'Muster Roll'],
+          m3: ['Auto-Calc', 'Payroll Sheet']
         },
         cloud: {
-          tag: '☁️ ENGINE 05 • CLOUD & TEAM',
-          title: 'Live Multi-Device Sync, Attendance & Multi-Shop Control',
-          desc: 'Secure per-owner Google & Email authentication powered by Firebase Firestore alongside 31-day staff attendance and payroll calculation.',
+          tag: '☁️ ENGINE 10 • CLOUD & OFFLINE PWA',
+          title: '0ms Offline Billing with Per-Owner Firebase Sync',
+          desc: 'Keep billing smoothly through internet cuts with IndexedDB persistence, syncing cleanly to UID-isolated Firestore across multiple branches.',
           highlights: [
-            'Per-owner Google & Email Auth with UID-isolated Firestore',
-            'IndexedDB offline persistence + automatic reconnect sync',
-            '31-day staff muster roll, leave marks & prorated payroll',
-            'Multi-branch shop switcher, EN/HI/Hinglish & JSON backups'
+            'Google & Email Auth with strict UID-isolated Firestore rules',
+            'IndexedDB local persistence + conflict-safe reconnect sync',
+            'Multi-branch shop switcher, EN/HI/Hinglish UI & PWA APK',
+            'Full JSON snapshot export & instant restore across devices'
           ],
-          m1: ['Per-Owner', 'UID Isolation'],
-          m2: ['Multi-Shop', 'Cloud Sync'],
-          m3: ['31-Day', 'Staff Register']
+          m1: ['0ms', 'Offline First'],
+          m2: ['UID Rules', 'Cloud Secure'],
+          m3: ['Multi-Shop', 'Branch Switch']
         }
       },
       select(key) {
         const d = this.data[key] || this.data.billing;
         document.querySelectorAll('.lp-engine-tab').forEach(b => b.classList.toggle('active', b.dataset.engine === key));
-        document.querySelectorAll('[data-engine-card]').forEach(c => c.classList.toggle('active', c.dataset.engineCard === key));
         const mount = document.getElementById('lp-engine-stage');
         if (!mount) return;
         const bulletsHtml = (d.highlights || []).map(item => `
@@ -1931,10 +1942,10 @@
       }
     });
 
-    // Register Network-First Service Worker v9.0
+    // Register Network-First Service Worker v9.2
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=9.0')
+        navigator.serviceWorker.register('./sw.js?v=9.2')
           .then(reg => reg.update())
           .catch(() => {});
       });

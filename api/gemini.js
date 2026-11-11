@@ -284,6 +284,7 @@ module.exports = async (req, res) => {
       imageBase64,
       mimeType,
       transcript,
+      lang,
       catalogHints,
       velocitySummary,
       apiKey: clientApiKey
@@ -555,7 +556,7 @@ ${safeHints.map(h => `${h.id} | ${h.name} | ${h.unit || 'pack'} | ₹${h.cost ||
     }
 
     // -------------------------------------------------------------
-    // BRANCH 3: Hindi / Hinglish / English Voice Cart Parser
+    // BRANCH 3: Multilingual Voice Cart Parser (All Indian & Global Scripts)
     // -------------------------------------------------------------
     if (cleanAction === 'parseVoiceCart') {
       const spoken = String(transcript || prompt || '').trim();
@@ -564,17 +565,19 @@ ${safeHints.map(h => `${h.id} | ${h.name} | ${h.unit || 'pack'} | ₹${h.cost ||
       }
 
       const safeHints = Array.isArray(catalogHints) ? catalogHints.slice(0, 220) : [];
-      const systemInstruction = `You are a fast Indian Kirana Voice Billing NLU assistant.
-Convert spoken Hindi, Hinglish, or English customer orders into structured cart items matched ONLY against the provided catalogHints.
-Understand Indian quantity idioms accurately:
-- ek=1, do=2, teen=3, chaar=4, paanch=5, chhah/che=6, saat=7, aath=8, nau=9, das=10
-- aadha/half kilo or 500 gram for a 1kg SKU -> qty: 0.5
-- pav/pao or 250 gram for a 1kg SKU -> qty: 0.25
-- dedh=1.5, dhai=2.5, sawa=1.25
-- If customer mentions a pack weight matching SKU title (e.g. "2 packet Maggi 70g" or "Maggi 2 packet"), set qty: 2.
-Put any phrase that does not match any catalog item into unmatched[]. Return strictly valid JSON.`;
+      const spokenLang = String(lang || 'auto').trim();
+      const systemInstruction = `You are a multilingual Indian Kirana Voice Billing NLU assistant.
+Translate and match customer orders spoken or typed in ANY language or script — including Hindi Devanagari (मैगी, बासमती चावल, आटा, मक्खन, तेल, चाय, दाल, दूध, कोलगेट, सर्फ, डेटॉल), Hinglish, Marathi, Bengali, Gujarati, Tamil, Telugu, Kannada, Malayalam, Punjabi, Urdu, Odia, Assamese, Nepali, or English — strictly against the provided catalogHints.
+Handle Indic & Arabic digits (०१२३...) and Indian quantity idioms accurately:
+- एक/ek=1, दो/do=2, तीन/teen=3, चार/char=4, पाँच/paanch=5, छह/chhah=6, सात/saat=7, आठ/aath=8, नौ/nau=9, दस/das=10
+- आधा/aadha/half kilo or 500g/500ml for loose kg/litre SKUs -> qty: 0.5
+- पाव/pav/pao or 250g/250ml for loose kg/litre SKUs -> qty: 0.25
+- सवा/sawa=1.25, डेढ़/dedh=1.5, ढाई/dhai=2.5
+- Never convert pack weight printed inside SKU title (e.g. "2 पैकेट मैगी" or "2 Maggi 70g") to 0.07; return qty: 2.
+Put any phrase that genuinely matches no catalog SKU into unmatched[]. Return strictly valid JSON.`;
 
-      const voicePrompt = `Spoken order: "${spoken}"
+      const voicePrompt = `Language hint: ${spokenLang}
+Spoken order: "${spoken}"
 Store Catalog (id | name | unit | price):
 ${safeHints.map(h => `${h.id} | ${h.name} | ${h.unit || 'pack'} | ₹${h.price || 0}`).join('\n')}`;
 

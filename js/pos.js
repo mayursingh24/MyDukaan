@@ -16,7 +16,8 @@ class POSEngine {
     this._expandedWeightId = null;
     this._voiceRecognition = null;
     this._voiceListening = false;
-    this._voiceLang = "hi-IN";
+    this._voiceFinalText = "";
+    this._voiceLang = localStorage.getItem('mydukaan24_voice_lang') || "hi-IN";
     this._voiceParsedItems = [];
   }
 
@@ -27,12 +28,12 @@ class POSEngine {
   }
 
   isWeightUnit(unit = '') {
-    return /^(kg|kilogram|g|gram|gm|l|ltr|litre|liter|ml|bag)$/i.test(String(unit || '').trim());
+    return /^(kg|kilogram|kgs|g|gm|gram|grams|l|ltr|litre|liter|ml|loose)$/i.test(String(unit || '').trim());
   }
 
   getWeightPresets(unit = '') {
     const u = String(unit || '').trim().toLowerCase();
-    if (u === 'litre' || u === 'liter' || u === 'l' || u === 'ltr') {
+    if (u === 'litre' || u === 'liter' || u === 'l' || u === 'ltr' || u === 'ml') {
       return [
         { label: '250ml', qty: 0.25 },
         { label: '500ml', qty: 0.5 },
@@ -41,7 +42,7 @@ class POSEngine {
         { label: '2L', qty: 2 }
       ];
     }
-    if (u === 'kg' || u === 'kilogram' || u === 'bag') {
+    if (u === 'kg' || u === 'kilogram' || u === 'kgs' || u === 'g' || u === 'gm' || u === 'gram' || u === 'grams' || u === 'loose') {
       return [
         { label: '250g', qty: 0.25 },
         { label: '500g', qty: 0.5 },
@@ -388,10 +389,11 @@ class POSEngine {
     }
 
     list.innerHTML = this.cart.map(item => {
-      const showWeights = this.isWeightUnit(item.unit) || this._expandedWeightId === item.id;
-      const presets = this.getWeightPresets(item.unit);
+      const isLoose = this.isWeightUnit(item.unit);
+      const showWeights = isLoose;
+      const presets = isLoose ? this.getWeightPresets(item.unit) : [];
       const lineTotal = DB.round2(item.price * item.qty);
-      const stepDelta = this.isWeightUnit(item.unit) ? 0.5 : 1;
+      const stepDelta = isLoose ? 0.5 : 1;
 
       return `
         <div class="cart-item-block">
@@ -402,12 +404,14 @@ class POSEngine {
             </div>
             <div class="cart-qty-ctrl">
               <button class="cart-qty-btn" type="button" onclick="POS.updateItemQty('${DB.escapeHtml(item.id)}', -${stepDelta})" title="Decrease">−</button>
-              <input type="number" step="any" min="0.01" class="cart-qty-input tnum" value="${DB.roundQty(item.qty)}" onchange="POS.setItemQty('${DB.escapeHtml(item.id)}', this.value)" title="Enter exact / decimal quantity" />
+              <input type="number" step="${isLoose ? 'any' : '1'}" min="${isLoose ? '0.05' : '1'}" class="cart-qty-input tnum" value="${DB.roundQty(item.qty)}" onchange="POS.setItemQty('${DB.escapeHtml(item.id)}', this.value)" title="${isLoose ? 'Enter exact / decimal weight' : 'Enter packet quantity'}" />
               <button class="cart-qty-btn" type="button" onclick="POS.updateItemQty('${DB.escapeHtml(item.id)}', ${stepDelta})" title="Increase">+</button>
             </div>
-            <button class="cart-weight-toggle ${showWeights ? 'active' : ''}" type="button" onclick="POS.toggleWeightChips('${DB.escapeHtml(item.id)}')" title="Quick Loose Weight / Decimal Presets">
-              ${Icons.scale(13)}
-            </button>
+            ${isLoose ? `
+              <button class="cart-weight-toggle active" type="button" onclick="POS.toggleWeightChips('${DB.escapeHtml(item.id)}')" title="Loose Weight Presets">
+                ${Icons.scale(13)}
+              </button>
+            ` : ''}
             <div class="cart-item-total tnum">₹${lineTotal.toLocaleString('en-IN')}</div>
             <button class="cart-item-del" type="button" onclick="POS.removeItemFromCart('${DB.escapeHtml(item.id)}')" title="Remove Item">
               ${Icons.close(14)}
@@ -509,10 +513,10 @@ class POSEngine {
         </div>
 
         ${this.paymentMode === 'Cash' ? `
-          <div style="background: var(--bg-input); padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 6px;">
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px;">
+          <div style="background: var(--bg-input); padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 2px;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 5px;">
               <span style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Tendered: ₹</span>
-              <input type="number" step="0.01" id="pos-cash-tendered" class="form-input" style="flex: 1; min-width: 110px; height: 32px; padding: 4px 8px; font-weight: 700; font-size: 14px;" value="${calc.grandTotal}" oninput="POS.calculateCashChange(${calc.grandTotal})" />
+              <input type="number" step="0.01" id="pos-cash-tendered" class="form-input" style="flex: 1; min-width: 110px; height: 30px; padding: 4px 8px; font-weight: 700; font-size: 13.5px;" value="${calc.grandTotal}" oninput="POS.calculateCashChange(${calc.grandTotal})" />
             </div>
             <div class="cash-tender-row">
               <div class="cash-note-chip" onclick="POS.setQuickTender(100, false, ${calc.grandTotal})">+₹100</div>
@@ -520,7 +524,7 @@ class POSEngine {
               <div class="cash-note-chip" onclick="POS.setQuickTender(500, false, ${calc.grandTotal})">+₹500</div>
               <div class="cash-note-chip" onclick="POS.setQuickTender(0, true, ${calc.grandTotal})">Exact</div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border-subtle);">
               <span>Change to Return:</span>
               <span id="pos-cash-change" style="color: var(--success);">₹0</span>
             </div>
@@ -528,20 +532,22 @@ class POSEngine {
         ` : ''}
 
         ${this.paymentMode === 'UPI' ? `
-          <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center; margin-bottom: 6px;">
-            <div style="font-size: 11.5px; font-weight: 600; color: var(--primary); margin-bottom: 8px;">
+          <div style="background: var(--bg-input); padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center; margin-bottom: 2px;">
+            <div style="font-size: 11px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">
               Scan with PhonePe • Google Pay • Paytm • BHIM
             </div>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=4&data=upi%3A%2F%2Fpay%3Fpa%3D${encodeURIComponent(db.shop.upiId || '6306437348@upi')}%26pn%3D${encodeURIComponent(db.shop.name || 'MyDukkan24')}%26am%3D${calc.grandTotal}%26cu%3DINR" alt="UPI QR Code" style="width: 130px; height: 130px; border-radius: 6px; background: #FFF; padding: 4px;" />
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-family: var(--font-mono);">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&margin=4&data=upi%3A%2F%2Fpay%3Fpa%3D${encodeURIComponent(db.shop.upiId || '6306437348@upi')}%26pn%3D${encodeURIComponent(db.shop.name || 'MyDukkan24')}%26am%3D${calc.grandTotal}%26cu%3DINR" alt="UPI QR Code" style="width: 108px; height: 108px; border-radius: 6px; background: #FFF; padding: 4px;" />
+            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono); overflow-wrap: anywhere;">
               ${DB.escapeHtml(db.shop.upiId || '6306437348@upi')} • ₹${calc.grandTotal}
             </div>
           </div>
         ` : ''}
 
-        <button type="button" class="btn btn-primary w100 btn-lg" style="margin-top: 4px;" onclick="POS.processCheckout()">
-          ${Icons.check(16)} Complete Bill (₹${calc.grandTotal.toLocaleString('en-IN')})
-        </button>
+        <div class="pos-checkout-sticky">
+          <button type="button" class="btn btn-primary w100 btn-lg" style="padding: 10px 16px;" onclick="POS.processCheckout()">
+            ${Icons.check(16)} Complete Bill (₹${calc.grandTotal.toLocaleString('en-IN')})
+          </button>
+        </div>
       </div>
     `;
   }
@@ -752,36 +758,63 @@ class POSEngine {
   }
 
   // =========================================================================
-  // HINDI / HINGLISH VOICE BILLING ENGINE (Live Online Gemini + Offline Parser)
+  // ALL-LANGUAGE VOICE BILLING ENGINE (Live Online Gemini + Multilingual Matcher)
   // =========================================================================
+  setVoiceLang(lang) {
+    this._voiceLang = lang || 'hi-IN';
+    localStorage.setItem('mydukaan24_voice_lang', this._voiceLang);
+  }
+
+  getVoiceLanguages() {
+    return [
+      { code: 'hi-IN', label: '🇮🇳 हिन्दी / Hinglish (Hindi)' },
+      { code: 'en-IN', label: '🇮🇳 English (India)' },
+      { code: 'mr-IN', label: '🇮🇳 मराठी (Marathi)' },
+      { code: 'bn-IN', label: '🇮🇳 বাংলা (Bengali)' },
+      { code: 'gu-IN', label: '🇮🇳 ગુજરાતી (Gujarati)' },
+      { code: 'ta-IN', label: '🇮🇳 தமிழ் (Tamil)' },
+      { code: 'te-IN', label: '🇮🇳 తెలుగు (Telugu)' },
+      { code: 'kn-IN', label: '🇮🇳 ಕನ್ನಡ (Kannada)' },
+      { code: 'ml-IN', label: '🇮🇳 മലയാളം (Malayalam)' },
+      { code: 'pa-IN', label: '🇮🇳 ਪੰਜਾਬੀ (Punjabi)' },
+      { code: 'ur-IN', label: '🇮🇳 اردو (Urdu)' },
+      { code: 'or-IN', label: '🇮🇳 ଓଡ଼ିଆ (Odia)' },
+      { code: 'as-IN', label: '🇮🇳 অসমীয়া (Assamese)' },
+      { code: 'ne-NP', label: '🇳🇵 नेपाली (Nepali)' },
+      { code: 'en-US', label: '🌐 English (Global)' },
+      { code: 'auto', label: '🌍 Auto-Detect (All Languages AI)' }
+    ];
+  }
+
   openVoiceBillingModal() {
     const existing = document.getElementById('voice-billing-modal');
     if (existing) existing.remove();
     this._voiceParsedItems = [];
+    this._voiceFinalText = "";
 
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     const hasSpeech = Boolean(SpeechRec);
     const isOnline = navigator.onLine !== false;
+    const langs = this.getVoiceLanguages();
 
     const modalHtml = `
       <div class="modal-backdrop" id="voice-billing-modal" onclick="if(event.target===this) POS.closeVoiceBillingModal()">
-        <div class="modal-card" style="max-width: 560px;">
+        <div class="modal-card" style="max-width: 580px;">
           <div class="modal-header">
-            <div class="modal-title">${Icons.mic(16)} Hindi / Hinglish Voice Billing</div>
+            <div class="modal-title">${Icons.mic(16)} All-Language Voice Billing</div>
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="badge ${isOnline ? 'badge-success' : 'badge-warning'}">${isOnline ? '🟢 Online Gemini 3.8' : '🟠 Offline Matcher'}</span>
+              <span class="badge ${isOnline ? 'badge-success' : 'badge-warning'}">${isOnline ? '🟢 Online Gemini 3.8' : '🟠 Offline Script Matcher'}</span>
               <button class="topbar-icon-btn" onclick="POS.closeVoiceBillingModal()">✕</button>
             </div>
           </div>
           <div class="modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: var(--bg-input); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-              <div>
-                <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Speak Order naturally in Hindi or English</div>
-                <div style="font-size: 11px; color: var(--text-muted);">Supports "do packet Maggi", "aadha kilo Toor Dal", "1 litre Fortune oil"</div>
+              <div style="flex: 1 1 200px; min-width: 0;">
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--text-primary);">Speak or Type in Any Language</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Supports हिन्दी ("२ पैकेट मैगी और आधा किलो चावल"), Hinglish, Marathi, Bengali, Tamil, Telugu, Gujarati &amp; English</div>
               </div>
-              <select id="voice-lang-select" class="form-select" style="width: auto; font-size: 12px; padding: 5px 10px;" onchange="POS._voiceLang = this.value;">
-                <option value="hi-IN" ${this._voiceLang === 'hi-IN' ? 'selected' : ''}>🇮🇳 Hindi / Hinglish</option>
-                <option value="en-IN" ${this._voiceLang === 'en-IN' ? 'selected' : ''}>🌐 English (India)</option>
+              <select id="voice-lang-select" class="form-select" style="width: auto; max-width: 220px; font-size: 12px; padding: 5px 10px;" onchange="POS.setVoiceLang(this.value)">
+                ${langs.map(l => `<option value="${l.code}" ${this._voiceLang === l.code ? 'selected' : ''}>${l.label}</option>`).join('')}
               </select>
             </div>
 
@@ -789,14 +822,17 @@ class POSEngine {
               <button type="button" id="voice-mic-btn" class="btn ${hasSpeech ? 'btn-primary' : 'btn-secondary'}" style="flex: 1 1 170px; justify-content: center;" onclick="POS.toggleVoiceListening()">
                 ${Icons.mic(15)} <span id="voice-mic-label">${hasSpeech ? 'Tap Mic & Speak' : 'Mic Unavailable (Type Below)'}</span>
               </button>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('voice-transcript-input').value = '2 packet Maggi, 1 litre Fortune oil, aur 500g Butter add karo';">
-                Try Sample Order
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('voice-transcript-input').value = '२ पैकेट मैगी और आधा किलो बासमती चावल और 1 अमूल मक्खन'; POS.parseVoiceTranscript();">
+                Sample (हिन्दी)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('voice-transcript-input').value = '2 packet Maggi, 1 litre Fortune oil, aur 500g Butter add karo'; POS.parseVoiceTranscript();">
+                Sample (Hinglish)
               </button>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label">Spoken / Typed Order Text</label>
-              <textarea id="voice-transcript-input" class="form-textarea" rows="2" placeholder='e.g. "do Maggi, ek Amul butter aur 1 kilo atta add karo"'></textarea>
+              <label class="form-label">Spoken / Typed Order Text (Editable)</label>
+              <textarea id="voice-transcript-input" class="form-textarea" rows="2" placeholder='e.g. "दो पैकेट मैगी और आधा किलो चावल" or "2 Maggi, ek Amul butter"'></textarea>
             </div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -818,53 +854,75 @@ class POSEngine {
   toggleVoiceListening() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
-      App.toast('warning', 'Speech API Unsupported', 'Type or paste your Hindi/Hinglish order in the box below.');
+      App.toast('warning', 'Speech API Unsupported', 'Type or paste your order in the box below.');
       return;
     }
 
     if (this._voiceListening && this._voiceRecognition) {
-      try { this._voiceRecognition.stop(); } catch (e) {}
       this._voiceListening = false;
       this.updateMicButtonUI(false);
+      try { this._voiceRecognition.stop(); } catch (e) {}
       return;
     }
 
     try {
       const rec = new SpeechRec();
-      rec.lang = this._voiceLang || 'hi-IN';
+      const chosenLang = this._voiceLang === 'auto'
+        ? (navigator.language || 'hi-IN')
+        : (this._voiceLang || 'hi-IN');
+      rec.lang = chosenLang;
       rec.interimResults = true;
-      rec.maxAlternatives = 1;
-      rec.continuous = false;
+      rec.maxAlternatives = 3;
+      rec.continuous = true;
       this._voiceRecognition = rec;
       this._voiceListening = true;
+      this._voiceFinalText = '';
       this.updateMicButtonUI(true);
 
+      const statusEl = document.getElementById('voice-parse-status');
+      if (statusEl) {
+        statusEl.innerHTML = `<div style="font-size: 11.5px; color: var(--primary); font-weight: 600;">🎙️ Listening (${DB.escapeHtml(chosenLang)})... Speak clearly, then tap Stop to match items.</div>`;
+      }
+
       rec.onresult = (event) => {
-        let transcript = '';
+        let finalSeg = '';
+        let interimSeg = '';
         for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript + ' ';
+          const txt = event.results[i][0]?.transcript || '';
+          if (event.results[i].isFinal) finalSeg += txt + ' ';
+          else interimSeg += txt + ' ';
         }
+        this._voiceFinalText = finalSeg.trim();
+        const combined = `${finalSeg}${interimSeg}`.trim();
         const input = document.getElementById('voice-transcript-input');
-        if (input) input.value = transcript.trim();
-        if (event.results[event.results.length - 1].isFinal) {
-          this._voiceListening = false;
-          this.updateMicButtonUI(false);
-          this.parseVoiceTranscript();
-        }
+        if (input) input.value = combined;
       };
 
       rec.onerror = (err) => {
         this._voiceListening = false;
         this.updateMicButtonUI(false);
-        const msg = err && err.error === 'not-allowed'
-          ? 'Microphone permission denied. Enable mic access or type below.'
-          : `Voice capture notice: ${(err && err.error) || 'retry or type below'}`;
-        App.toast('warning', 'Mic Notice', msg);
+        const code = err && err.error;
+        if (code === 'aborted') return;
+        const msg = code === 'not-allowed'
+          ? 'Microphone permission denied. Allow mic in browser or type below.'
+          : code === 'no-speech'
+            ? 'No speech detected. Speak louder near mic or type your order below.'
+            : `Speech notice (${code || 'error'}). Type your order below if browser speech service is unavailable.`;
+        if (statusEl) {
+          statusEl.innerHTML = `<div style="font-size: 11.5px; color: var(--warning);">${DB.escapeHtml(msg)}</div>`;
+        }
       };
 
       rec.onend = () => {
+        const wasListening = this._voiceListening;
         this._voiceListening = false;
         this.updateMicButtonUI(false);
+        const currentText = (document.getElementById('voice-transcript-input')?.value || this._voiceFinalText || '').trim();
+        if (currentText && wasListening) {
+          this.parseVoiceTranscript();
+        } else if (currentText) {
+          this.parseVoiceTranscript();
+        }
       };
 
       rec.start();
@@ -879,7 +937,7 @@ class POSEngine {
     const btn = document.getElementById('voice-mic-btn');
     const label = document.getElementById('voice-mic-label');
     if (btn) btn.classList.toggle('voice-pulse-active', listening);
-    if (label) label.textContent = listening ? 'Listening... (Tap to Stop)' : 'Tap Mic & Speak';
+    if (label) label.textContent = listening ? 'Listening... (Tap to Stop & Match)' : 'Tap Mic & Speak';
   }
 
   async parseVoiceTranscript(forceOffline = false) {
@@ -901,7 +959,7 @@ class POSEngine {
       const matched = this.parseVoiceOfflineHinglish(text, products);
       this.renderVoiceParsedItems(
         matched,
-        forceOffline ? '🟠 Offline Hinglish Parser (User Requested Fallback)' : '🟠 Offline Hinglish Parser',
+        forceOffline ? '🟠 Multilingual Local Matcher (Fallback)' : '🟠 Offline Multilingual Matcher',
         null
       );
       return;
@@ -911,13 +969,16 @@ class POSEngine {
     resultsEl.innerHTML = '';
 
     const res = window.DukaanAI && typeof DukaanAI.parseVoiceCartOnline === 'function'
-      ? await DukaanAI.parseVoiceCartOnline(text, products)
+      ? await DukaanAI.parseVoiceCartOnline(text, products, this._voiceLang || 'hi-IN')
       : { ok: false, error: 'AI helper unavailable' };
 
     if (res && res.ok) {
-      const enriched = (res.items || []).map(it => {
+      const payload = (res.result && typeof res.result === 'object') ? res.result : res;
+      const rawItems = Array.isArray(payload.items) ? payload.items : [];
+      let enriched = rawItems.map(it => {
+        const candidateName = String(it.matchedName || it.name || it.spokenText || '').toLowerCase().trim();
         const prod = products.find(p => p.id === it.productId) ||
-          products.find(p => p.name.toLowerCase().includes(String(it.name || '').toLowerCase()));
+          (candidateName ? products.find(p => p.name.toLowerCase().includes(candidateName)) : null);
         if (!prod) return null;
         return {
           productId: prod.id,
@@ -929,49 +990,129 @@ class POSEngine {
         };
       }).filter(Boolean);
 
-      this.renderVoiceParsedItems(enriched, `🟢 Live ${res.model || 'Gemini 3.8'}`, res.unmatched || []);
+      let unmatchedList = Array.isArray(payload.unmatched) ? payload.unmatched : [];
+      if (!enriched.length) {
+        const localMatched = this.parseVoiceOfflineHinglish(text, products);
+        if (localMatched.length) {
+          enriched = localMatched;
+          unmatchedList = [];
+        }
+      }
+
+      this.renderVoiceParsedItems(enriched, `🟢 Live ${res.model || 'Gemini 3.8'}`, unmatchedList);
     } else {
+      const localMatched = this.parseVoiceOfflineHinglish(text, products);
+      if (localMatched.length) {
+        this.renderVoiceParsedItems(
+          localMatched,
+          '🟡 Auto-Recovered via Offline Script Matcher',
+          null
+        );
+        return;
+      }
       const errMsg = (res && res.error) || 'Could not reach live Gemini parser.';
       statusEl.innerHTML = `
         <div style="background: var(--danger-light); border: 1px solid var(--danger-border); padding: 10px 12px; border-radius: var(--radius-md); font-size: 12px; color: var(--danger); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <span><strong>Live Voice API Error:</strong> ${DB.escapeHtml(errMsg)}</span>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="POS.parseVoiceTranscript(true)">Use Offline Hinglish Matcher</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="POS.parseVoiceTranscript(true)">Use Local Multilingual Matcher</button>
         </div>
       `;
     }
   }
 
+  _normalizeIndicText(raw) {
+    const digitScripts = [
+      '०१२३४५६७८९', // Devanagari
+      '০১২৩৪৫৬৭৮৯', // Bengali
+      '੦੧੨੩੪੫੬੭੮੯', // Gurmukhi
+      '૦૧૨૩૪૫૬૭૮૯', // Gujarati
+      '୦୧୨୩୪୫୬୭୮୯', // Odia
+      '௦௧௨௩௪௫௬௭௮௯', // Tamil
+      '౦౧౨౩౪౫౬౭౮౯', // Telugu
+      '೦೧೨೩೪೫೬೭೮೯', // Kannada
+      '൦൧൨൩൪൫൬൭൮൯', // Malayalam
+      '٠١٢٣٤٥٦٧٨٩', // Arabic
+      '۰۱۲۳۴۵۶۷۸۹'  // Urdu/Persian
+    ];
+    let out = String(raw || '').toLowerCase();
+    digitScripts.forEach(digits => {
+      const chars = Array.from(digits);
+      chars.forEach((ch, idx) => {
+        if (out.includes(ch)) out = out.split(ch).join(String(idx));
+      });
+    });
+    return out;
+  }
+
   parseVoiceOfflineHinglish(text, products) {
     const wordNums = {
-      ek: 1, one: 1, a: 1,
-      do: 2, two: 2,
-      teen: 3, three: 3,
-      char: 4, four: 4,
-      paanch: 5, panch: 5, five: 5,
-      chhah: 6, cheh: 6, six: 6,
-      saat: 7, seven: 7,
-      aath: 8, eight: 8,
-      nau: 9, nine: 9,
-      das: 10, ten: 10,
-      aadha: 0.5, adha: 0.5, half: 0.5,
-      pav: 0.25, pao: 0.25, quarter: 0.25,
-      sawa: 1.25, dedh: 1.5, dhai: 2.5
+      ek: 1, one: 1, 'एक': 1, 'दोन': 2, 'दुई': 2, 'দুই': 2, 'এক': 1, 'ਇੱਕ': 1, 'ஒன்று': 1, 'ఒకటి': 1, 'ఒక': 1, 'ಒಂದು': 1, 'ഒന്ന്': 1,
+      do: 2, two: 2, 'दो': 2, 'ਦੋ': 2, 'இரண்டு': 2, 'రెండు': 2, 'ಎರಡು': 2, 'രണ്ട്': 2, 'બે': 2,
+      teen: 3, three: 3, 'तीन': 3, 'তিন': 3, 'ਤਿੰਨ': 3, 'ત્રણ': 3, 'மூன்று': 3, 'మూడు': 3, 'ಮೂರು': 3,
+      char: 4, chaar: 4, four: 4, 'चार': 4, 'চার': 4, 'ਚਾਰ': 4, 'ચાર': 4, 'நான்கு': 4, 'నాలుగు': 4,
+      paanch: 5, panch: 5, five: 5, 'पांच': 5, 'पाँच': 5, 'पाच': 5, 'পাঁচ': 5, 'ਪੰਜ': 5, 'પાંચ': 5,
+      chhah: 6, cheh: 6, six: 6, 'छह': 6, 'छः': 6, 'सहा': 6, 'ছয়': 6,
+      saat: 7, seven: 7, 'सात': 7, 'সাত': 7,
+      aath: 8, eight: 8, 'आठ': 8, 'আট': 8,
+      nau: 9, nine: 9, 'नौ': 9, 'नऊ': 9, 'নয়': 9,
+      das: 10, ten: 10, 'दस': 10, 'दहा': 10, 'দশ': 10,
+      aadha: 0.5, adha: 0.5, half: 0.5, 'आधा': 0.5, 'आधी': 0.5, 'अर्धा': 0.5, 'আধা': 0.5, 'ਅੱਧਾ': 0.5, 'અડધો': 0.5, 'அரை': 0.5, 'అర': 0.5, 'ಅರ್ಧ': 0.5,
+      pav: 0.25, pao: 0.25, quarter: 0.25, 'पाव': 0.25, 'पाओ': 0.25, 'पाऊण': 0.75,
+      sawa: 1.25, 'सवा': 1.25,
+      dedh: 1.5, 'डेढ़': 1.5, 'डेढ': 1.5, 'दीड': 1.5,
+      dhai: 2.5, 'ढाई': 2.5, 'अडीच': 2.5
     };
 
-    const stopWords = new Set(['aur', 'and', 'add', 'karo', 'kardo', 'de', 'do', 'dena', 'chahiye', 'packet', 'packets', 'pack', 'packs', 'box', 'bottle', 'pcs', 'piece', 'pieces', 'unit', 'units', 'ka', 'ki', 'ke', 'bhai']);
-    const clauses = String(text || '')
-      .toLowerCase()
-      .split(/[,;+&]+|\baur\b|\band\b/g)
+    const multilingualAliases = {
+      'मैगी': ['maggi', 'noodles', 'masala'], 'मेगी': ['maggi', 'noodles'], 'ম্যাগি': ['maggi'], 'મેગી': ['maggi'], 'மகி': ['maggi'],
+      'चावल': ['basmati', 'rice'], 'बासमती': ['basmati', 'rice'], 'चांवल': ['rice', 'basmati'], 'तांदूळ': ['rice'], 'चाल': ['rice'], 'চাউল': ['rice'], 'அரிசி': ['rice'], 'బియ్యం': ['rice'],
+      'आटा': ['aashirvaad', 'atta', 'wheat'], 'आट्टा': ['aashirvaad', 'atta'], 'गहू': ['atta'], 'ময়দা': ['atta'], 'আটা': ['atta'], 'कणीक': ['atta'], 'गोदमा': ['atta'],
+      'तेल': ['oil', 'fortune', 'sunflower'], 'தயிர்': ['curd'], 'எண்ணெய்': ['oil'], 'నూనె': ['oil'], 'તેલ': ['oil'],
+      'फॉर्च्यून': ['fortune', 'oil'], 'फॉर्चून': ['fortune', 'oil'],
+      'अमूल': ['amul'], 'मक्खन': ['butter', 'amul'], 'बटर': ['butter', 'amul'], 'लोणी': ['butter'], 'মাখন': ['butter'],
+      'दूध': ['milk', 'amul'], 'দুধ': ['milk'], 'पால்': ['milk'], 'పాలు': ['milk'],
+      'चाय': ['tea', 'tata', 'premium'], 'चायपत्ती': ['tea', 'tata'], 'पत्ती': ['tea', 'tata'], 'टाटा': ['tata', 'tea'], 'चहा': ['tea'], 'চা': ['tea'], 'டீ': ['tea'],
+      'दाल': ['dal', 'toor'], 'तूर': ['toor', 'dal'], 'तुअर': ['toor', 'dal'], 'डाळ': ['dal', 'toor'], 'ডাল': ['dal'], 'பருப்பு': ['dal'],
+      'कोलगेट': ['colgate', 'toothpaste'], 'पेस्ट': ['toothpaste', 'colgate'], 'टूथपेस्ट': ['toothpaste', 'colgate'], 'मंजन': ['toothpaste', 'colgate'],
+      'सर्फ': ['surf', 'excel', 'detergent'], 'एक्सेल': ['excel', 'surf'], 'डिटर्जेंट': ['detergent', 'surf'], 'पाउडर': ['surf', 'detergent'],
+      'डेटॉल': ['dettol', 'soap'], 'डेटोल': ['dettol', 'soap'], 'साबुन': ['soap', 'dettol'], 'सॉप': ['soap', 'dettol'], 'সাবান': ['soap'], 'சோப்பு': ['soap'],
+      'पारले': ['parle', 'biscuits'], 'बिस्किट': ['biscuits', 'parle'], 'बिस्कुट': ['biscuits', 'parle'],
+      'डेयरी': ['dairy', 'milk', 'chocolate'], 'मिल्क': ['milk', 'dairy'], 'चॉकलेट': ['chocolate', 'dairy'], 'कैडबरी': ['cadbury', 'dairy', 'milk'],
+      'क्लीनिक': ['clinic', 'shampoo'], 'शैम्पू': ['shampoo', 'clinic'], 'शैंपू': ['shampoo', 'clinic'], 'शाम्पू': ['shampoo'],
+      'डोलो': ['dolo', 'paracetamol'], 'दवाई': ['dolo', 'paracetamol'], 'गोली': ['dolo', 'paracetamol'], 'टैबलेट': ['dolo'],
+      'चीनी': ['sugar', 'chini'], 'शक्कर': ['sugar'], 'नमक': ['salt'], 'हल्दी': ['turmeric', 'haldi']
+    };
+
+    const stopWords = new Set([
+      'aur', 'and', 'add', 'karo', 'kardo', 'kar', 'de', 'do', 'dena', 'dijiye', 'dedo', 'bhai', 'chahiye', 'lena', 'hai',
+      'packet', 'packets', 'pack', 'packs', 'box', 'bottle', 'pcs', 'piece', 'pieces', 'unit', 'units', 'bag', 'tube', 'bar',
+      'ka', 'ki', 'ke', 'ko', 'me', 'bhi', 'kilo', 'kg', 'litre', 'liter', 'ltr', 'gm', 'gram', 'grams', 'ml',
+      'और', 'तथा', 'एवं', 'व', 'पैकेट', 'पैकेट्स', 'पैक', 'बॉक्स', 'बोतल', 'पीस', 'का', 'की', 'के', 'को', 'दो', 'दे', 'देना', 'दीजिए', 'करो', 'करदो', 'चाहिए', 'जोड़ो', 'लें',
+      'किलो', 'किलोग्राम', 'ग्राम', 'लीटर', 'लिटर', 'मिली', 'आणि', 'আর', 'এবং', 'மற்றும்', 'మరియు', 'અને', 'ಮತ್ತು'
+    ]);
+
+    const normalized = this._normalizeIndicText(text);
+    const clauses = normalized
+      .split(/[,;+&\n]+|\b(?:aur|and|tatha|ani|ebong)\b|\s+(?:और|तथा|एवं|आणि|আর|এবং|மற்றும்|మరియు|અને|ಮತ್ತು)\s+/gi)
       .map(s => s.trim())
       .filter(Boolean);
+
+    const stripPunct = (w) => {
+      try {
+        return w.replace(/[^\p{L}\p{N}\p{M}.]/gu, '');
+      } catch (e) {
+        return w.replace(/[!"#$%&'()*+,./:;<=>?@[\\\]^_`{|}~।॥]/g, '');
+      }
+    };
 
     const matchedMap = new Map();
 
     clauses.forEach(clause => {
       let qty = 1;
       let isGramsOrMl = false;
-      const gramMatch = clause.match(/\b(\d+(?:\.\d+)?)\s*(g|gm|gram|grams|ml)\b/i);
-      const numMatch = clause.match(/\b(\d+(?:\.\d+)?)\b/);
+      const gramMatch = clause.match(/(\d+(?:\.\d+)?)\s*(?:g|gm|gram|grams|ml|ग्राम|मिली)\b/i)
+        || clause.match(/(\d+(?:\.\d+)?)\s*(?:ग्राम|मिली)/);
+      const numMatch = clause.match(/(\d+(?:\.\d+)?)/);
 
       if (gramMatch) {
         qty = parseFloat(gramMatch[1]) / 1000;
@@ -979,30 +1120,46 @@ class POSEngine {
       } else if (numMatch) {
         qty = parseFloat(numMatch[1]);
       } else {
-        const tokens = clause.split(/\s+/);
-        for (const t of tokens) {
+        const tokens = clause.split(/\s+/).map(stripPunct).filter(Boolean);
+        for (let idx = 0; idx < tokens.length; idx++) {
+          const t = tokens[idx];
           if (wordNums[t] !== undefined) {
+            // In Hindi/Hinglish phrases like "चावल दो" or "maggi do", trailing "do"/"दो" means "give", not 2.
+            if ((t === 'do' || t === 'दो') && (tokens.length === 1 || idx === tokens.length - 1)) continue;
             qty = wordNums[t];
             break;
           }
         }
       }
 
-      const keywords = clause
-        .replace(/\b\d+(?:\.\d+)?\s*(kg|g|gm|gram|grams|l|ltr|litre|liter|ml)?\b/gi, ' ')
+      const rawTokens = clause
+        .replace(/(\d+(?:\.\d+)?)\s*(?:kg|kilogram|g|gm|gram|grams|l|ltr|litre|liter|ml|किलो|किलोग्राम|ग्राम|लीटर|लिटर|मिली)?/gi, ' ')
         .split(/\s+/)
-        .map(w => w.replace(/[^a-z0-9]/g, ''))
-        .filter(w => w.length >= 2 && !stopWords.has(w) && wordNums[w] === undefined && w !== 'kilo' && w !== 'kg' && w !== 'litre' && w !== 'liter');
+        .map(stripPunct)
+        .filter(w => w.length >= 2 && !stopWords.has(w) && wordNums[w] === undefined && !/^\d+(\.\d+)?$/.test(w));
 
-      if (!keywords.length) return;
+      const expandedKeywords = [];
+      rawTokens.forEach(t => {
+        expandedKeywords.push(t);
+        if (multilingualAliases[t]) {
+          expandedKeywords.push(...multilingualAliases[t]);
+        }
+      });
+
+      if (!expandedKeywords.length) return;
 
       let bestProd = null;
       let bestScore = 0;
       products.forEach(p => {
         const hay = `${p.name} ${p.cat || ''}`.toLowerCase();
         let score = 0;
-        keywords.forEach(k => {
-          if (hay.includes(k)) score += (k.length >= 4 ? 3 : 2);
+        const counted = new Set();
+        expandedKeywords.forEach(k => {
+          if (counted.has(k)) return;
+          if (hay.includes(k)) {
+            score += (k.length >= 4 ? 3 : 2);
+            counted.add(k);
+          }
         });
         if (score > bestScore) {
           bestScore = score;
@@ -1012,7 +1169,6 @@ class POSEngine {
 
       if (bestProd && bestScore >= 2) {
         let finalQty = qty;
-        // If someone said "500g Maggi" vs "500g Basmati Rice" (kg unit): keep 0.5 only for kg/litre
         if (isGramsOrMl && !this.isWeightUnit(bestProd.unit)) {
           finalQty = 1;
         }
@@ -1046,7 +1202,7 @@ class POSEngine {
     if (!items.length) {
       resultsEl.innerHTML = `
         <div style="padding: 18px; text-align: center; background: var(--bg-input); border-radius: var(--radius-md); color: var(--text-muted); font-size: 12.5px;">
-          No exact catalog match found. Try naming a stocked item like "Maggi", "Butter", "Atta", or "Tata Tea".
+          No exact catalog match found. Try naming a stocked item like "मैगी / Maggi", "चावल / Rice", "आटा / Atta", or "मक्खन / Butter".
         </div>
       `;
       return;
@@ -1092,6 +1248,60 @@ class POSEngine {
     this._voiceListening = false;
     const m = document.getElementById('voice-billing-modal');
     if (m) m.remove();
+  }
+
+  printCartEstimate() {
+    const db = DB.getData();
+    if (!this.cart.length) {
+      const lastInv = (db.invoices || [])[0];
+      if (lastInv) {
+        this.openReceiptModal(lastInv);
+        App.toast('info', 'Reprinting Last Receipt', `Opened ${lastInv.id} — click Print Thermal Slip`);
+      } else {
+        App.toast('warning', 'Empty Cart', 'Add items to cart first to print an estimate or receipt.');
+      }
+      return;
+    }
+
+    const shop = db.shop || {};
+    const slipWidth = shop.rcptWidth === '58mm' ? '52mm' : '72mm';
+    const calc = this.calculateTotals();
+    const cust = this.selectedCustomerId ? (db.customers || []).find(c => c.id === this.selectedCustomerId) : null;
+    const html = `
+      <div style="font-family: monospace; font-size: 11.5px; width: ${slipWidth}; margin: 0 auto; line-height: 1.4; color: #000;">
+        <div style="text-align: center; border-bottom: 1px dashed #71717A; padding-bottom: 6px; margin-bottom: 6px;">
+          <div style="font-size: 14px; font-weight: 800;">${DB.escapeHtml(shop.name || 'MyDukkan24 Mart')}</div>
+          <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px;">*** ESTIMATE / PROFORMA SLIP ***</div>
+          <div style="font-size: 9.5px; color: #374151;">${DB.getLocalDateStr()} • ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+          ${cust ? `<div style="font-size: 10px;">Customer: ${DB.escapeHtml(cust.name)}</div>` : ''}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; border-bottom: 1px dashed #71717A; margin-bottom: 6px;">
+          <thead>
+            <tr><th style="text-align:left;">Item</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Total</th></tr>
+          </thead>
+          <tbody>
+            ${this.cart.map(it => `
+              <tr>
+                <td>${DB.escapeHtml(String(it.name || '').slice(0, 20))}</td>
+                <td style="text-align:center;">${DB.roundQty(it.qty)}</td>
+                <td style="text-align:right;">₹${DB.round2(it.price * it.qty)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="display:flex; justify-content:space-between; font-size:11px;"><span>Subtotal:</span><span>₹${calc.subtotal}</span></div>
+        ${calc.discount > 0 ? `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Discount:</span><span>-₹${calc.discount}</span></div>` : ''}
+        ${calc.tax > 0 ? `<div style="display:flex; justify-content:space-between; font-size:10px;"><span>GST Included/Extra:</span><span>₹${calc.tax}</span></div>` : ''}
+        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:13px; border-top:1px dashed #71717A; margin-top:4px; padding-top:4px;">
+          <span>ESTIMATED TOTAL:</span><span>₹${calc.grandTotal.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+    `;
+    if (window.App && typeof App.printHtmlDocument === 'function') {
+      App.printHtmlDocument(html, 'thermal');
+    } else {
+      window.print();
+    }
   }
 
   // Complete checkout & generate invoice
@@ -1236,22 +1446,22 @@ class POSEngine {
         <span>Customer: ${DB.escapeHtml(invoice.customerName || 'Walk-in')}</span>
         ${invoice.cashierName ? `<span>By: ${DB.escapeHtml(invoice.cashierName)}</span>` : ''}
       </div>
-      <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; border-top: 1px dashed #71717A; border-bottom: 1px dashed #71717A; margin-bottom: 6px;">
+      <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 10.5px; border-top: 1px dashed #71717A; border-bottom: 1px dashed #71717A; margin-bottom: 6px;">
         <thead>
           <tr>
-            <th style="text-align: left; padding: 3px 0;">Item</th>
-            <th style="text-align: center;">Qty</th>
-            <th style="text-align: right;">Rate</th>
-            <th style="text-align: right;">Total</th>
+            <th style="text-align: left; padding: 3px 2px 3px 0; width: 44%;">Item</th>
+            <th style="text-align: center; width: 16%;">Qty</th>
+            <th style="text-align: right; width: 18%;">Rate</th>
+            <th style="text-align: right; width: 22%;">Total</th>
           </tr>
         </thead>
         <tbody>
           ${(invoice.items || []).map(it => `
             <tr>
-              <td style="padding: 2px 0;">${DB.escapeHtml(String(it.name || '').slice(0, 18))}</td>
+              <td style="padding: 2px 2px 2px 0; word-break: break-word;">${DB.escapeHtml(String(it.name || ''))}</td>
               <td style="text-align: center;">${it.qty}${it.unit && /^(kg|g|litre|l)$/i.test(it.unit) ? it.unit : ''}</td>
               <td style="text-align: right;">₹${it.price}</td>
-              <td style="text-align: right;">₹${it.total}</td>
+              <td style="text-align: right; font-weight: 600;">₹${it.total}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1287,34 +1497,33 @@ class POSEngine {
     const printArea = document.getElementById('thermal-printable-area');
     if (printArea) {
       printArea.className = '';
-      printArea.innerHTML = `<div style="font-family: monospace; font-size: 12px; width: ${slipWidth}; margin: 0 auto; line-height: 1.4;">${buildReceiptHtml()}</div>`;
+      printArea.innerHTML = `<div style="font-family: monospace; font-size: 12px; width: ${slipWidth}; max-width: 100%; margin: 0 auto; line-height: 1.4; box-sizing: border-box;">${buildReceiptHtml()}</div>`;
     }
 
     const modalHtml = `
       <div class="modal-backdrop" id="receipt-modal" onclick="if(event.target === this) POS.closeReceiptModal()">
-        <div class="modal-card" style="max-width: 420px;">
-          <div class="modal-header">
-            <div class="modal-title">${Icons.receipt(16)} Invoice Receipt — ${DB.escapeHtml(invoice.id)}</div>
+        <div class="modal-card" style="width: min(400px, calc(100vw - 20px)); max-width: 400px; max-height: 90dvh;">
+          <div class="modal-header" style="padding: 10px 14px;">
+            <div class="modal-title" style="font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${Icons.receipt(16)} Invoice — ${DB.escapeHtml(invoice.id)}</div>
             <button class="topbar-icon-btn" onclick="POS.closeReceiptModal()">✕</button>
           </div>
-          <div class="modal-body" style="padding: 16px;">
-            <div class="thermal-receipt-body" style="background: #FFF; color: #000; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 11.5px; border: 1px solid #E2E8F0;">
+          <div class="modal-body" style="padding: 10px 14px;">
+            <div class="thermal-receipt-body" style="background: #FFF; color: #000; border-radius: 8px; font-family: monospace; border: 1px solid #E2E8F0;">
               ${buildReceiptHtml()}
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-primary" style="flex: 1 1 140px;" onclick="window.print()">
-                  ${Icons.print(15)} Print Thermal Slip
-                </button>
-                <a href="${waLink}" target="_blank" class="btn btn-success" style="flex: 1 1 140px;">
-                  ${Icons.whatsapp(15)} WhatsApp Bill
-                </a>
-              </div>
-              <button class="btn btn-secondary w100" onclick="POS.closeReceiptModal()">
-                Close & Next Customer
+          </div>
+          <div class="modal-footer receipt-modal-footer" style="flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 14px; flex-shrink: 0;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm" style="flex: 1 1 130px; justify-content: center; min-height: 36px;" onclick="window.print()">
+                ${Icons.print(14)} Print Thermal Slip
               </button>
+              <a href="${waLink}" target="_blank" class="btn btn-success btn-sm" style="flex: 1 1 130px; justify-content: center; min-height: 36px;">
+                ${Icons.whatsapp(14)} WhatsApp Bill
+              </a>
             </div>
+            <button type="button" class="btn btn-secondary btn-sm w100" style="min-height: 34px; flex: 0 0 auto;" onclick="POS.closeReceiptModal()">
+              Close &amp; Next Customer
+            </button>
           </div>
         </div>
       </div>

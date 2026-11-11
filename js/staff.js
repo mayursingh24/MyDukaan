@@ -57,9 +57,14 @@ class StaffEngine {
               Click any date button to cycle status: Present (Green) → Half-Day (Amber) → Absent (Red)
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="Staff.openAddStaffModal()">
-            ${Icons.plus(14)} Add Employee
-          </button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="Staff.printAttendanceReport()">
+              ${Icons.print(14)} Print Muster Roll
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="Staff.openAddStaffModal()">
+              ${Icons.plus(14)} Add Employee
+            </button>
+          </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -254,6 +259,74 @@ class StaffEngine {
   closeModal() {
     const m = document.getElementById('add-staff-modal');
     if (m) m.remove();
+  }
+
+  printAttendanceReport() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const staffList = db.staff || [];
+    const attendance = db.attendance || {};
+    const today = new Date();
+    const currentMonth = today.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const todayDateNum = today.getDate();
+
+    let totalPayroll = 0;
+    const rows = staffList.map(emp => {
+      const empAtt = attendance[emp.id] || {};
+      let presentCount = 0, halfCount = 0, leaveCount = 0;
+      for (let d = 1; d <= todayDateNum; d++) {
+        const s = empAtt[d] || 'present';
+        if (s === 'present') presentCount++;
+        else if (s === 'half') halfCount++;
+        else leaveCount++;
+      }
+      const estPay = Math.round(((Number(emp.salary) || 0) / daysInMonth) * (presentCount + halfCount * 0.5));
+      totalPayroll += estPay;
+      return `
+        <tr>
+          <td style="padding:7px; border:1px solid #D1D5DB; font-weight:700;">${DB.escapeHtml(emp.name)}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB;">${DB.escapeHtml(emp.role)}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB;">${DB.escapeHtml(emp.phone || '')}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB; text-align:center;">${presentCount}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB; text-align:center;">${halfCount}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB; text-align:center;">${leaveCount}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB; text-align:right;">₹${(Number(emp.salary) || 0).toLocaleString('en-IN')}</td>
+          <td style="padding:7px; border:1px solid #D1D5DB; text-align:right; font-weight:700;">₹${estPay.toLocaleString('en-IN')}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 780px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:19px;">${DB.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Staff Muster Roll &amp; Payroll</h2>
+            <div style="font-size:12px; color:#4B5563;">Month: ${DB.escapeHtml(currentMonth)} (Up to Day ${todayDateNum}) • Printed: ${DB.getLocalDateStr()}</div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            <div><strong>Total Team:</strong> ${staffList.length}</div>
+            <div><strong>Est. Earned Payroll:</strong> ₹${totalPayroll.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:left;">Name</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:left;">Role</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:left;">Phone</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:center;">Present</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:center;">Half</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:center;">Absent</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:right;">Base Salary</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:right;">Est. Earned</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    App.printHtmlDocument(html, 'wide');
   }
 }
 

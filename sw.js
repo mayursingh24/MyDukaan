@@ -4,7 +4,7 @@
  * High-Speed Offline-Ready PWA & Pure Network-First Caching Engine
  */
 
-const CACHE_NAME = 'mydukkan24-v9.1';
+const CACHE_NAME = 'mydukkan24-v9.2';
 
 const ASSETS_TO_PRECACHE = [
   './',
@@ -14,23 +14,23 @@ const ASSETS_TO_PRECACHE = [
   './assets/LOGO.jpeg',
   './assets/logo.svg',
   './assets/MyDukkan24-v4.apk',
-  './css/style.css?v=9.0',
-  './css/components.css?v=9.0',
-  './css/landing.css?v=9.1',
-  './js/html5-qrcode.min.js?v=9.0',
-  './js/icons.js?v=9.0',
-  './js/i18n.js?v=9.0',
-  './js/storage.js?v=9.0',
-  './js/firebase-sync.js?v=9.0',
-  './js/scanner.js?v=9.0',
-  './js/pos.js?v=9.0',
-  './js/inventory.js?v=9.0',
-  './js/purchases.js?v=9.0',
-  './js/khata.js?v=9.0',
-  './js/analytics.js?v=9.0',
-  './js/staff.js?v=9.0',
-  './js/ai.js?v=9.0',
-  './js/app.js?v=9.0'
+  './css/style.css?v=9.2',
+  './css/components.css?v=9.2',
+  './css/landing.css?v=9.2',
+  './js/html5-qrcode.min.js?v=9.2',
+  './js/icons.js?v=9.2',
+  './js/i18n.js?v=9.2',
+  './js/storage.js?v=9.2',
+  './js/firebase-sync.js?v=9.2',
+  './js/scanner.js?v=9.2',
+  './js/pos.js?v=9.2',
+  './js/inventory.js?v=9.2',
+  './js/purchases.js?v=9.2',
+  './js/khata.js?v=9.2',
+  './js/analytics.js?v=9.2',
+  './js/staff.js?v=9.2',
+  './js/ai.js?v=9.2',
+  './js/app.js?v=9.2'
 ];
 
 // Install: Cache core assets and activate immediately

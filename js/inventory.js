@@ -8,6 +8,9 @@ class InventoryEngine {
     this.searchQuery = "";
     this.filterCategory = "All";
     this.filterStock = "All"; // 'All', 'Low', 'OutOfStock', 'Expiring7', 'Expired'
+    this.catalogSearch = "";
+    this.catalogCategory = "All";
+    this.catalogSort = "name";
     this._bulkParsedRows = [];
     this._restockPredictions = [];
   }
@@ -266,6 +269,7 @@ class InventoryEngine {
     DB.saveData(db);
     App.toast('success', 'Stock Updated', `Added ${qty} ${prod.unit} to ${prod.name}`);
     this.render();
+    if (document.getElementById('products-catalog-grid')) this.renderCatalogView();
     if (App.currentView === 'dashboard') {
       const container = document.getElementById('main-view-container');
       if (container) App.renderDashboardView(container);
@@ -287,6 +291,7 @@ class InventoryEngine {
       DB.deleteItem('products', id);
       App.toast('info', 'Deleted', `${prod.name} removed from inventory`);
       this.render();
+      if (document.getElementById('products-catalog-grid')) this.renderCatalogView();
       if (window.POS) POS.renderCatalog();
       App.updateNotificationBadge();
     }
@@ -494,6 +499,7 @@ class InventoryEngine {
 
     this.closeModal();
     this.render();
+    if (document.getElementById('products-catalog-grid')) this.renderCatalogView();
     if (App.currentView === 'dashboard') {
       const container = document.getElementById('main-view-container');
       if (container) App.renderDashboardView(container);
@@ -778,6 +784,7 @@ class InventoryEngine {
     DB.saveData(db);
     this.closeBulkImportModal();
     this.render();
+    if (document.getElementById('products-catalog-grid')) this.renderCatalogView();
     if (window.POS) POS.renderCatalog();
     App.updateNotificationBadge();
     App.toast('success', 'Bulk Import Complete', `Added ${added} new SKUs & updated ${updated} existing SKUs.`);
@@ -1118,6 +1125,290 @@ class InventoryEngine {
   closeModal() {
     const modal = document.getElementById('product-form-modal');
     if (modal) modal.remove();
+  }
+
+  // Visual Code-128 style deterministic SVG barcode strip
+  renderBarcodeSvg(code = '', height = 34) {
+    const raw = String(code || 'MD24001').trim() || 'MD24001';
+    let pattern = '';
+    let x = 2;
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw.charCodeAt(i);
+      const bars = [1 + (ch % 2), 1 + ((ch >> 1) % 2), 1 + ((ch >> 2) % 3), 1 + ((ch >> 4) % 2)];
+      bars.forEach((w, idx) => {
+        if (idx % 2 === 0) {
+          pattern += `<rect x="${x}" y="0" width="${w}" height="${height}" fill="#111827" />`;
+        }
+        x += w + 1;
+      });
+    }
+    return `
+      <svg viewBox="0 0 ${Math.max(x + 2, 80)} ${height}" width="100%" height="${height}" preserveAspectRatio="none" aria-hidden="true" style="display:block;">
+        <rect x="0" y="0" width="${Math.max(x + 2, 80)}" height="${height}" fill="#FFFFFF" />
+        ${pattern}
+      </svg>
+    `;
+  }
+
+  quickAddToPos(prodId) {
+    const db = DB.getData();
+    const prod = (db.products || []).find(p => p.id === prodId);
+    if (!prod || !window.POS) return;
+    if (POS.addItemToCart(prod, 1)) {
+      App.toast('success', 'Added to POS Bill', `${prod.name} added to current cart`);
+    }
+  }
+
+  // Dedicated PRODUCT CATALOG & BARCODE PRICE BOOK View ('products')
+  renderCatalogView() {
+    const grid = document.getElementById('products-catalog-grid');
+    const summaryEl = document.getElementById('products-catalog-summary');
+    if (!grid) return;
+
+    const cashier = this.isCashier();
+    const db = DB.getData();
+    const allProducts = db.products || [];
+    let filtered = [...allProducts];
+
+    if (this.catalogCategory && this.catalogCategory !== 'All') {
+      filtered = filtered.filter(p => p.cat === this.catalogCategory);
+    }
+    if (this.catalogSearch) {
+      const q = this.catalogSearch;
+      filtered = filtered.filter(p =>
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.cat || '').toLowerCase().includes(q) ||
+        (p.barcode || '').toLowerCase().includes(q)
+      );
+    }
+
+    if (this.catalogSort === 'price-asc') {
+      filtered.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+    } else if (this.catalogSort === 'price-desc') {
+      filtered.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+    } else if (this.catalogSort === 'discount-desc') {
+      filtered.sort((a, b) => {
+        const da = (a.mrp > a.price && a.mrp > 0) ? ((a.mrp - a.price) / a.mrp) : 0;
+        const dbPct = (b.mrp > b.price && b.mrp > 0) ? ((b.mrp - b.price) / b.mrp) : 0;
+        return dbPct - da;
+      });
+    } else {
+      filtered.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    }
+
+    if (summaryEl) {
+      const withBarcodes = allProducts.filter(p => Boolean(p.barcode)).length;
+      const catsCount = new Set(allProducts.map(p => p.cat).filter(Boolean)).size;
+      summaryEl.innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-top"><span class="kpi-title">Catalog SKUs</span><div class="kpi-icon-badge" style="background: var(--primary-light); color: var(--primary);">${Icons.package(16)}</div></div>
+          <div class="kpi-val">${allProducts.length}</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">Across ${catsCount} store categories</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top"><span class="kpi-title">Barcoded Labels Ready</span><div class="kpi-icon-badge" style="background: var(--success-light); color: var(--success);">${Icons.scan(16)}</div></div>
+          <div class="kpi-val">${withBarcodes}</div>
+          <div class="kpi-trend" style="color: var(--success);">EAN / Store SKU barcodes ready</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top"><span class="kpi-title">Showing Results</span><div class="kpi-icon-badge" style="background: rgba(139,92,246,0.14); color: #A78BFA;">${Icons.search(16)}</div></div>
+          <div class="kpi-val">${filtered.length}</div>
+          <div class="kpi-trend" style="color: var(--text-muted);">${DB.escapeHtml(this.catalogCategory)} filter active</div>
+        </div>
+      `;
+    }
+
+    if (!filtered.length) {
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 48px 16px; color: var(--text-muted); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);">
+          ${Icons.package(32)}
+          <div style="font-weight: 700; font-size: 14px; margin-top: 8px;">No products match "${DB.escapeHtml(this.catalogSearch || this.catalogCategory)}"</div>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(p => {
+      const mrp = Number(p.mrp) || Number(p.price) || 0;
+      const price = Number(p.price) || 0;
+      const savePct = mrp > price && mrp > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
+      const barcodeCode = p.barcode || p.id || 'MD24SKU';
+      const expMeta = this.getExpiryMeta(p.expiryDate);
+      const stockNum = Number(p.stock) || 0;
+
+      return `
+        <div class="catalog-sku-card">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+              <span class="badge badge-muted">${DB.escapeHtml(p.cat || 'General')}</span>
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                <span class="badge badge-primary">GST ${p.gstRate ?? 5}%</span>
+                ${savePct > 0 ? `<span class="badge badge-success">${savePct}% OFF</span>` : ''}
+              </div>
+            </div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); line-height: 1.35;">${DB.escapeHtml(p.name)}</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
+              Unit: ${DB.escapeHtml(p.unit || 'pack')} • Stock: <strong style="color: ${stockNum <= 0 ? 'var(--danger)' : stockNum <= (p.minStock || 5) ? 'var(--warning)' : 'var(--success)'};">${DB.roundQty(stockNum)}</strong>
+              ${expMeta ? ` • <span style="color: ${expMeta.status === 'expired' || expMeta.status === 'expiring7' ? 'var(--danger)' : 'var(--text-muted)'};">${DB.escapeHtml(expMeta.label)}</span>` : ''}
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+            <div>
+              <span class="tnum" style="font-size: 19px; font-weight: 800; color: var(--primary);">₹${price.toLocaleString('en-IN')}</span>
+              ${mrp > price ? `<span class="tnum" style="font-size: 12px; color: var(--text-muted); text-decoration: line-through; margin-left: 4px;">₹${mrp.toLocaleString('en-IN')}</span>` : ''}
+            </div>
+            ${!cashier && p.cost ? `<span style="font-size: 11px; color: var(--text-muted);">Cost: ₹${p.cost}</span>` : ''}
+          </div>
+
+          <div class="catalog-barcode-strip">
+            ${this.renderBarcodeSvg(barcodeCode, 30)}
+            <div style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 1px; margin-top: 2px;">${DB.escapeHtml(barcodeCode)}</div>
+          </div>
+
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="Inventory.quickAddToPos('${DB.escapeHtml(p.id)}')" ${stockNum <= 0 ? 'disabled' : ''}>
+              ${Icons.plus(13)} + POS Bill
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="Inventory.printBarcodeSheet('${DB.escapeHtml(p.id)}')" title="Print Barcode Label">
+              ${Icons.print(13)} Label
+            </button>
+            ${!cashier ? `
+              <button type="button" class="btn btn-secondary btn-sm" onclick="Inventory.openProductModal(DB.getData().products.find(x => x.id === '${DB.escapeHtml(p.id)}'))" title="Edit SKU">
+                ${Icons.edit(13)}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  printStockSheet() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const products = db.products || [];
+    const cashier = this.isCashier();
+    const totalValuation = Math.round(products.reduce((s, p) => s + ((Number(p.cost) || 0) * (Number(p.stock) || 0)), 0));
+    const retailVal = Math.round(products.reduce((s, p) => s + ((Number(p.price) || 0) * (Number(p.stock) || 0)), 0));
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 780px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:19px;">${DB.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Inventory Stock Register</h2>
+            <div style="font-size:12px; color:#4B5563;">Printed: ${DB.getLocalDateStr()} • ${products.length} Total SKUs</div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            ${!cashier ? `<div><strong>Cost Valuation:</strong> ₹${totalValuation.toLocaleString('en-IN')}</div>` : ''}
+            <div><strong>Retail Valuation:</strong> ₹${retailVal.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:11.5px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Product SKU</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Category</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Sell Rate</th>
+              ${!cashier ? `<th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Cost</th>` : ''}
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:center;">Stock</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Expiry</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td style="padding:6px; border:1px solid #D1D5DB; font-weight:600;">${DB.escapeHtml(p.name)}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${DB.escapeHtml(p.cat || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:right;">₹${p.price}/${DB.escapeHtml(p.unit || '')}</td>
+                ${!cashier ? `<td style="padding:6px; border:1px solid #D1D5DB; text-align:right;">₹${p.cost || 0}</td>` : ''}
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:center; font-weight:700;">${DB.roundQty(p.stock || 0)}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${DB.escapeHtml(p.expiryDate || '—')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    App.printHtmlDocument(html, 'wide');
+  }
+
+  printPriceList() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const products = [...(db.products || [])].sort((a, b) => String(a.cat || '').localeCompare(String(b.cat || '')) || String(a.name || '').localeCompare(String(b.name || '')));
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 780px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:19px;">${DB.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Retail Price List</h2>
+            <div style="font-size:12px; color:#4B5563;">Updated: ${DB.getLocalDateStr()} • ${products.length} Catalog Items</div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            <div><strong>Phone:</strong> ${DB.escapeHtml(shop.phone || '')}</div>
+            <div><strong>GSTIN:</strong> ${DB.escapeHtml(shop.gstin || 'N/A')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:11.5px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Item Name</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Category</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Barcode</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">MRP</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Offer Rate</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:center;">GST</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td style="padding:6px; border:1px solid #D1D5DB; font-weight:600;">${DB.escapeHtml(p.name)}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${DB.escapeHtml(p.cat || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; font-family:monospace;">${DB.escapeHtml(p.barcode || p.id)}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:right;">₹${p.mrp || p.price}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:right; font-weight:700;">₹${p.price}/${DB.escapeHtml(p.unit || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:center;">${p.gstRate ?? 5}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    App.printHtmlDocument(html, 'wide');
+  }
+
+  printBarcodeSheet(singleId = null) {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    let list = db.products || [];
+    if (singleId) {
+      const target = list.find(p => p.id === singleId);
+      if (!target) return;
+      list = Array.from({ length: 6 }, () => target);
+    }
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 10px;">
+        <div style="font-size: 13px; font-weight: 800; margin-bottom: 10px; border-bottom: 1px solid #CBD5E1; padding-bottom: 6px;">
+          ${DB.escapeHtml(shop.name || 'MyDukkan24')} — Printable Shelf Barcode Stickers (${DB.getLocalDateStr()})
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          ${list.map(p => {
+            const code = p.barcode || p.id || 'MD24SKU';
+            return `
+              <div style="border: 1px dashed #94A3B8; padding: 8px; text-align: center; border-radius: 4px; break-inside: avoid;">
+                <div style="font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${DB.escapeHtml(p.name)}</div>
+                <div style="font-size: 12px; font-weight: 800; margin: 2px 0 4px;">₹${p.price} <span style="font-size:9.5px; color:#475569; text-decoration: line-through;">${p.mrp > p.price ? 'MRP ₹' + p.mrp : ''}</span></div>
+                ${this.renderBarcodeSvg(code, 28)}
+                <div style="font-family: monospace; font-size: 9.5px; letter-spacing: 0.8px; margin-top: 2px;">${DB.escapeHtml(code)}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    App.printHtmlDocument(html, 'wide');
   }
 }
 

@@ -755,8 +755,8 @@ Customer Udhaar Ledger:
     }
   }
 
-  // Gemini NLU: Parse Hindi / Hinglish Voice Order against store catalog
-  async parseVoiceCartOnline(transcript, catalogHints = []) {
+  // Gemini NLU: Parse Multilingual Voice Order (All Indian & Global languages) against store catalog
+  async parseVoiceCartOnline(transcript, catalogHints = [], lang = 'hi-IN') {
     if (!transcript || !String(transcript).trim()) {
       return { ok: false, error: 'Empty voice transcript.' };
     }
@@ -768,6 +768,13 @@ Customer Udhaar Ledger:
     const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 16000);
+    const leanHints = (Array.isArray(catalogHints) ? catalogHints : []).slice(0, 220).map(p => ({
+      id: p.id,
+      name: p.name,
+      unit: p.unit || 'pack',
+      price: p.price || 0,
+      cat: p.cat || ''
+    }));
 
     try {
       const response = await fetch(endpoint, {
@@ -776,7 +783,8 @@ Customer Udhaar Ledger:
         body: JSON.stringify({
           action: 'parseVoiceCart',
           transcript,
-          catalogHints,
+          lang,
+          catalogHints: leanHints,
           apiKey: customApiKey
         }),
         signal: controller.signal

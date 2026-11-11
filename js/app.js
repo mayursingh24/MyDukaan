@@ -388,16 +388,24 @@ class AppController {
         }
         break;
 
-      case 'products':
       case 'inventory':
         this.renderInventoryView(container);
         if (window.Inventory) Inventory.render();
         break;
 
-      case 'customers':
+      case 'products':
+        this.renderProductsCatalogView(container);
+        if (window.Inventory) Inventory.renderCatalogView();
+        break;
+
       case 'udhaar':
         this.renderKhataView(container);
         if (window.Khata) Khata.render();
+        break;
+
+      case 'customers':
+        this.renderCustomersView(container);
+        if (window.Khata) Khata.renderCustomersView();
         break;
 
       case 'invoices':
@@ -826,7 +834,7 @@ class AppController {
               <span class="pos-search-icon">${Icons.search(16)}</span>
               <input type="text" id="pos-search-input" class="form-input pos-search-input" placeholder="Search product name, category, or scan barcode..." oninput="POS.setSearchQuery(this.value)" onkeydown="POS.handleSearchKeydown(event)" autofocus />
             </div>
-            <button type="button" class="btn btn-secondary" onclick="POS.openVoiceBillingModal()" title="Hindi / Hinglish Voice Billing">
+            <button type="button" class="btn btn-secondary" onclick="POS.openVoiceBillingModal()" title="All-Language Voice Billing (Hindi, Hinglish, Marathi, Tamil, Telugu, Bengali, English...)">
               ${Icons.mic(16)} Voice
             </button>
             <button type="button" class="btn btn-secondary" onclick="BarcodeScanner.openScannerModal()" title="Open Camera Scanner">
@@ -857,12 +865,15 @@ class AppController {
               ${Icons.pos(16)} Current Bill
               <span class="badge badge-primary" id="pos-cart-count">0</span>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            <div class="pos-cart-header-actions">
               <button type="button" class="btn btn-secondary btn-sm" onclick="POS.openParkedCartsModal()" title="View Held / Parked Customer Bills">
                 Queue <span class="badge badge-warning" id="pos-parked-count" style="display: none; margin-left: 3px;">0</span>
               </button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="POS.parkActiveCart()" title="Hold current bill and serve next customer">
                 ${Icons.pause(12)} Hold
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="POS.printCartEstimate()" title="Print Bill Estimate or Last Receipt">
+                ${Icons.print(12)} Print
               </button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="POS.clearCart()">Clear</button>
               <button type="button" class="topbar-icon-btn mobile-only" style="width: 28px; height: 28px;" onclick="POS.toggleMobileCartDrawer()">✕</button>
@@ -891,6 +902,9 @@ class AppController {
           <p>${cashier ? 'Check real-time prices, expiry dates, and stock counts for checkout billing' : 'Monitor SKUs, expiry dates, bulk CSV imports, smart AI restock & margins'}</p>
         </div>
         <div class="page-actions-row">
+          <button type="button" class="btn btn-secondary" onclick="Inventory.printStockSheet()" title="Print Inventory Stock Register">
+            ${Icons.print(14)} Print Stock
+          </button>
           ${cashier ? `
             <span class="badge badge-warning" style="padding: 7px 12px; font-size: 12px;">🔒 Read-Only Stock</span>
             <button type="button" class="btn btn-secondary" onclick="App.openUnlockOwnerModal()">
@@ -960,19 +974,87 @@ class AppController {
     `;
   }
 
+  // 3B. DEDICATED PRODUCT CATALOG & BARCODE PRICE BOOK VIEW
+  renderProductsCatalogView(container) {
+    const cashier = this.isCashierMode();
+    const activeCat = window.Inventory ? Inventory.catalogCategory : 'All';
+    const activeSort = window.Inventory ? Inventory.catalogSort : 'name';
+    const searchVal = window.Inventory ? Inventory.catalogSearch : '';
+    const cats = ['All', 'Grocery', 'Dairy', 'Oils', 'Snacks', 'Beverages', 'Personal Care', 'Household', 'Chocolates', 'Healthcare', 'General'];
+
+    container.innerHTML = `
+      <div class="page-header-row">
+        <div class="page-title-block">
+          <h1>Product Catalog &amp; Barcode Price Book</h1>
+          <p>Browse visual retail price cards, print EAN barcode shelf stickers &amp; push SKUs straight to POS billing</p>
+        </div>
+        <div class="page-actions-row">
+          <button type="button" class="btn btn-secondary" onclick="Inventory.printBarcodeSheet()" title="Print All Shelf Barcode Stickers">
+            ${Icons.scan(14)} Print All Barcodes
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="Inventory.printPriceList()" title="Print Formatted Store Price List">
+            ${Icons.print(14)} Print Price List
+          </button>
+          ${!cashier ? `
+            <button type="button" class="btn btn-primary" onclick="Inventory.openProductModal()">
+              ${Icons.plus(15)} Add Product
+            </button>
+          ` : `
+            <button type="button" class="btn btn-secondary" onclick="App.openUnlockOwnerModal()">
+              ${Icons.lock(14)} Unlock Owner
+            </button>
+          `}
+        </div>
+      </div>
+
+      <!-- Catalog KPI Summary -->
+      <div class="kpi-grid" id="products-catalog-summary"></div>
+
+      <!-- Search, Category & Sort Toolbar -->
+      <div class="card" style="padding: 14px 16px; margin-bottom: 18px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1 1 220px; min-width: 0; position: relative;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
+            <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search product title, category, or barcode..." value="${this.escapeHtml(searchVal)}" oninput="Inventory.catalogSearch = (this.value || '').toLowerCase().trim(); Inventory.renderCatalogView();" />
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; flex: 1 1 240px; min-width: 0;">
+            <select class="form-select" style="flex: 1 1 130px; min-width: 0;" onchange="Inventory.catalogCategory = this.value; Inventory.renderCatalogView();">
+              ${cats.map(c => `<option value="${c}" ${activeCat === c ? 'selected' : ''}>${c === 'All' ? 'All Categories' : c}</option>`).join('')}
+            </select>
+            <select class="form-select" style="flex: 1 1 140px; min-width: 0;" onchange="Inventory.catalogSort = this.value; Inventory.renderCatalogView();">
+              <option value="name" ${activeSort === 'name' ? 'selected' : ''}>Sort: Name (A–Z)</option>
+              <option value="price-asc" ${activeSort === 'price-asc' ? 'selected' : ''}>Price: Low → High</option>
+              <option value="price-desc" ${activeSort === 'price-desc' ? 'selected' : ''}>Price: High → Low</option>
+              <option value="discount-desc" ${activeSort === 'discount-desc' ? 'selected' : ''}>Highest MRP Savings</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual SKU & Barcode Cards Grid -->
+      <div class="catalog-cards-grid" id="products-catalog-grid"></div>
+    `;
+  }
+
   // 4. UDHAAR KHATA VIEW WRAPPER
   renderKhataView(container) {
+    const activeFilter = window.Khata ? Khata.udhaarFilter : 'pending';
+    const searchVal = window.Khata ? Khata.searchQuery : '';
+
     container.innerHTML = `
       <div class="page-header-row">
         <div class="page-title-block">
           <h1>Customer Udhaar Khata (Credit Ledger)</h1>
-          <p>Track customer credit dues, settlements, and send WhatsApp payment reminders</p>
+          <p>Collect pending credit dues, track settlements, print statements &amp; send WhatsApp payment reminders</p>
         </div>
         <div class="page-actions-row">
-          <button class="btn btn-secondary" onclick="DB.downloadFile(DB.exportCSV('customers'), 'customers.csv')">
+          <button type="button" class="btn btn-secondary" onclick="Khata.printKhataSummary()" title="Print Udhaar Dues Statement">
+            ${Icons.print(14)} Print Statement
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="App.exportCustomersCSV('udhaar')">
             ${Icons.download(14)} Export Khata
           </button>
-          <button class="btn btn-primary" onclick="Khata.openCustomerModal()">
+          <button type="button" class="btn btn-primary" onclick="Khata.openCustomerModal()">
             ${Icons.plus(15)} Add Customer
           </button>
         </div>
@@ -981,17 +1063,94 @@ class AppController {
       <!-- Khata Summary KPIs -->
       <div class="kpi-grid" id="khata-kpi-row"></div>
 
-      <!-- Search & Filters -->
+      <!-- Search & Recovery Filter Pills -->
       <div class="card" style="padding: 14px 18px; margin-bottom: 18px;">
-        <div style="position: relative;">
-          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
-          <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search customer name or phone number..." oninput="Khata.setSearch(this.value)" />
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1 1 220px; min-width: 0; position: relative;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
+            <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search debtor name or phone number..." value="${this.escapeHtml(searchVal)}" oninput="Khata.setSearch(this.value)" />
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" data-udhaar-filter="pending" class="btn btn-sm ${activeFilter === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="Khata.setUdhaarFilter('pending')">Pending Dues</button>
+            <button type="button" data-udhaar-filter="all" class="btn btn-sm ${activeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="Khata.setUdhaarFilter('all')">All Accounts</button>
+            <button type="button" data-udhaar-filter="clear" class="btn btn-sm ${activeFilter === 'clear' ? 'btn-primary' : 'btn-secondary'}" onclick="Khata.setUdhaarFilter('clear')">Cleared (₹0)</button>
+          </div>
         </div>
       </div>
 
       <!-- Customer Ledger Cards / List -->
       <div id="khata-customer-list"></div>
     `;
+  }
+
+  // 4B. DEDICATED CUSTOMERS DIRECTORY & LOYALTY CRM VIEW
+  renderCustomersView(container) {
+    const activeTier = window.Khata ? Khata.crmTier : 'All';
+    const activeSort = window.Khata ? Khata.crmSort : 'spent';
+    const searchVal = window.Khata ? Khata.crmSearch : '';
+
+    container.innerHTML = `
+      <div class="page-header-row">
+        <div class="page-title-block">
+          <h1>Customers Directory &amp; Loyalty CRM</h1>
+          <p>Manage regular shopper profiles, VIP Gold/Silver/Bronze tiers, reward points &amp; repeat order velocity</p>
+        </div>
+        <div class="page-actions-row">
+          <button type="button" class="btn btn-secondary" onclick="Khata.printCustomersDirectory()" title="Print Customer Directory">
+            ${Icons.print(14)} Print Directory
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="App.exportCustomersCSV('crm')">
+            ${Icons.download(14)} Export CRM CSV
+          </button>
+          <button type="button" class="btn btn-primary" onclick="Khata.openCustomerModal()">
+            ${Icons.plus(15)} Add Customer
+          </button>
+        </div>
+      </div>
+
+      <!-- Customer CRM KPIs -->
+      <div class="kpi-grid" id="customers-crm-kpi-row"></div>
+
+      <!-- Search, Loyalty Tier & Sort Toolbar -->
+      <div class="card" style="padding: 14px 18px; margin-bottom: 18px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1 1 220px; min-width: 0; position: relative;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">${Icons.search(15)}</span>
+            <input type="text" class="form-input" style="padding-left: 36px;" placeholder="Search customer name, phone, email, or notes..." value="${this.escapeHtml(searchVal)}" oninput="Khata.setCrmSearch(this.value)" />
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; flex: 1 1 230px; min-width: 0;">
+            <select class="form-select" style="flex: 1 1 120px; min-width: 0;" onchange="Khata.setCrmTier(this.value)">
+              <option value="All" ${activeTier === 'All' ? 'selected' : ''}>All Loyalty Tiers</option>
+              <option value="Gold" ${activeTier === 'Gold' ? 'selected' : ''}>Gold Tier</option>
+              <option value="Silver" ${activeTier === 'Silver' ? 'selected' : ''}>Silver Tier</option>
+              <option value="Bronze" ${activeTier === 'Bronze' ? 'selected' : ''}>Bronze Tier</option>
+            </select>
+            <select class="form-select" style="flex: 1 1 135px; min-width: 0;" onchange="Khata.setCrmSort(this.value)">
+              <option value="spent" ${activeSort === 'spent' ? 'selected' : ''}>Sort: Highest Spend</option>
+              <option value="orders" ${activeSort === 'orders' ? 'selected' : ''}>Sort: Most Orders</option>
+              <option value="points" ${activeSort === 'points' ? 'selected' : ''}>Sort: Reward Points</option>
+              <option value="name" ${activeSort === 'name' ? 'selected' : ''}>Sort: Name (A–Z)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CRM Customer Cards Grid -->
+      <div class="catalog-cards-grid" id="customers-crm-grid"></div>
+    `;
+  }
+
+  exportCustomersCSV(source = 'crm') {
+    const csv = DB.exportCSV('customers');
+    if (!csv) {
+      this.toast('warning', 'No Customers', 'Add customer profiles first before exporting.');
+      return;
+    }
+    const file = source === 'udhaar'
+      ? `udhaar_khata_${DB.getLocalDateStr()}.csv`
+      : `customers_crm_${DB.getLocalDateStr()}.csv`;
+    DB.downloadFile(csv, file);
+    this.toast('success', 'CSV Exported', `Downloaded ${file}`);
   }
 
   // 5. INVOICES, SALES LEDGER & RETURNS VIEW
@@ -1006,7 +1165,10 @@ class AppController {
           <p>Review sales transactions, process item returns/refunds, reprint receipts &amp; WhatsApp bills</p>
         </div>
         <div class="page-actions-row">
-          <button class="btn btn-secondary" onclick="DB.downloadFile(DB.exportCSV('invoices'), 'invoices.csv')">
+          <button type="button" class="btn btn-secondary" onclick="App.printInvoicesRegister()" title="Print Sales Invoice Register">
+            ${Icons.print(14)} Print Register
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="DB.downloadFile(DB.exportCSV('invoices'), 'invoices.csv')">
             ${Icons.download(14)} Export Invoices CSV
           </button>
         </div>
@@ -1094,6 +1256,60 @@ class AppController {
       const hay = row.dataset.search || '';
       row.style.display = !query || hay.includes(query) ? '' : 'none';
     });
+  }
+
+  printInvoicesRegister() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const invoices = db.invoices || [];
+    if (!invoices.length) {
+      this.toast('warning', 'No Invoices', 'Generate at least one sale invoice first.');
+      return;
+    }
+    const netSum = DB.round2(invoices.reduce((s, inv) => s + Math.max(0, (Number(inv.total) || 0) - (Number(inv.refundAmount) || 0)), 0));
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 780px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:19px;">${this.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Sales Invoices Register</h2>
+            <div style="font-size:12px; color:#4B5563;">Printed: ${DB.getLocalDateStr()} • ${invoices.length} Total Bills</div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            <div><strong>Net Sales Total:</strong> ₹${netSum.toLocaleString('en-IN')}</div>
+            <div><strong>GSTIN:</strong> ${this.escapeHtml(shop.gstin || 'N/A')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Invoice #</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Date</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Customer</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Mode</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:center;">Status</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Net Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoices.map(inv => {
+              const netTotal = Math.max(0, DB.round2((Number(inv.total) || 0) - (Number(inv.refundAmount) || 0)));
+              return `
+                <tr>
+                  <td style="padding:6px; border:1px solid #D1D5DB; font-family:monospace; font-weight:700;">${this.escapeHtml(inv.id)}</td>
+                  <td style="padding:6px; border:1px solid #D1D5DB;">${this.escapeHtml(inv.date || '')}</td>
+                  <td style="padding:6px; border:1px solid #D1D5DB;">${this.escapeHtml(inv.customerName || 'Walk-in')}</td>
+                  <td style="padding:6px; border:1px solid #D1D5DB;">${this.escapeHtml(inv.paymentMode || '')}</td>
+                  <td style="padding:6px; border:1px solid #D1D5DB; text-align:center;">${this.escapeHtml(inv.status || 'Paid')}</td>
+                  <td style="padding:6px; border:1px solid #D1D5DB; text-align:right; font-weight:700;">₹${netTotal.toLocaleString('en-IN')}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    this.printHtmlDocument(html, 'wide');
   }
 
   _getReturnedMapForInvoice(inv) {
@@ -1367,7 +1583,13 @@ class AppController {
           <p>Track store operational expenses, supplier freight, utility bills, and salary advances</p>
         </div>
         <div class="page-actions-row">
-          <button class="btn btn-primary" onclick="App.openExpenseModal()">
+          <button type="button" class="btn btn-secondary" onclick="App.printExpensesReport()" title="Print Shop Expenses Register">
+            ${Icons.print(14)} Print Expenses
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="App.exportExpensesCSV()">
+            ${Icons.download(14)} Export CSV
+          </button>
+          <button type="button" class="btn btn-primary" onclick="App.openExpenseModal()">
             ${Icons.plus(15)} Record Expense
           </button>
         </div>
@@ -1542,6 +1764,60 @@ class AppController {
     }
   }
 
+  exportExpensesCSV() {
+    const csv = DB.exportCSV('expenses');
+    if (!csv) {
+      this.toast('warning', 'No Expenses', 'Record at least one expense entry first.');
+      return;
+    }
+    const file = `expenses_${DB.getLocalDateStr()}.csv`;
+    DB.downloadFile(csv, file);
+    this.toast('success', 'CSV Exported', `Downloaded ${file}`);
+  }
+
+  printExpensesReport() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const expenses = db.expenses || [];
+    const totalExp = DB.round2(expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0));
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 780px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:19px;">${this.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Operating Expenses Statement</h2>
+            <div style="font-size:12px; color:#4B5563;">Printed: ${DB.getLocalDateStr()} • ${expenses.length} Expense Entries</div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            <div><strong>Total Expenses:</strong> ₹${totalExp.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Date</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Description</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Category</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:center;">Status</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${expenses.length ? expenses.map(e => `
+              <tr>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${this.escapeHtml(e.date || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; font-weight:600;">${this.escapeHtml(e.desc || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${this.escapeHtml(e.cat || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:center;">${this.escapeHtml(e.status || 'Paid')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:right; font-weight:700;">₹${DB.round2(e.amount || 0).toLocaleString('en-IN')}</td>
+              </tr>
+            `).join('') : `<tr><td colspan="5" style="padding:12px; border:1px solid #D1D5DB; text-align:center; color:#6B7280;">No expenses recorded yet.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `;
+    this.printHtmlDocument(html, 'wide');
+  }
+
   // 7. STAFF VIEW WRAPPER
   renderStaffView(container) {
     container.innerHTML = `
@@ -1551,7 +1827,10 @@ class AppController {
           <p>Staff records, 31-day attendance calendar and automatic monthly payroll calculation</p>
         </div>
         <div class="page-actions-row">
-          <button class="btn btn-primary" onclick="Staff.openAddStaffModal()">
+          <button type="button" class="btn btn-secondary" onclick="Staff.printAttendanceReport()">
+            ${Icons.print(14)} Print Muster Roll
+          </button>
+          <button type="button" class="btn btn-primary" onclick="Staff.openAddStaffModal()">
             ${Icons.plus(15)} Add Employee
           </button>
         </div>
@@ -1652,7 +1931,6 @@ class AppController {
     };
     window.addEventListener('afterprint', cleanup, { once: true });
     window.print();
-    setTimeout(cleanup, 1200);
   }
 
   // 9. SYSTEM SETTINGS VIEW (Zero manual Gemini keys in cloud - Dual Offline + Firebase Sync)
@@ -2479,23 +2757,30 @@ class AppController {
     const isCashier = this.isCashierMode();
 
     const lowStock = products.filter(p => Number(p.stock || 0) <= Number(p.minStock || 0));
-    const expiringSoon = this.getExpiringProducts(products, 7);
-    const expiredCount = expiringSoon.filter(x => x.daysLeft < 0).length;
+    const expiringProducts = this.getExpiringProducts(products);
+    const expiringMeta = expiringProducts.map(p => ({
+      product: p,
+      ex: window.Inventory && typeof Inventory.getExpiryMeta === 'function' ? Inventory.getExpiryMeta(p.expiryDate) : null
+    }));
+    const expiredCount = expiringMeta.filter(x => x.ex && x.ex.days < 0).length;
     const debtors = customers.filter(c => (Number(c.balanceDue) || 0) > 0);
     const reg = this.getDailyRegisterSummary(todayStr);
 
     const notifications = [];
 
-    if (expiringSoon.length) {
-      const sampleNames = expiringSoon.slice(0, 2).map(x => `${this.escapeHtml(x.product.name)} (${x.daysLeft < 0 ? 'Expired' : `${x.daysLeft}d`})`).join(', ');
+    if (expiringMeta.length) {
+      const sampleNames = expiringMeta.slice(0, 2).map(x => {
+        const d = x.ex ? x.ex.days : 0;
+        return `${this.escapeHtml(x.product.name)} (${d < 0 ? 'Expired' : `${d}d`})`;
+      }).join(', ');
       notifications.push({
         type: expiredCount > 0 ? 'danger' : 'warning',
-        title: `${expiringSoon.length} Items ${expiredCount > 0 ? 'Expired / Expiring Soon' : 'Expiring in 7 Days'}`,
-        desc: `${sampleNames}${expiringSoon.length > 2 ? '...' : ''}`,
+        title: `${expiringMeta.length} Items ${expiredCount > 0 ? 'Expired / Expiring Soon' : 'Expiring in 7 Days'}`,
+        desc: `${sampleNames}${expiringMeta.length > 2 ? '...' : ''}`,
         action: () => {
           App.navigate('inventory');
           if (window.Inventory && typeof Inventory.setStockFilter === 'function') {
-            Inventory.setStockFilter(expiredCount > 0 && expiredCount === expiringSoon.length ? 'Expired' : 'Expiring7');
+            Inventory.setStockFilter(expiredCount > 0 && expiredCount === expiringMeta.length ? 'Expired' : 'Expiring7');
           }
         }
       });

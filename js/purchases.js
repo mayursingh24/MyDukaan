@@ -41,6 +41,9 @@ class PurchaseEngine {
           <p>${I18n.t('pur_subtitle', 'Record vendor deliveries, scan paper bills with AI Vision, and settle distributor payables')}</p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="Purchases.printPurchasesReport()">
+            ${Icons.print(14)} Print Register
+          </button>
           <button class="btn btn-secondary" onclick="Purchases.openAiBillScannerModal()">
             ${Icons.camera(14)} Scan Bill Photo (AI)
           </button>
@@ -1156,14 +1159,114 @@ class PurchaseEngine {
               <span style="color: var(--primary);" class="tnum">₹${DB.round2(p.totalAmount || 0).toLocaleString('en-IN')}</span>
             </div>
 
-            <button class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 14px;" onclick="Purchases.closeModals()">
-              Done
-            </button>
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+              <button class="btn btn-primary" style="flex: 1; justify-content: center;" onclick="Purchases.printPurchaseBill('${DB.escapeHtml(p.id)}')">
+                ${Icons.print(14)} Print Bill
+              </button>
+              <button class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="Purchases.closeModals()">
+                Done
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  printPurchaseBill(purchaseId) {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const p = (db.purchases || []).find(x => x.id === purchaseId);
+    if (!p) return;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 760px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:18px;">${DB.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Wholesale Inward GRN</h2>
+            <div style="font-size:12px; color:#4B5563;">Supplier: <strong>${DB.escapeHtml(p.supplierName || '')}</strong></div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            <div><strong>Bill No:</strong> ${DB.escapeHtml(p.billNo || p.id)}</div>
+            <div><strong>Date:</strong> ${DB.escapeHtml(p.date || '')} • ${DB.escapeHtml(p.status || '')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:14px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:left;">Product</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:right;">Cost Rate</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:center;">Qty</th>
+              <th style="padding:7px; border:1px solid #D1D5DB; text-align:right;">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(p.items || []).map(i => `
+              <tr>
+                <td style="padding:7px; border:1px solid #D1D5DB;">${DB.escapeHtml(i.name)}</td>
+                <td style="padding:7px; border:1px solid #D1D5DB; text-align:right;">₹${DB.round2(i.cost)}</td>
+                <td style="padding:7px; border:1px solid #D1D5DB; text-align:center;">${i.qty}</td>
+                <td style="padding:7px; border:1px solid #D1D5DB; text-align:right; font-weight:700;">₹${DB.round2(i.total).toLocaleString('en-IN')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:800; padding:8px; background:#F9FAFB; border:1px solid #D1D5DB;">
+          <span>Payment Mode: ${DB.escapeHtml(p.paymentMode || 'Credit')} (Paid: ₹${DB.round2(p.paidAmount || 0)} | Due: ₹${DB.round2(p.dueAmount || 0)})</span>
+          <span>Total: ₹${DB.round2(p.totalAmount || 0).toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+    `;
+    App.printHtmlDocument(html, 'wide');
+  }
+
+  printPurchasesReport() {
+    const db = DB.getData();
+    const shop = db.shop || {};
+    const purchases = db.purchases || [];
+    const total = DB.round2(purchases.reduce((s, p) => s + (Number(p.totalAmount) || 0), 0));
+    const totalDue = DB.round2(purchases.reduce((s, p) => s + (Number(p.dueAmount) || 0), 0));
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; padding: 14px; max-width: 780px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #111827; padding-bottom:10px; margin-bottom:14px;">
+          <div>
+            <h2 style="margin:0; font-size:19px;">${DB.escapeHtml(shop.name || 'MyDukkan24 Mart')} — Wholesale Purchase Register</h2>
+            <div style="font-size:12px; color:#4B5563;">Printed: ${DB.getLocalDateStr()} • ${purchases.length} Inward Bills</div>
+          </div>
+          <div style="text-align:right; font-size:12px;">
+            <div><strong>Total Billed:</strong> ₹${total.toLocaleString('en-IN')}</div>
+            <div><strong>Pending Dues:</strong> ₹${totalDue.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#F3F4F6;">
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Date</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Bill No</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:left;">Supplier</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Amount</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:right;">Due</th>
+              <th style="padding:6px; border:1px solid #D1D5DB; text-align:center;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${purchases.map(p => `
+              <tr>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${DB.escapeHtml(p.date || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${DB.escapeHtml(p.billNo || p.id)}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB;">${DB.escapeHtml(p.supplierName || '')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:right;">₹${DB.round2(p.totalAmount || 0).toLocaleString('en-IN')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:right;">₹${DB.round2(p.dueAmount || 0).toLocaleString('en-IN')}</td>
+                <td style="padding:6px; border:1px solid #D1D5DB; text-align:center;">${DB.escapeHtml(p.status || '')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    App.printHtmlDocument(html, 'wide');
   }
 
   exportPurchasesCSV() {
