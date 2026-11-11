@@ -1127,14 +1127,22 @@
 
         const cartSummary = SimPOS.cart.map(e => `${SimPOS.products[e.id]?.name} x${e.qty}`).join(', ') || 'Atta 5kg, Oil 1L';
         try {
-          const resp = await fetch(this.getGeminiEndpoint(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              prompt: promptText,
-              storeContext: `Live Store Showcase (Today Revenue: ₹18,450, Active Bill: ${cartSummary}, Payable: ₹${SimPOS.currentTotal}). Answer concisely in under 5 sharp bullet lines for an Indian store owner.`
-            })
-          });
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 24000);
+          let resp;
+          try {
+            resp = await fetch(this.getGeminiEndpoint(), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                prompt: promptText,
+                storeContext: `Live Store Showcase (Today Revenue: ₹18,450, Active Bill: ${cartSummary}, Payable: ₹${SimPOS.currentTotal}). Answer concisely in under 5 sharp bullet lines for an Indian store owner.`
+              }),
+              signal: controller.signal
+            });
+          } finally {
+            clearTimeout(timer);
+          }
           const data = await resp.json().catch(() => ({}));
           if (resp.ok && data && data.success && data.text) {
             out.textContent = data.text;

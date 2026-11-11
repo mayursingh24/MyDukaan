@@ -157,7 +157,7 @@ module.exports = async (req, res) => {
   }
 
   const startedAt = Date.now();
-  const remainingMs = () => Math.max(1500, 9200 - (Date.now() - startedAt));
+  const remainingMs = () => Math.max(2000, 25000 - (Date.now() - startedAt));
 
   try {
     let body;
@@ -174,19 +174,25 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Prompt or barcode is required.' });
     }
 
-    // Resolve API key: explicit client setting (if user set one) -> Vercel environment variable
+    // Resolve API key: explicit client setting (if provided) -> Vercel environment variable
     const apiKey = (clientApiKey && String(clientApiKey).trim()) || (process.env.GEMINI_API_KEY && String(process.env.GEMINI_API_KEY).trim()) || '';
 
     if (!apiKey) {
       return res.status(401).json({
-        error: 'GEMINI_API_KEY is not configured in Vercel Environment Variables or Copilot Settings.',
+        error: 'GEMINI_API_KEY is not configured in Vercel Environment Variables.',
         authError: true,
         status: 401,
-        hint: 'Create an API key at aistudio.google.com/api-keys and add it to Vercel Environment Variables or click "🔑 Set Key".'
+        hint: 'Add an active GEMINI_API_KEY from aistudio.google.com/api-keys in Vercel Project Settings -> Environment Variables.'
       });
     }
 
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-2.5-flash'];
+    // Prioritize ultra-low-latency models with per-model optimal thinking_level
+    const modelConfigs = [
+      { model: 'gemini-3.6-flash', thinking: 'minimal' },
+      { model: 'gemini-3.5-flash-lite', thinking: 'minimal' },
+      { model: 'gemini-3.8-flash', thinking: 'low' },
+      { model: 'gemini-2.5-flash', thinking: 'low' }
+    ];
     const attempts = [];
     let lastError = null;
     let lastStatus = 500;
@@ -232,9 +238,10 @@ Return strictly valid JSON matching the requested schema.`;
         }
       };
 
-      for (const model of modelsToTry) {
-        if (Date.now() - startedAt > 7800) break;
-        const perTryTimeout = Math.min(5800, remainingMs());
+      for (const cfg of modelConfigs) {
+        if (Date.now() - startedAt > 21000) break;
+        const { model, thinking } = cfg;
+        const perTryTimeout = Math.min(8500, remainingMs());
 
         try {
           // Attempt 1: Google Search grounding + structured JSON response_format
@@ -245,7 +252,7 @@ Return strictly valid JSON matching the requested schema.`;
             tools: [{ type: 'google_search' }],
             response_format: barcodeSchema,
             generation_config: {
-              thinking_level: 'low',
+              thinking_level: thinking,
               max_output_tokens: 1536
             },
             store: false
@@ -254,7 +261,7 @@ Return strictly valid JSON matching the requested schema.`;
           let { response, data } = await postInteraction(apiKey, payload, perTryTimeout);
 
           // Attempt 2: Some models disallow combining tools + response_format; retry without response_format
-          if (!response.ok && response.status === 400 && Date.now() - startedAt < 7500) {
+          if (!response.ok && response.status === 400 && Date.now() - startedAt < 20000) {
             const errText = String(data?.error?.message || '').toLowerCase();
             if (!errText.includes('api key')) {
               const fallbackPayload = {
@@ -263,19 +270,19 @@ Return strictly valid JSON matching the requested schema.`;
                 input: `${barcodePrompt}\nReturn ONLY raw JSON with keys: found, barcode, name, brand, cat, mrp, price, cost, stock, unit, emoji.`,
                 tools: [{ type: 'google_search' }],
                 generation_config: {
-                  thinking_level: 'low',
+                  thinking_level: thinking,
                   max_output_tokens: 1536
                 },
                 store: false
               };
-              const res2 = await postInteraction(apiKey, fallbackPayload, Math.min(4500, remainingMs()));
+              const res2 = await postInteraction(apiKey, fallbackPayload, Math.min(7000, remainingMs()));
               response = res2.response;
               data = res2.data;
             }
           }
 
           // Attempt 3: Retry minimal payload without tools if 400 persists
-          if (!response.ok && response.status === 400 && Date.now() - startedAt < 7500) {
+          if (!response.ok && response.status === 400 && Date.now() - startedAt < 20000) {
             const errText = String(data?.error?.message || '').toLowerCase();
             if (!errText.includes('api key')) {
               const minimalPayload = {
@@ -287,7 +294,7 @@ Return strictly valid JSON matching the requested schema.`;
                 },
                 store: false
               };
-              const res3 = await postInteraction(apiKey, minimalPayload, Math.min(3500, remainingMs()));
+              const res3 = await postInteraction(apiKey, minimalPayload, Math.min(6000, remainingMs()));
               response = res3.response;
               data = res3.data;
             }
@@ -329,7 +336,7 @@ Return strictly valid JSON matching the requested schema.`;
           status: lastStatus,
           attempts,
           hint: lastIsAuth
-            ? 'Your Gemini API key was rejected or revoked. Generate a fresh key in Google AI Studio (aistudio.google.com/api-keys) and update Vercel Environment Variables or click "🔑 Set Key".'
+            ? 'Server Gemini API key requires rotation in Google AI Studio and Vercel Environment Variables.'
             : 'Live Gemini barcode lookup could not complete right now. Check connection or retry.'
         });
       }
@@ -398,9 +405,10 @@ Keep answers structured, concise, accurate to the provided live store numbers, a
 Current Live Business Context:
 ${storeContext || 'No store data provided.'}`;
 
-    for (const model of modelsToTry) {
-      if (Date.now() - startedAt > 7800) break;
-      const perTryTimeout = Math.min(5800, remainingMs());
+    for (const cfg of modelConfigs) {
+      if (Date.now() - startedAt > 21000) break;
+      const { model, thinking } = cfg;
+      const perTryTimeout = Math.min(8500, remainingMs());
 
       try {
         let payload = {
@@ -408,7 +416,7 @@ ${storeContext || 'No store data provided.'}`;
           system_instruction: systemInstruction,
           input: String(prompt).trim(),
           generation_config: {
-            thinking_level: 'low',
+            thinking_level: thinking,
             max_output_tokens: 2048
           },
           store: false
@@ -417,7 +425,7 @@ ${storeContext || 'No store data provided.'}`;
         let { response, data } = await postInteraction(apiKey, payload, perTryTimeout);
 
         // Retry without thinking_level if model rejects it with 400
-        if (!response.ok && response.status === 400 && Date.now() - startedAt < 7500) {
+        if (!response.ok && response.status === 400 && Date.now() - startedAt < 20000) {
           const errText = String(data?.error?.message || '').toLowerCase();
           if (!errText.includes('api key')) {
             const simplerPayload = {
@@ -429,7 +437,7 @@ ${storeContext || 'No store data provided.'}`;
               },
               store: false
             };
-            const res2 = await postInteraction(apiKey, simplerPayload, Math.min(4500, remainingMs()));
+            const res2 = await postInteraction(apiKey, simplerPayload, Math.min(7000, remainingMs()));
             response = res2.response;
             data = res2.data;
           }

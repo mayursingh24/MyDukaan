@@ -165,15 +165,20 @@ exports.handler = async (event) => {
         statusCode: 401,
         headers,
         body: JSON.stringify({
-          error: 'GEMINI_API_KEY is not configured in Netlify Environment Variables or Copilot Settings.',
+          error: 'GEMINI_API_KEY is not configured in Netlify Environment Variables.',
           authError: true,
           status: 401,
-          hint: 'Create an API key at aistudio.google.com/api-keys and add it to Netlify Environment Variables or click "🔑 Set Key".'
+          hint: 'Add an active GEMINI_API_KEY from aistudio.google.com/api-keys in Netlify Environment Variables.'
         })
       };
     }
 
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-2.5-flash'];
+    const modelConfigs = [
+      { model: 'gemini-3.6-flash', thinking: 'minimal' },
+      { model: 'gemini-3.5-flash-lite', thinking: 'minimal' },
+      { model: 'gemini-3.8-flash', thinking: 'low' },
+      { model: 'gemini-2.5-flash', thinking: 'low' }
+    ];
     const attempts = [];
     let lastError = null;
     let lastStatus = 500;
@@ -223,9 +228,10 @@ Return strictly valid JSON matching the requested schema.`;
         }
       };
 
-      for (const model of modelsToTry) {
+      for (const cfg of modelConfigs) {
         if (Date.now() - startedAt > 7800) break;
-        const perTryTimeout = Math.min(5800, remainingMs());
+        const { model, thinking } = cfg;
+        const perTryTimeout = Math.min(4800, remainingMs());
 
         try {
           // Attempt 1: Google Search grounding + structured JSON response_format
@@ -236,7 +242,7 @@ Return strictly valid JSON matching the requested schema.`;
             tools: [{ type: 'google_search' }],
             response_format: barcodeSchema,
             generation_config: {
-              thinking_level: 'low',
+              thinking_level: thinking,
               max_output_tokens: 1536
             },
             store: false
@@ -254,7 +260,7 @@ Return strictly valid JSON matching the requested schema.`;
                 input: `${barcodePrompt}\nReturn ONLY raw JSON with keys: found, barcode, name, brand, cat, mrp, price, cost, stock, unit, emoji.`,
                 tools: [{ type: 'google_search' }],
                 generation_config: {
-                  thinking_level: 'low',
+                  thinking_level: thinking,
                   max_output_tokens: 1536
                 },
                 store: false
@@ -322,7 +328,7 @@ Return strictly valid JSON matching the requested schema.`;
             status: lastStatus,
             attempts,
             hint: lastIsAuth
-              ? 'Your Gemini API key was rejected or revoked. Generate a fresh key in Google AI Studio (aistudio.google.com/api-keys) and update Netlify Environment Variables or click "🔑 Set Key".'
+              ? 'Server Gemini API key requires rotation in Google AI Studio and Netlify Environment Variables.'
               : 'Live Gemini barcode lookup could not complete right now. Check connection or retry.'
           })
         };
@@ -400,9 +406,10 @@ Keep answers structured, concise, accurate to the provided live store numbers, a
 Current Live Business Context:
 ${storeContext || 'No store data provided.'}`;
 
-    for (const model of modelsToTry) {
+    for (const cfg of modelConfigs) {
       if (Date.now() - startedAt > 7800) break;
-      const perTryTimeout = Math.min(5800, remainingMs());
+      const { model, thinking } = cfg;
+      const perTryTimeout = Math.min(4800, remainingMs());
 
       try {
         let payload = {
@@ -410,7 +417,7 @@ ${storeContext || 'No store data provided.'}`;
           system_instruction: systemInstruction,
           input: String(prompt).trim(),
           generation_config: {
-            thinking_level: 'low',
+            thinking_level: thinking,
             max_output_tokens: 2048
           },
           store: false

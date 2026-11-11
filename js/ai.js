@@ -276,7 +276,7 @@ Customer Udhaar Ledger:
       const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 13000);
+      const timeoutId = setTimeout(() => controller.abort(), 24000);
 
       let response = null;
       let result = null;
@@ -654,7 +654,7 @@ Customer Udhaar Ledger:
     const endpoint = this.getEndpoint();
     const customApiKey = localStorage.getItem('mydukaan_gemini_api_key') || '';
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 11000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
       const response = await fetch(endpoint, {
