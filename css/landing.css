@@ -174,11 +174,14 @@ button {
   z-index: 1;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .lp-container {
   max-width: 1220px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -920,6 +923,8 @@ button {
    ========================================================================== */
 .lp-section {
   padding: 54px 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .lp-section-head {
@@ -1128,6 +1133,12 @@ button {
   justify-content: space-between;
   gap: 14px;
   min-width: 0;
+}
+
+.lp-cart-cta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .lp-cart-list {
@@ -1843,7 +1854,7 @@ button {
   .lp-analytics-grid,
   .lp-platform-card,
   .lp-contact-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .lp-sim-kpi-grid,
@@ -1918,11 +1929,11 @@ button {
 
   .lp-engine-metrics,
   .lp-engine-highlights {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .lp-features-deep-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .lp-feature-deep-card,
@@ -1982,7 +1993,7 @@ button {
   }
 
   .lp-hero-stats-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .lp-crest-ring {
@@ -1997,7 +2008,15 @@ button {
 
   .lp-auth-status-grid,
   .lp-auth-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-btn,
+  .lp-term-tab {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.25;
+    text-align: center;
   }
 
   .lp-cart-panel {
@@ -2066,8 +2085,13 @@ button {
 
   .lp-sim-kpi-grid,
   .lp-sim-products-grid,
-  .lp-impact-kpis {
-    grid-template-columns: 1fr;
+  .lp-impact-kpis,
+  .lp-cart-cta-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-cart-row {
+    flex-wrap: wrap;
   }
 }
 

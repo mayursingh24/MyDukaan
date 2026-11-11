@@ -4,7 +4,7 @@
  * High-Speed Offline-Ready PWA & Pure Network-First Caching Engine
  */
 
-const CACHE_NAME = 'mydukkan24-v9.0';
+const CACHE_NAME = 'mydukkan24-v9.1';
 
 const ASSETS_TO_PRECACHE = [
   './',
@@ -16,7 +16,7 @@ const ASSETS_TO_PRECACHE = [
   './assets/MyDukkan24-v4.apk',
   './css/style.css?v=9.0',
   './css/components.css?v=9.0',
-  './css/landing.css?v=9.0',
+  './css/landing.css?v=9.1',
   './js/html5-qrcode.min.js?v=9.0',
   './js/icons.js?v=9.0',
   './js/i18n.js?v=9.0',
