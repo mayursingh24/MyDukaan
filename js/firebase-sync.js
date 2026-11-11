@@ -14,10 +14,16 @@
   const SDK_VERSION = '11.6.0';
   const CATEGORIES = ['products', 'customers', 'invoices', 'suppliers', 'purchases', 'expenses', 'staff'];
 
-  // Optional built-in Firebase Web App config.
-  // Replace `null` with your Firebase Console Web App config object so every device auto-connects:
-  // Example: { apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." }
-  const DEFAULT_FIREBASE_CONFIG = null;
+  // Built-in Firebase Web App config (public client identifier for mydukaan24-live).
+  const DEFAULT_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCP0BzNcoCJabaZV4g9uLenJvCWqjoLEXg",
+    authDomain: "mydukaan24-live.firebaseapp.com",
+    projectId: "mydukaan24-live",
+    storageBucket: "mydukaan24-live.firebasestorage.app",
+    messagingSenderId: "783968943512",
+    appId: "1:783968943512:web:2a23b9594b60e271157fed",
+    measurementId: "G-Z9W9VSPQPV"
+  };
 
   function getDeviceId() {
     let id = localStorage.getItem(DEVICE_ID_KEY);
@@ -318,7 +324,13 @@
                 this.showNotice('success', 'Signed In', 'Google account linked for live cloud sync.');
               }
             })
-            .catch(() => {});
+            .catch((redirErr) => {
+              if (redirErr && redirErr.code) {
+                this.lastError = this.humanizeAuthError(redirErr);
+                this.showNotice('danger', 'Google Sign-In Error', this.lastError);
+                this.notifyUI();
+              }
+            });
         }
 
         return true;
@@ -475,6 +487,16 @@
       }
       if (code === 'auth/operation-not-allowed') {
         return 'Enable Email/Password & Google Sign-In in Firebase Console > Authentication > Sign-in method.';
+      }
+      if (code === 'auth/unauthorized-domain') {
+        const host = (typeof window !== 'undefined' && window.location && window.location.hostname) || 'this domain';
+        return `Add "${host}" in Firebase Console > Authentication > Settings > Authorized domains.`;
+      }
+      if (code === 'auth/configuration-not-found') {
+        return 'Complete Authentication > Get Started & enable Google/Email providers in Firebase Console.';
+      }
+      if (code === 'auth/network-request-failed') {
+        return 'Network error connecting to Firebase Auth. Check internet connection.';
       }
       return (err && err.message) || 'Authentication error.';
     }

@@ -1376,7 +1376,7 @@
             accountBar.classList.remove('signed-in');
             accountBar.innerHTML = `
               <span class="lp-pulse-dot" style="width:7px;height:7px;"></span>
-              <span><strong>${status.configured ? `Cloud Ready (${this.escapeHtml(status.projectId)}):` : 'Live Cloud Store:'}</strong></span>
+              <span><strong>${status.configured ? 'Cloud Sync Live:' : 'Live Cloud Store:'}</strong></span>
               <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signin')">Sign In</button>
               <button type="button" class="lp-inline-action" onclick="LandingAuth.openModal('signup')">Create Account</button>
               <a href="#showcase" class="lp-inline-action" style="background: rgba(16,185,129,0.2); border-color: rgba(52,211,153,0.5);">Live AI Demo ↓</a>
